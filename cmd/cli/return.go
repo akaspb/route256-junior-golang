@@ -1,0 +1,68 @@
+package cli
+
+import (
+	"fmt"
+	"github.com/spf13/cobra"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
+)
+
+var returnCli = &cobra.Command{
+	Use:     "return",
+	Short:   "Get order from customer to return",
+	Long:    `Get order from customer to return`,
+	Example: "return -o=<orderID> -c=<customerID>",
+	Run: func(cmd *cobra.Command, args []string) {
+		if err := cliService.getServiceInCommand(cmd); err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+		var orderID, customerID models.IDType
+
+		if cmd.Flags().Changed("order") {
+			orderIDint64, err := cmd.Flags().GetInt64("order")
+			orderID = models.IDType(orderIDint64)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+		} else {
+			fmt.Println("order flag is not defined")
+			return
+		}
+
+		if cmd.Flags().Changed("customer") {
+			customerIDint64, err := cmd.Flags().GetInt64("customer")
+			customerID = models.IDType(customerIDint64)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+		} else {
+			fmt.Println("customer flag is not defined")
+			return
+		}
+
+		if err := cliService.srvc.ReturnOrderFromCustomer(customerID, orderID); err != nil {
+			fmt.Println("error:", err.Error())
+		} else {
+			fmt.Println("success: take order from customer to store it in PVZ")
+		}
+	},
+}
+
+func init() {
+	rootCli.AddCommand(returnCli)
+
+	returnCli.AddCommand(&cobra.Command{
+		Use:   "help",
+		Short: "Help about command",
+		Long:  `Help about command`,
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := returnCli.Help(); err != nil {
+				fmt.Println(err.Error())
+			}
+		},
+	})
+
+	returnCli.Flags().Int64P("order", "o", 0, "unique order ID")
+	returnCli.Flags().Int64P("customer", "c", 0, "unique customer ID")
+}

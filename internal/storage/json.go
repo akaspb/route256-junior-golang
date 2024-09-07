@@ -79,6 +79,11 @@ func (s *JsonStorage) RemoveOrder(orderID models.IDType) error {
 	}
 
 	delete(s.OrderStorage, orderID)
+
+	if err := s.writeDataFromFile(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
