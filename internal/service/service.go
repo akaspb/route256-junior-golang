@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage"
@@ -8,8 +9,8 @@ import (
 	"time"
 )
 
-const Day = time.Hour * 24
-const ReturnTime = Day * 2
+const Day = 24 * time.Hour
+const MaxReturnTime = 2 * Day
 
 type OrderIDWithMsg struct {
 	ID  models.IDType
@@ -21,7 +22,6 @@ type OrderIDWithExpiryAndStatus struct {
 	ID      models.IDType
 	Expiry  time.Time
 	Expired bool
-	Status  models.StatusVal
 }
 
 type ReturnOrderAndCustomer struct {
@@ -44,55 +44,53 @@ func NewService(orderStorage storage.Storage, startTime time.Time, systemStartTi
 }
 
 func (s *Service) AcceptOrderFromCourier(orderID, customerID models.IDType, orderExpiry time.Time) error {
-	order, err := s.orderStorage.GetOrder(orderID)
-	if err != nil {
-		return err
-	}
+	_, err := s.orderStorage.GetOrder(orderID)
 
-	if order != nil {
+	if err == nil {
 		return fmt.Errorf("order with ID==%v was accepted earlier", orderID)
 	}
 
+	if !errors.Is(err, storage.ErrOrderNotFound) {
+		return err
+	}
+
 	if !isLessOrEqualTime(s.GetCurrentTime(), orderExpiry) {
-		return fmt.Errorf("order expiry time can't be before current time")
+		return errors.New("order expiry time can't be before current time")
 	}
 
 	return s.orderStorage.SetOrder(models.Order{
-		ID:     orderID,
-		Expiry: orderExpiry,
+		ID:         orderID,
+		CustomerID: customerID,
+		Expiry:     orderExpiry,
 		Status: models.Status{
-			Val:        models.StatusToStorage,
-			CustomerID: customerID,
-			Time:       s.GetCurrentTime(),
+			Val:  models.StatusToStorage,
+			Time: s.GetCurrentTime(),
 		},
 	})
 }
 
 func (s *Service) ReturnOrder(orderID models.IDType) error {
-	var order *models.Order
 	order, err := s.orderStorage.GetOrder(orderID)
-	if order == nil {
-		return fmt.Errorf("order with ID==%v is not in PVZ or has already been returned and given to courier", orderID)
+
+	if err != nil {
+		if errors.Is(err, storage.ErrOrderNotFound) {
+			return fmt.Errorf("order with ID==%v is not in PVZ or has already been returned and given to courier", orderID)
+		}
+		return err
 	}
 
-	if order.Status.Val == models.StatusToCustomer {
+	switch order.Status.Val {
+	case models.StatusToCustomer:
 		return fmt.Errorf("order with orderId==%v was taken by customer", orderID)
+	case models.StatusReturn:
+		break
+	case models.StatusToStorage:
+		if !isLessOrEqualTime(order.Expiry, s.GetCurrentTime()) {
+			return fmt.Errorf("order with orderId==%v expiry time is not reached", orderID)
+		}
+	default: // if some unknown status
+		return errors.New("unhandled error")
 	}
-
-	//if order.Status.Val == models.StatusReturn {
-	//	return fmt.Errorf("order with orderId==%v was already returned by customer", orderID)
-	//}
-
-	if !isLessOrEqualTime(order.Expiry, s.GetCurrentTime()) {
-		return fmt.Errorf("order with orderId==%v expiry time is not reached", orderID)
-	}
-
-	//order.Status.Val = models.StatusReturn
-	//order.Status.Time = s.GetCurrentTime()
-	//err = s.orderStorage.SetOrder(*order)
-	//if err != nil {
-	//	return err
-	//}
 
 	err = s.orderStorage.RemoveOrder(orderID)
 	if err != nil {
@@ -107,48 +105,44 @@ func (s *Service) GiveOrderToCustomer(orderIDs []models.IDType, customerID model
 	currTime := s.GetCurrentTime()
 
 	for _, orderID := range orderIDs {
-		var order *models.Order
 		order, err := s.orderStorage.GetOrder(orderID)
 		if err != nil {
+			if errors.Is(err, storage.ErrOrderNotFound) {
+				// if order has not been delivered to storage yet
+				ordersToGive = append(ordersToGive, OrderIDWithMsg{
+					ID:  orderID,
+					Msg: "Order has not been delivered to PVZ yet or was returned and given to courier",
+					Ok:  false,
+				})
+				continue
+			}
 			return nil, err
 		}
 
-		// if order has not been delivered to storage yet
-		if order == nil {
-			ordersToGive = append(ordersToGive, OrderIDWithMsg{
-				ID:  orderID,
-				Msg: "Order has not been delivered to PVZ yet or was returned and given to courier",
-				Ok:  false,
-			})
-			continue
+		// if order's customer is other person return error immediately
+		if order.CustomerID != customerID {
+			return nil, fmt.Errorf(
+				"customer %v can't get the information about order with ID==%v",
+				customerID, order.ID,
+			)
 		}
 
-		if order.Status.Val == models.StatusToCustomer {
+		switch order.Status.Val {
+		case models.StatusToCustomer:
 			ordersToGive = append(ordersToGive, OrderIDWithMsg{
 				ID:  orderID,
 				Msg: "Order was given to customer earlier",
 				Ok:  false,
 			})
 			continue
-		}
-
-		if order.Status.Val == models.StatusReturn {
+		case models.StatusReturn:
 			ordersToGive = append(ordersToGive, OrderIDWithMsg{
 				ID:  orderID,
 				Msg: "Order was returned to PVZ by customer",
 				Ok:  false,
 			})
 			continue
-		}
-
-		if order.Status.Val == models.StatusToStorage {
-			if order.CustomerID != customerID {
-				return nil, fmt.Errorf(
-					"order (ID=%v, CustomerID=%v) can't be given to customer %v",
-					order.ID, order.CustomerID, customerID,
-				)
-			}
-
+		case models.StatusToStorage:
 			if isLessOrEqualTime(currTime, order.Expiry) {
 				ordersToGive = append(ordersToGive, OrderIDWithMsg{
 					ID:  order.ID,
@@ -162,14 +156,12 @@ func (s *Service) GiveOrderToCustomer(orderIDs []models.IDType, customerID model
 					Ok:  false,
 				})
 			}
-
-			continue
+		default: // if some unknown status
+			return nil, errors.New("unhandled error")
 		}
-
-		// if some unknown status
-		return nil, fmt.Errorf("unhandled error")
 	}
 
+	// add this loop with purpose if error occurred in previous loop no change in DB were made
 	for _, order := range ordersToGive {
 		if order.Ok {
 			orderPtr, err := s.orderStorage.GetOrder(order.ID)
@@ -179,7 +171,7 @@ func (s *Service) GiveOrderToCustomer(orderIDs []models.IDType, customerID model
 
 			orderPtr.Status.Val = models.StatusToCustomer
 			orderPtr.Status.Time = currTime
-			err = s.orderStorage.SetOrder(*orderPtr)
+			err = s.orderStorage.SetOrder(orderPtr)
 			if err != nil {
 				return nil, err
 			}
@@ -199,16 +191,15 @@ func (s *Service) GetCustomerOrders(customerID models.IDType, n uint) ([]OrderID
 	for _, orderID := range allOrdersIDs {
 		order, err := s.orderStorage.GetOrder(orderID)
 		if err != nil {
+			if errors.Is(err, storage.ErrOrderNotFound) {
+				return nil, errors.New("unhandled error")
+			}
 			return nil, err
 		}
 
-		if order == nil {
-			return nil, fmt.Errorf("unhandled error")
-		}
-
 		if order.CustomerID == customerID {
-			if order.Status.Val == models.StatusToStorage || order.Status.Val == models.StatusReturn {
-				userOrders = append(userOrders, *order)
+			if order.Status.Val == models.StatusToStorage {
+				userOrders = append(userOrders, order)
 			}
 		}
 	}
@@ -233,7 +224,6 @@ func (s *Service) GetCustomerOrders(customerID models.IDType, n uint) ([]OrderID
 			ID:      userOrder.ID,
 			Expiry:  userOrder.Expiry,
 			Expired: !isLessOrEqualTime(s.GetCurrentTime(), userOrder.Expiry),
-			Status:  userOrder.Status.Val,
 		}
 	}
 
@@ -244,12 +234,19 @@ func (s *Service) ReturnOrderFromCustomer(customerID, orderID models.IDType) err
 	currTime := s.GetCurrentTime()
 
 	order, err := s.orderStorage.GetOrder(orderID)
+
 	if err != nil {
+		if errors.Is(err, storage.ErrOrderNotFound) {
+			return fmt.Errorf("order with ID==%v is not in PVZ or has already been returned", orderID)
+		}
 		return err
 	}
 
-	if order == nil {
-		return fmt.Errorf("order with ID==%v is not in PVZ or has already been returned", orderID)
+	if order.CustomerID != customerID {
+		return fmt.Errorf(
+			"order with ID==%v can't be accepted for return from other customer %v",
+			order.ID, customerID,
+		)
 	}
 
 	if order.Status.Val == models.StatusReturn {
@@ -266,21 +263,14 @@ func (s *Service) ReturnOrderFromCustomer(customerID, orderID models.IDType) err
 		)
 	}
 
-	if order.CustomerID != customerID {
-		return fmt.Errorf(
-			"order (ID=%v, CustomerID=%v) can't be accepted for return from customer %v",
-			order.ID, order.CustomerID, customerID,
-		)
-	}
-
-	if !isLessOrEqualTime(currTime, order.Status.Time.Add(ReturnTime)) {
-		return fmt.Errorf("order with ID==%v return time elapsed")
+	if !isLessOrEqualTime(currTime, order.Status.Time.Add(MaxReturnTime)) {
+		return fmt.Errorf("order with ID==%v return time elapsed", order.ID)
 	}
 
 	order.Status.Val = models.StatusReturn
 	order.Status.Time = currTime
 
-	err = s.orderStorage.SetOrder(*order)
+	err = s.orderStorage.SetOrder(order)
 	if err != nil {
 		return err
 	}
@@ -290,38 +280,32 @@ func (s *Service) ReturnOrderFromCustomer(customerID, orderID models.IDType) err
 
 func (s *Service) GetReturnsList(offset, limit int) ([]ReturnOrderAndCustomer, error) {
 	orderIDsToReturn := make([]ReturnOrderAndCustomer, 0)
-	allOrdersIDs, err := s.orderStorage.GetOrderIDs()
+	returnIDs, err := s.orderStorage.GetReturnIDs()
 	if err != nil {
 		return nil, err
 	}
 
 	count := -offset
-	for _, orderID := range allOrdersIDs {
+	for _, orderID := range returnIDs {
 		order, err := s.orderStorage.GetOrder(orderID)
 		if err != nil {
 			return nil, err
 		}
 
-		if order == nil {
-			return nil, fmt.Errorf("unhandled error")
+		if count >= 0 {
+			orderIDsToReturn = append(orderIDsToReturn, ReturnOrderAndCustomer{
+				OrderID:    order.ID,
+				CustomerID: order.CustomerID,
+			})
 		}
-
-		if !isLessOrEqualTime(s.GetCurrentTime(), order.Expiry) || order.Status.Val == models.StatusReturn {
-			if count >= 0 {
-				orderIDsToReturn = append(orderIDsToReturn, ReturnOrderAndCustomer{
-					OrderID:    order.ID,
-					CustomerID: order.CustomerID,
-				})
-			}
-			count++
-			if count == limit {
-				break
-			}
+		count++
+		if count == limit {
+			break
 		}
 	}
 
 	if count < 1 {
-		return nil, fmt.Errorf("offset value is too small")
+		return nil, errors.New("offset value is too small")
 	}
 
 	return orderIDsToReturn, nil

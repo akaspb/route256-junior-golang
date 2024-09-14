@@ -19,39 +19,41 @@ var returnsCli = &cobra.Command{
 		var offset, limit int
 		var err error
 
-		if cmd.Flags().Changed("offset") {
-			offset, err = cmd.Flags().GetInt("offset")
-			if err != nil {
-				fmt.Println(err.Error())
-			}
-		} else {
-			fmt.Println("offset flag is not defined")
+		if !cmd.Flags().Changed("offset") {
+			fmt.Println("offset flag is not defined, check 'returns --help'")
+			return
+		}
+		offset, err = cmd.Flags().GetInt("offset")
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+
+		if !cmd.Flags().Changed("limit") {
+			fmt.Println("limit flag is not defined, check 'returns --help'")
+			return
+		}
+		limit, err = cmd.Flags().GetInt("limit")
+		if err != nil {
+			fmt.Println(err.Error())
 			return
 		}
 
-		if cmd.Flags().Changed("limit") {
-			limit, err = cmd.Flags().GetInt("limit")
-			if err != nil {
-				fmt.Println(err.Error())
-			}
-		} else {
-			fmt.Println("limit flag is not defined")
-			return
-		}
-
-		if orders, err := cliService.srvc.GetReturnsList(offset, limit); err != nil {
+		orders, err := cliService.srvc.GetReturnsList(offset, limit)
+		if err != nil {
 			fmt.Println("error:", err.Error())
-		} else {
-			if len(orders) == 0 {
-				fmt.Println("No orders")
-			} else {
-				tableTop := fmt.Sprintf("%8s|%11s", "Order ID", "Customer ID")
-				fmt.Println(tableTop)
-				for _, order := range orders {
-					tableRow := fmt.Sprintf("%8v|%11v", order.OrderID, order.CustomerID)
-					fmt.Println(tableRow)
-				}
-			}
+			return
+		}
+
+		if len(orders) == 0 {
+			fmt.Println("No orders")
+			return
+		}
+
+		tableTop := fmt.Sprintf("%8s|%11s", "Order ID", "Customer ID")
+		fmt.Println(tableTop)
+		for _, order := range orders {
+			tableRow := fmt.Sprintf("%8v|%11v", order.OrderID, order.CustomerID)
+			fmt.Println(tableRow)
 		}
 	},
 }
@@ -71,5 +73,5 @@ func init() {
 	})
 
 	returnsCli.Flags().IntP("limit", "l", 0, "limit of results")
-	returnsCli.Flags().IntP("offset", "o", 0, "offset of results")
+	returnsCli.Flags().IntP("offset", "o", 0, "offset of results, starts from 0")
 }

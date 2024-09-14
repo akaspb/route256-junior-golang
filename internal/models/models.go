@@ -5,11 +5,17 @@ import (
 )
 
 type IDType int64
+type WeightType float32
+type CostType float32
 
 type Order struct {
-	ID     IDType    `json:"id"`
-	Expiry time.Time `json:"expiry"`
-	Status `json:"status"`
+	ID         IDType     `json:"id"`
+	CustomerID IDType     `json:"customerID"`
+	Expiry     time.Time  `json:"expiry"`
+	Weight     WeightType `json:"weight"`
+	Cost       CostType   `json:"cost"`
+	Packaging  Packaging  `json:"packaging"`
+	Status     `json:"status"`
 }
 
 type StatusVal string
@@ -21,7 +27,12 @@ const (
 )
 
 type Status struct {
-	Val        StatusVal `json:"val"`
-	CustomerID IDType    `json:"customerID"`
-	Time       time.Time `json:"time"`
+	Val  StatusVal `json:"val"`
+	Time time.Time `json:"time"`
+}
+
+type Packaging interface {
+	GetName() string
+	GetCost() CostType
+	GetMaxOrderWeight() WeightType
 }

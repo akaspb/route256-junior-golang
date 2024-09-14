@@ -32,37 +32,30 @@ var listCli = &cobra.Command{
 		}
 		customerID := models.IDType(customerIDint64)
 
-		if orders, err := cliService.srvc.GetCustomerOrders(customerID, n); err != nil {
+		orders, err := cliService.srvc.GetCustomerOrders(customerID, n)
+		if err != nil {
 			fmt.Println("error:", err.Error())
-		} else {
-			if len(orders) == 0 {
-				fmt.Println("No orders")
-			} else {
-				tableTop := fmt.Sprintf("%8s|    Expiry|Expired|%-10s", "ID", "Status")
-				fmt.Println(tableTop)
-				for _, order := range orders {
-					expired := "NO"
-					if order.Expired {
-						expired = "YES"
-					}
+			return
+		}
 
-					var status string
-					switch order.Status {
-					case models.StatusToStorage:
-						status = "PVZ"
-					case models.StatusReturn:
-						status = "PVZ return"
-					default:
-						status = string(order.Status)
-					}
+		if len(orders) == 0 {
+			fmt.Println("No orders")
+			return
+		}
 
-					tableRow := fmt.Sprintf(
-						"%8v|%-10s|%7s|%-10s",
-						order.ID, order.Expiry.Format("02.01.2006"), expired, status,
-					)
-					fmt.Println(tableRow)
-				}
+		tableTop := fmt.Sprintf("%8s|    Expiry|Expired", "ID")
+		fmt.Println(tableTop)
+		for _, order := range orders {
+			expired := "NO"
+			if order.Expired {
+				expired = "YES"
 			}
+
+			tableRow := fmt.Sprintf(
+				"%8v|%-10s|%7s",
+				order.ID, order.Expiry.Format("02.01.2006"), expired,
+			)
+			fmt.Println(tableRow)
 		}
 	},
 }
