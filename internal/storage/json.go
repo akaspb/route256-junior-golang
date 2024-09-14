@@ -100,8 +100,18 @@ func (s *JsonStorage) GetReturnIDs() ([]models.IDType, error) {
 
 func (s *JsonStorage) readDataFromFile() error {
 	var file *os.File
-	file, err := os.OpenFile(s.Path, os.O_CREATE|os.O_RDWR, 0666)
+	file, err := os.OpenFile(s.Path, os.O_RDWR, 0666)
 	if err != nil {
+		if os.IsNotExist(err) {
+			_, err = os.OpenFile(s.Path, os.O_CREATE, 0666)
+			if err != nil {
+				return err
+			}
+
+			s.OrderStorage = make(map[models.IDType]models.Order)
+			s.Returns = make(map[models.IDType]struct{})
+			return nil
+		}
 		return err
 	}
 	defer file.Close()
@@ -137,7 +147,7 @@ func (s *JsonStorage) writeDataToFile() error {
 	}
 	defer file.Close()
 
-	orders := make([]models.Order, len(s.OrderStorage))
+	orders := make([]models.Order, 0, len(s.OrderStorage))
 	for _, order := range s.OrderStorage {
 		orders = append(orders, order)
 	}
