@@ -18,20 +18,6 @@ type OrdersStorage struct {
 	Returns []models.IDType `json:"returns"`
 }
 
-func InitJsonStorage(jsonPath string) (*JsonStorage, error) {
-	jsonStorage := &JsonStorage{
-		OrderStorage: nil,
-		Path:         jsonPath,
-		Returns:      nil,
-	}
-
-	if err := jsonStorage.readDataFromFile(); err != nil {
-		return nil, err
-	}
-
-	return jsonStorage, nil
-}
-
 func (s *JsonStorage) SetOrder(order models.Order) error {
 	if order.Status.Val == models.StatusReturn {
 		if prevOrder, ok := s.OrderStorage[order.ID]; ok {
@@ -94,7 +80,12 @@ func (s *JsonStorage) GetReturnIDs() ([]models.IDType, error) {
 	return returnIDs, nil
 }
 
-func (s *JsonStorage) readDataFromFile() error {
+func InitJsonStorage(jsonPath string) (*JsonStorage, error) {
+	s := &JsonStorage{
+		OrderStorage: nil,
+		Path:         jsonPath,
+		Returns:      nil,
+	}
 
 	var file *os.File
 	file, err := os.OpenFile(s.Path, os.O_RDWR, 0666)
@@ -102,14 +93,14 @@ func (s *JsonStorage) readDataFromFile() error {
 		if os.IsNotExist(err) {
 			_, err = os.OpenFile(s.Path, os.O_CREATE, 0666)
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			s.OrderStorage = make(map[models.IDType]models.Order)
 			s.Returns = make(map[models.IDType]struct{})
-			return s.writeDataToFile()
+			return s, s.writeDataToFile()
 		}
-		return err
+		return s, err
 	}
 	defer file.Close()
 
@@ -117,7 +108,7 @@ func (s *JsonStorage) readDataFromFile() error {
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&ordersStorage)
 	if err != nil {
-		return err
+		return s, err
 	}
 
 	orders := ordersStorage.Orders
@@ -132,7 +123,7 @@ func (s *JsonStorage) readDataFromFile() error {
 		s.Returns[oderID] = struct{}{}
 	}
 
-	return nil
+	return s, nil
 }
 
 func (s *JsonStorage) writeDataToFile() error {

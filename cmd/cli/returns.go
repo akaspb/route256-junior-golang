@@ -38,21 +38,21 @@ var returnsCli = &cobra.Command{
 			return
 		}
 
-		orders, err := cliService.srvc.GetReturnsList(offset, limit)
+		returns, err := cliService.srvc.GetReturnsList(offset, limit)
 		if err != nil {
 			fmt.Println("error:", err.Error())
 			return
 		}
 
-		if len(orders) == 0 {
+		if len(returns) == 0 {
 			fmt.Println("No orders")
 			return
 		}
 
 		tableTop := fmt.Sprintf("%8s|%11s", "Order ID", "Customer ID")
 		fmt.Println(tableTop)
-		for _, order := range orders {
-			tableRow := fmt.Sprintf("%8v|%11v", order.ID, order.CustomerID)
+		for _, raw := range returns {
+			tableRow := fmt.Sprintf("%8v|%11v", raw.OrderID, raw.CustomerID)
 			fmt.Println(tableRow)
 		}
 	},

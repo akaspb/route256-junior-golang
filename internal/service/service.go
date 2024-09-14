@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage"
 	"sort"
 	"time"
@@ -13,13 +14,17 @@ const Day = 24 * time.Hour
 const MaxReturnTime = 2 * Day
 
 type OrderIDWithMsg struct {
-	ID  models.IDType
-	Msg string
-	Ok  bool
+	ID      models.IDType
+	Cost    models.CostType
+	Package string
+	Msg     string
+	Ok      bool
 }
 
 type OrderIDWithExpiryAndStatus struct {
 	ID      models.IDType
+	Package string
+	Cost    models.CostType
 	Expiry  time.Time
 	Expired bool
 }
@@ -73,15 +78,19 @@ func (s *Service) AcceptOrderFromCourier(
 		return errors.New("order weight can't be negative")
 	}
 
-	if oderWeight >= pack.MaxOrderWeight {
-		return fmt.Errorf("order weight==%v reached max packaging '%s' weight==%v", oderWeight, pack.Name, pack.MaxOrderWeight)
+	fullCost := orderCost
+	if pack != nil {
+		if pack.MaxOrderWeight != packaging.AnyWeight && oderWeight >= pack.MaxOrderWeight {
+			return fmt.Errorf("order weight==%v reached max packaging '%s' weight==%v", oderWeight, pack.Name, pack.MaxOrderWeight)
+		}
+		fullCost += pack.Cost
 	}
 
 	return s.orderStorage.SetOrder(models.Order{
 		ID:         orderID,
 		CustomerID: customerID,
 		Weight:     oderWeight,
-		Cost:       orderCost + pack.Cost,
+		Cost:       fullCost,
 		Expiry:     orderExpiry,
 		Packaging:  pack,
 		Status: models.Status{
@@ -132,9 +141,10 @@ func (s *Service) GiveOrderToCustomer(orderIDs []models.IDType, customerID model
 			if errors.Is(err, storage.ErrOrderNotFound) {
 				// if order has not been delivered to storage yet
 				ordersToGive = append(ordersToGive, OrderIDWithMsg{
-					ID:  orderID,
-					Msg: "Order has not been delivered to PVZ yet or was returned and given to courier",
-					Ok:  false,
+					ID:      orderID,
+					Package: "",
+					Msg:     "Order has not been delivered to PVZ yet or was returned and given to courier",
+					Ok:      false,
 				})
 				continue
 			}
@@ -149,33 +159,46 @@ func (s *Service) GiveOrderToCustomer(orderIDs []models.IDType, customerID model
 			)
 		}
 
+		packagingName := ""
+		if order.Packaging != nil {
+			packagingName = order.Packaging.Name
+		}
+
 		switch order.Status.Val {
 		case models.StatusToCustomer:
 			ordersToGive = append(ordersToGive, OrderIDWithMsg{
-				ID:  orderID,
-				Msg: "Order was given to customer earlier",
-				Ok:  false,
+				ID:      orderID,
+				Cost:    order.Cost,
+				Package: packagingName,
+				Msg:     "Order was given to customer earlier",
+				Ok:      false,
 			})
 			continue
 		case models.StatusReturn:
 			ordersToGive = append(ordersToGive, OrderIDWithMsg{
-				ID:  orderID,
-				Msg: "Order was returned to PVZ by customer",
-				Ok:  false,
+				ID:      orderID,
+				Cost:    order.Cost,
+				Package: packagingName,
+				Msg:     "Order was returned to PVZ by customer",
+				Ok:      false,
 			})
 			continue
 		case models.StatusToStorage:
 			if isLessOrEqualTime(currTime, order.Expiry) {
 				ordersToGive = append(ordersToGive, OrderIDWithMsg{
-					ID:  order.ID,
-					Msg: "Give order to customer",
-					Ok:  true,
+					ID:      order.ID,
+					Cost:    order.Cost,
+					Package: packagingName,
+					Msg:     "Give order to customer",
+					Ok:      true,
 				})
 			} else {
 				ordersToGive = append(ordersToGive, OrderIDWithMsg{
-					ID:  order.ID,
-					Msg: "Order expiry time was reached",
-					Ok:  false,
+					ID:      order.ID,
+					Cost:    order.Cost,
+					Package: packagingName,
+					Msg:     "Order expiry time was reached",
+					Ok:      false,
 				})
 			}
 		default: // if some unknown status
@@ -241,9 +264,17 @@ func (s *Service) GetCustomerOrders(customerID models.IDType, n uint) ([]OrderID
 
 	userOrders = userOrders[len(userOrders)-int(n):]
 	res := make([]OrderIDWithExpiryAndStatus, n)
+
 	for i, userOrder := range userOrders {
+		packagingName := ""
+		if userOrder.Packaging != nil {
+			packagingName = userOrder.Packaging.Name
+		}
+
 		res[i] = OrderIDWithExpiryAndStatus{
 			ID:      userOrder.ID,
+			Cost:    userOrder.Cost,
+			Package: packagingName,
 			Expiry:  userOrder.Expiry,
 			Expired: !isLessOrEqualTime(s.GetCurrentTime(), userOrder.Expiry),
 		}
@@ -300,8 +331,8 @@ func (s *Service) ReturnOrderFromCustomer(customerID, orderID models.IDType) err
 	return nil
 }
 
-func (s *Service) GetReturnsList(offset, limit int) ([]models.Order, error) {
-	orderIDsToReturn := make([]models.Order, 0)
+func (s *Service) GetReturnsList(offset, limit int) ([]ReturnOrderAndCustomer, error) {
+	orderIDsToReturn := make([]ReturnOrderAndCustomer, 0)
 	returnIDs, err := s.orderStorage.GetReturnIDs()
 	if err != nil {
 		return nil, err
@@ -315,7 +346,10 @@ func (s *Service) GetReturnsList(offset, limit int) ([]models.Order, error) {
 		}
 
 		if count >= 0 {
-			orderIDsToReturn = append(orderIDsToReturn, order)
+			orderIDsToReturn = append(orderIDsToReturn, ReturnOrderAndCustomer{
+				OrderID:    order.ID,
+				CustomerID: order.CustomerID,
+			})
 		}
 		count++
 		if count == limit {

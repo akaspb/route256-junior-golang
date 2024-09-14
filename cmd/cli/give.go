@@ -45,18 +45,27 @@ var giveCli = &cobra.Command{
 		}
 
 		maxMsgLen := 0
+		maxPackageNameLen := len("Packaging")
 		for _, order := range orders {
 			maxMsgLen = max(maxMsgLen, len(order.Msg))
+			maxPackageNameLen = max(maxPackageNameLen, len(order.Package))
 		}
 
-		tableTop := fmt.Sprintf("%8s|Give|%-"+strconv.Itoa(maxMsgLen)+"s", "ID", "Message")
+		tableTop := fmt.Sprintf(
+			"%8s|Give|%-"+strconv.Itoa(maxMsgLen)+"s|%"+strconv.Itoa(maxPackageNameLen)+"s|Cost",
+			"ID",
+			"Message",
+			"Packaging",
+		)
 		fmt.Println(tableTop)
 		for _, order := range orders {
 			give := "NO"
 			if order.Ok {
 				give = "YES"
 			}
-			tableRow := fmt.Sprintf("%8v|%4s|%-"+strconv.Itoa(maxMsgLen)+"s", order.ID, give, order.Msg)
+			tableRow := fmt.Sprintf(
+				"%8v|%4s|%-"+strconv.Itoa(maxMsgLen)+"s|%-"+strconv.Itoa(maxPackageNameLen)+"s|%v",
+				order.ID, give, order.Msg, order.Package, order.Cost)
 			fmt.Println(tableRow)
 		}
 	},

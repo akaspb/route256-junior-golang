@@ -43,8 +43,14 @@ var listCli = &cobra.Command{
 			return
 		}
 
-		tableTop := fmt.Sprintf("%8s|    Expiry|Expired", "ID")
+		maxPackageNameLen := len("Packaging")
+		for _, order := range orders {
+			maxPackageNameLen = max(maxPackageNameLen, len(order.Package))
+		}
+
+		tableTop := fmt.Sprintf("%8s|    Expiry|Expired|%"+strconv.Itoa(maxPackageNameLen)+"s|Cost", "ID", "Packaging")
 		fmt.Println(tableTop)
+
 		for _, order := range orders {
 			expired := "NO"
 			if order.Expired {
@@ -52,8 +58,8 @@ var listCli = &cobra.Command{
 			}
 
 			tableRow := fmt.Sprintf(
-				"%8v|%-10s|%7s",
-				order.ID, order.Expiry.Format("02.01.2006"), expired,
+				"%8v|%-10s|%7s|%"+strconv.Itoa(maxPackageNameLen)+"s|%v",
+				order.ID, order.Expiry.Format("02.01.2006"), expired, order.Package, order.Cost,
 			)
 			fmt.Println(tableRow)
 		}
