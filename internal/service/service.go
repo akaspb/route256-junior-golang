@@ -43,7 +43,14 @@ func NewService(orderStorage storage.Storage, startTime time.Time, systemStartTi
 	}
 }
 
-func (s *Service) AcceptOrderFromCourier(orderID, customerID models.IDType, orderExpiry time.Time) error {
+func (s *Service) AcceptOrderFromCourier(
+	orderID models.IDType,
+	orderCost models.CostType,
+	oderWeight models.WeightType,
+	customerID models.IDType,
+	pack *models.Packaging,
+	orderExpiry time.Time,
+) error {
 	_, err := s.orderStorage.GetOrder(orderID)
 
 	if err == nil {
@@ -58,10 +65,25 @@ func (s *Service) AcceptOrderFromCourier(orderID, customerID models.IDType, orde
 		return errors.New("order expiry time can't be before current time")
 	}
 
+	if orderCost < 0 {
+		return errors.New("order cost can't be negative")
+	}
+
+	if oderWeight < 0 {
+		return errors.New("order weight can't be negative")
+	}
+
+	if oderWeight >= pack.MaxOrderWeight {
+		return fmt.Errorf("order weight==%v reached max packaging '%s' weight==%v", oderWeight, pack.Name, pack.MaxOrderWeight)
+	}
+
 	return s.orderStorage.SetOrder(models.Order{
 		ID:         orderID,
 		CustomerID: customerID,
+		Weight:     oderWeight,
+		Cost:       orderCost + pack.Cost,
 		Expiry:     orderExpiry,
+		Packaging:  pack,
 		Status: models.Status{
 			Val:  models.StatusToStorage,
 			Time: s.GetCurrentTime(),
@@ -278,8 +300,8 @@ func (s *Service) ReturnOrderFromCustomer(customerID, orderID models.IDType) err
 	return nil
 }
 
-func (s *Service) GetReturnsList(offset, limit int) ([]ReturnOrderAndCustomer, error) {
-	orderIDsToReturn := make([]ReturnOrderAndCustomer, 0)
+func (s *Service) GetReturnsList(offset, limit int) ([]models.Order, error) {
+	orderIDsToReturn := make([]models.Order, 0)
 	returnIDs, err := s.orderStorage.GetReturnIDs()
 	if err != nil {
 		return nil, err
@@ -293,10 +315,7 @@ func (s *Service) GetReturnsList(offset, limit int) ([]ReturnOrderAndCustomer, e
 		}
 
 		if count >= 0 {
-			orderIDsToReturn = append(orderIDsToReturn, ReturnOrderAndCustomer{
-				OrderID:    order.ID,
-				CustomerID: order.CustomerID,
-			})
+			orderIDsToReturn = append(orderIDsToReturn, order)
 		}
 		count++
 		if count == limit {

@@ -52,7 +52,7 @@ pvz inter -s="08.09.2024"
 ### Список команд в интерактивном режиме
 Принять заказ от курьера
 ```
-> receive -o=<orderID> -c=<customerID> -e="<expiry in DD.MM.YYYY format>"
+> receive -o=<orderID> -m=<order cost> -w=<order weight> -c=<customerID> -e=<expiry in DD.MM.YYYY format> [-p=<packaging name>]
 ```
 Вернуть заказ курьеру
 ```

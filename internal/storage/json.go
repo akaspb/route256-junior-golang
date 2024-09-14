@@ -94,11 +94,8 @@ func (s *JsonStorage) GetReturnIDs() ([]models.IDType, error) {
 	return returnIDs, nil
 }
 
-//func (s *JsonStorage) storageIsLoaded() bool {
-//	return s.OrderStorage != nil && s.Returns != nil
-//}
-
 func (s *JsonStorage) readDataFromFile() error {
+
 	var file *os.File
 	file, err := os.OpenFile(s.Path, os.O_RDWR, 0666)
 	if err != nil {
@@ -110,7 +107,7 @@ func (s *JsonStorage) readDataFromFile() error {
 
 			s.OrderStorage = make(map[models.IDType]models.Order)
 			s.Returns = make(map[models.IDType]struct{})
-			return nil
+			return s.writeDataToFile()
 		}
 		return err
 	}

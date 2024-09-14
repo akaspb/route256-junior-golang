@@ -52,7 +52,7 @@ var returnsCli = &cobra.Command{
 		tableTop := fmt.Sprintf("%8s|%11s", "Order ID", "Customer ID")
 		fmt.Println(tableTop)
 		for _, order := range orders {
-			tableRow := fmt.Sprintf("%8v|%11v", order.OrderID, order.CustomerID)
+			tableRow := fmt.Sprintf("%8v|%11v", order.ID, order.CustomerID)
 			fmt.Println(tableRow)
 		}
 	},
