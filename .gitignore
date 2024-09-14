@@ -1,4 +1,3 @@
 .idea
-main.exe
-pvz.exe
+pvz
 internal/storage/storage.json

@@ -31,7 +31,6 @@ var interCli = &cobra.Command{
 			rootCli.SetArgs(argsFromLine)
 			if err := rootCli.Execute(); err != nil {
 				fmt.Println(err.Error())
-				//os.Exit(1)
 			}
 
 			fmt.Println()
