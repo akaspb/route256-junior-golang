@@ -3,8 +3,9 @@ package storage
 import (
 	"encoding/json"
 	"fmt"
-	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 	"os"
+
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 )
 
 type JsonStorage struct {
@@ -19,9 +20,9 @@ type OrdersStorage struct {
 }
 
 func (s *JsonStorage) SetOrder(order models.Order) error {
-	if order.Status.Val == models.StatusReturn {
+	if order.Status.Value == models.StatusReturn {
 		if prevOrder, ok := s.OrderStorage[order.ID]; ok {
-			if prevOrder.Status.Val != models.StatusReturn {
+			if prevOrder.Status.Value != models.StatusReturn {
 				s.Returns[order.ID] = struct{}{}
 			}
 		} else {

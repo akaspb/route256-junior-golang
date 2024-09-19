@@ -2,11 +2,12 @@ package cli
 
 import (
 	"bufio"
+	"os"
+	"time"
+
 	"github.com/spf13/cobra"
 	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage"
-	"os"
-	"time"
 )
 
 const (

@@ -2,9 +2,10 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/spf13/cobra"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
-	"strconv"
 )
 
 var removeCli = &cobra.Command{
@@ -31,7 +32,7 @@ var removeCli = &cobra.Command{
 		orderID := models.IDType(orderIDint64)
 
 		if err := cliService.srvc.ReturnOrder(orderID); err != nil {
-			fmt.Println("error:", err.Error())
+			fmt.Printf("error: %v\n", err)
 		} else {
 			fmt.Println("success: order can be given to courier for return")
 		}

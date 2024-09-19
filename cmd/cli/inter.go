@@ -2,8 +2,9 @@ package cli
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"strings"
+
+	"github.com/spf13/cobra"
 )
 
 var interCli = &cobra.Command{

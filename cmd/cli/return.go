@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 )
@@ -42,7 +43,7 @@ var returnCli = &cobra.Command{
 		}
 
 		if err := cliService.srvc.ReturnOrderFromCustomer(customerID, orderID); err != nil {
-			fmt.Println("error:", err.Error())
+			fmt.Printf("error: %v\n", err)
 		} else {
 			fmt.Println("success: take order from customer to store it in PVZ")
 		}

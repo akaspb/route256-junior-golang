@@ -27,8 +27,8 @@ const (
 )
 
 type Status struct {
-	Val  StatusVal `json:"val"`
-	Time time.Time `json:"time"`
+	Value StatusVal `json:"value"`
+	Time  time.Time `json:"time"`
 }
 
 type Packaging struct {

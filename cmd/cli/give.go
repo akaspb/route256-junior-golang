@@ -2,9 +2,10 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/spf13/cobra"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
-	"strconv"
 )
 
 var giveCli = &cobra.Command{
@@ -33,9 +34,12 @@ var giveCli = &cobra.Command{
 			ids[i] = models.IDType(id)
 		}
 
-		orders, err := cliService.srvc.GiveOrderToCustomer(ids[1:], ids[0])
+		customerID := ids[0]
+		orderIDs := ids[1:]
+
+		orders, err := cliService.srvc.GiveOrderToCustomer(orderIDs, customerID)
 		if err != nil {
-			fmt.Println("error:", err.Error())
+			fmt.Printf("error: %v\n", err)
 			return
 		}
 

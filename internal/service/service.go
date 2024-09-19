@@ -3,11 +3,12 @@ package service
 import (
 	"errors"
 	"fmt"
+	"sort"
+	"time"
+
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage"
-	"sort"
-	"time"
 )
 
 const Day = 24 * time.Hour
@@ -94,8 +95,8 @@ func (s *Service) AcceptOrderFromCourier(
 		Expiry:     orderExpiry,
 		Packaging:  pack,
 		Status: models.Status{
-			Val:  models.StatusToStorage,
-			Time: s.GetCurrentTime(),
+			Value: models.StatusToStorage,
+			Time:  s.GetCurrentTime(),
 		},
 	})
 }
@@ -110,7 +111,7 @@ func (s *Service) ReturnOrder(orderID models.IDType) error {
 		return err
 	}
 
-	switch order.Status.Val {
+	switch order.Status.Value {
 	case models.StatusToCustomer:
 		return fmt.Errorf("order with orderId==%v was taken by customer", orderID)
 	case models.StatusReturn:
@@ -164,7 +165,7 @@ func (s *Service) GiveOrderToCustomer(orderIDs []models.IDType, customerID model
 			packagingName = order.Packaging.Name
 		}
 
-		switch order.Status.Val {
+		switch order.Status.Value {
 		case models.StatusToCustomer:
 			ordersToGive = append(ordersToGive, OrderIDWithMsg{
 				ID:      orderID,
@@ -214,7 +215,7 @@ func (s *Service) GiveOrderToCustomer(orderIDs []models.IDType, customerID model
 				return nil, err
 			}
 
-			orderPtr.Status.Val = models.StatusToCustomer
+			orderPtr.Status.Value = models.StatusToCustomer
 			orderPtr.Status.Time = currTime
 			err = s.orderStorage.SetOrder(orderPtr)
 			if err != nil {
@@ -243,7 +244,7 @@ func (s *Service) GetCustomerOrders(customerID models.IDType, n uint) ([]OrderID
 		}
 
 		if order.CustomerID == customerID {
-			if order.Status.Val == models.StatusToStorage {
+			if order.Status.Value == models.StatusToStorage {
 				userOrders = append(userOrders, order)
 			}
 		}
@@ -302,14 +303,14 @@ func (s *Service) ReturnOrderFromCustomer(customerID, orderID models.IDType) err
 		)
 	}
 
-	if order.Status.Val == models.StatusReturn {
+	if order.Status.Value == models.StatusReturn {
 		return fmt.Errorf(
 			"order with ID==%v was returned by customer %v",
 			orderID, customerID,
 		)
 	}
 
-	if order.Status.Val != models.StatusToCustomer {
+	if order.Status.Value != models.StatusToCustomer {
 		return fmt.Errorf(
 			"order with ID==%v was not given to customer %v",
 			orderID, customerID,
@@ -320,7 +321,7 @@ func (s *Service) ReturnOrderFromCustomer(customerID, orderID models.IDType) err
 		return fmt.Errorf("order with ID==%v return time elapsed", order.ID)
 	}
 
-	order.Status.Val = models.StatusReturn
+	order.Status.Value = models.StatusReturn
 	order.Status.Time = currTime
 
 	err = s.orderStorage.SetOrder(order)

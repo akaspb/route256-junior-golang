@@ -2,9 +2,10 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/spf13/cobra"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
-	"strconv"
 )
 
 var listCli = &cobra.Command{
@@ -34,7 +35,7 @@ var listCli = &cobra.Command{
 
 		orders, err := cliService.srvc.GetCustomerOrders(customerID, n)
 		if err != nil {
-			fmt.Println("error:", err.Error())
+			fmt.Printf("error: %v\n", err)
 			return
 		}
 

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
@@ -40,7 +41,7 @@ var returnsCli = &cobra.Command{
 
 		returns, err := cliService.srvc.GetReturnsList(offset, limit)
 		if err != nil {
-			fmt.Println("error:", err.Error())
+			fmt.Printf("error: %v\n", err)
 			return
 		}
 

@@ -2,11 +2,12 @@ package cli
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/spf13/cobra"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
-	"strings"
-	"time"
 )
 
 var receiveCli = &cobra.Command{
