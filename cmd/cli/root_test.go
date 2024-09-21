@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"gitlab.ozon.dev/siralexpeter/Homework/test/cli/helpers"
+	"gitlab.ozon.dev/siralexpeter/Homework/test/helpers"
 	"testing"
 )
 

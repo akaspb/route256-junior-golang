@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"gitlab.ozon.dev/siralexpeter/Homework/test/cli/helpers"
+	"gitlab.ozon.dev/siralexpeter/Homework/test/helpers"
 	"testing"
 	"time"
 )
