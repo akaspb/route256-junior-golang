@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/spf13/cobra"
+	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -29,4 +30,13 @@ func DeleteFile(fileName string) error {
 		return fmt.Errorf("error cleaning up %s: %w", fileName, err)
 	}
 	return nil
+}
+
+func CopyFile(fileName, copyFileName string) error {
+	data, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return err
+	}
+	// Write data to dst
+	return ioutil.WriteFile(copyFileName, data, 0755)
 }

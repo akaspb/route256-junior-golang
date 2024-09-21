@@ -51,7 +51,7 @@ var returnCli = &cobra.Command{
 }
 
 func init() {
-	RootCli.AddCommand(returnCli)
+	rootCli.AddCommand(returnCli)
 
 	returnCli.AddCommand(&cobra.Command{
 		Use:   "help",

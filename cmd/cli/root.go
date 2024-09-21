@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var RootCli = &cobra.Command{
+var rootCli = &cobra.Command{
 	Use:   "pvz",
 	Short: "pvz is program for implementing the interaction of the PVZ manager with the courier and the customer",
 	Long:  `pvz is program for implementing the interaction of the PVZ manager with the courier and the customer`,

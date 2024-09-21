@@ -37,46 +37,52 @@ var giveCli = &cobra.Command{
 		customerID := ids[0]
 		orderIDs := ids[1:]
 
-		orders, err := cliService.srvc.GiveOrderToCustomer(orderIDs, customerID)
-		if err != nil {
-			fmt.Printf("error: %v\n", err)
-			return
-		}
-
-		if len(orders) == 0 {
-			fmt.Println("No orders")
-			return
-		}
-
-		maxMsgLen := 0
-		maxPackageNameLen := len("Pack")
-		for _, order := range orders {
-			maxMsgLen = max(maxMsgLen, len(order.Msg))
-			maxPackageNameLen = max(maxPackageNameLen, len(order.Package))
-		}
-
-		tableTop := fmt.Sprintf(
-			"%8s|Give|%-"+strconv.Itoa(maxMsgLen)+"s|%"+strconv.Itoa(maxPackageNameLen)+"s|Cost",
-			"ID",
-			"Message",
-			"Pack",
-		)
-		fmt.Println(tableTop)
-		for _, order := range orders {
-			give := "NO"
-			if order.Ok {
-				give = "YES"
-			}
-			tableRow := fmt.Sprintf(
-				"%8v|%4s|%-"+strconv.Itoa(maxMsgLen)+"s|%-"+strconv.Itoa(maxPackageNameLen)+"s|%v",
-				order.ID, give, order.Msg, order.Package, order.Cost)
-			fmt.Println(tableRow)
+		if err := cliService.give(customerID, orderIDs); err != nil {
+			fmt.Println(err.Error())
 		}
 	},
 }
 
+func (s *CliService) give(customerID models.IDType, orderIDs []models.IDType) error {
+	orders, err := s.srvc.GiveOrderToCustomer(orderIDs, customerID)
+	if err != nil {
+		return fmt.Errorf("error: %w", err)
+	}
+
+	if len(orders) == 0 {
+		fmt.Println("No orders")
+		return nil
+	}
+
+	maxMsgLen := 0
+	maxPackageNameLen := len("Pack")
+	for _, order := range orders {
+		maxMsgLen = max(maxMsgLen, len(order.Msg))
+		maxPackageNameLen = max(maxPackageNameLen, len(order.Package))
+	}
+
+	tableTop := fmt.Sprintf(
+		"%8s|Give|%-"+strconv.Itoa(maxMsgLen)+"s|%"+strconv.Itoa(maxPackageNameLen)+"s|Cost",
+		"ID",
+		"Message",
+		"Pack",
+	)
+	fmt.Println(tableTop)
+	for _, order := range orders {
+		give := "NO"
+		if order.Ok {
+			give = "YES"
+		}
+		tableRow := fmt.Sprintf(
+			"%8v|%4s|%-"+strconv.Itoa(maxMsgLen)+"s|%-"+strconv.Itoa(maxPackageNameLen)+"s|%v",
+			order.ID, give, order.Msg, order.Package, order.Cost)
+		fmt.Println(tableRow)
+	}
+	return nil
+}
+
 func init() {
-	RootCli.AddCommand(giveCli)
+	rootCli.AddCommand(giveCli)
 
 	giveCli.AddCommand(&cobra.Command{
 		Use:   "help",

@@ -87,7 +87,7 @@ func (cs *CliService) getServiceInCommand(cmd *cobra.Command) error {
 func Execute() error {
 	var err error
 
-	err = RootCli.Execute()
+	err = rootCli.Execute()
 	if err != nil {
 		return err
 	}

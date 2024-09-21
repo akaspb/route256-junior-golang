@@ -1,14 +1,11 @@
-package cli_test
+package cli
 
 import (
-	"gitlab.ozon.dev/siralexpeter/Homework/cmd/cli"
 	"gitlab.ozon.dev/siralexpeter/Homework/test/cli/helpers"
 	"testing"
 )
 
 func TestRootCmdCommand(t *testing.T) {
-	root := cli.RootCli
-
 	tests := []struct {
 		args  []string
 		isErr bool
@@ -34,7 +31,7 @@ func TestRootCmdCommand(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		res, err := helpers.ExecuteCliCommand(t, root, tc.args...)
+		res, err := helpers.ExecuteCliCommand(t, rootCli, tc.args...)
 
 		if tc.isErr {
 			if err == nil {

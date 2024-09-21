@@ -29,7 +29,7 @@ func (s *CliService) now() error {
 }
 
 func init() {
-	RootCli.AddCommand(nowCli)
+	rootCli.AddCommand(nowCli)
 
 	nowCli.AddCommand(&cobra.Command{
 		Use:   "help",

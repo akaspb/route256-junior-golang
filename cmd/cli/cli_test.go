@@ -13,12 +13,6 @@ const (
 	longTime = year
 )
 
-func TestRootCmdCommand(t *testing.T) {
-	if err := Execute(); err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-}
-
 func TestGetCliService(t *testing.T) {
 	tests := []struct {
 		testName              string
