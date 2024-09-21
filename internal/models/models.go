@@ -14,7 +14,7 @@ type Order struct {
 	Expiry     time.Time  `json:"expiry"`
 	Weight     WeightType `json:"weight"`
 	Cost       CostType   `json:"cost"`
-	Packaging  *Packaging `json:"packaging"`
+	Pack       *Pack      `json:"pack"`
 	Status     `json:"status"`
 }
 
@@ -31,7 +31,7 @@ type Status struct {
 	Time  time.Time `json:"time"`
 }
 
-type Packaging struct {
+type Pack struct {
 	Name           string     `json:"name"`
 	Cost           CostType   `json:"cost"`
 	MaxOrderWeight WeightType `json:"maxOrderWeight"`

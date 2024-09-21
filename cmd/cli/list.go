@@ -44,12 +44,12 @@ var listCli = &cobra.Command{
 			return
 		}
 
-		maxPackageNameLen := len("Packaging")
+		maxPackageNameLen := len("Pack")
 		for _, order := range orders {
 			maxPackageNameLen = max(maxPackageNameLen, len(order.Package))
 		}
 
-		tableTop := fmt.Sprintf("%8s|    Expiry|Expired|%"+strconv.Itoa(maxPackageNameLen)+"s|Cost", "ID", "Packaging")
+		tableTop := fmt.Sprintf("%8s|    Expiry|Expired|%"+strconv.Itoa(maxPackageNameLen)+"s|Cost", "ID", "Pack")
 		fmt.Println(tableTop)
 
 		for _, order := range orders {

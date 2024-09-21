@@ -2,12 +2,12 @@ package cli
 
 import (
 	"fmt"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
-	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
 )
 
 var receiveCli = &cobra.Command{
@@ -90,16 +90,25 @@ var receiveCli = &cobra.Command{
 			return
 		}
 
-		var pack *models.Packaging
+		var packPtr *models.Pack
 		if packName != "" {
-			pack, err = packaging.GetPackagingByName(packName)
+			pack, err := cliService.srvc.Packaging.GetPackagingByName(packName)
 			if err != nil {
 				fmt.Println(err.Error())
 				return
 			}
+
+			packPtr = &pack
 		}
 
-		if err := cliService.srvc.AcceptOrderFromCourier(orderID, cost, weight, customerID, pack, orderExpiry); err != nil {
+		if err := cliService.srvc.AcceptOrderFromCourier(service.AcceptOrderDTO{
+			OrderID:     orderID,
+			OrderCost:   cost,
+			OderWeight:  weight,
+			CustomerID:  customerID,
+			Pack:        packPtr,
+			OrderExpiry: orderExpiry,
+		}); err != nil {
 			fmt.Println("error:", err.Error())
 		} else {
 			fmt.Println("success: take order for storage in PVZ")
@@ -121,8 +130,8 @@ func init() {
 		},
 	})
 
-	packagingNames := make([]string, 0, len(packaging.Packs))
-	for packagingName, _ := range packaging.Packs {
+	packagingNames := make([]string, 0, len(packs))
+	for packagingName, _ := range packs {
 		packagingNames = append(packagingNames, fmt.Sprintf("\n\t - %s", packagingName))
 	}
 

@@ -36,27 +36,45 @@ type ReturnOrderAndCustomer struct {
 }
 
 type Service struct {
+	Packaging       *packaging.Packaging
 	startTime       time.Time
 	systemStartTime time.Time
 	orderStorage    storage.Storage
 }
 
-func NewService(orderStorage storage.Storage, startTime time.Time, systemStartTime time.Time) *Service {
+func NewService(
+	orderStorage storage.Storage,
+	packagingSrvc *packaging.Packaging,
+	startTime time.Time,
+	systemStartTime time.Time,
+) *Service {
 	return &Service{
+		Packaging:       packagingSrvc,
 		startTime:       startTime,
 		systemStartTime: systemStartTime,
 		orderStorage:    orderStorage,
 	}
 }
 
+type AcceptOrderDTO struct {
+	OrderID     models.IDType
+	OrderCost   models.CostType
+	OderWeight  models.WeightType
+	CustomerID  models.IDType
+	Pack        *models.Pack
+	OrderExpiry time.Time
+}
+
 func (s *Service) AcceptOrderFromCourier(
-	orderID models.IDType,
-	orderCost models.CostType,
-	oderWeight models.WeightType,
-	customerID models.IDType,
-	pack *models.Packaging,
-	orderExpiry time.Time,
+	acceptOrderDTO AcceptOrderDTO,
 ) error {
+	orderID := acceptOrderDTO.OrderID
+	orderCost := acceptOrderDTO.OrderCost
+	oderWeight := acceptOrderDTO.OderWeight
+	customerID := acceptOrderDTO.CustomerID
+	pack := acceptOrderDTO.Pack
+	orderExpiry := acceptOrderDTO.OrderExpiry
+
 	_, err := s.orderStorage.GetOrder(orderID)
 
 	if err == nil {
@@ -79,21 +97,21 @@ func (s *Service) AcceptOrderFromCourier(
 		return errors.New("order weight can't be negative")
 	}
 
-	fullCost := orderCost
 	if pack != nil {
-		if pack.MaxOrderWeight != packaging.AnyWeight && oderWeight >= pack.MaxOrderWeight {
-			return fmt.Errorf("order weight==%v reached max packaging '%s' weight==%v", oderWeight, pack.Name, pack.MaxOrderWeight)
+		packCost, err := s.Packaging.PackOrder(*pack, oderWeight)
+		if err != nil {
+			return err
 		}
-		fullCost += pack.Cost
+		orderCost += packCost
 	}
 
 	return s.orderStorage.SetOrder(models.Order{
 		ID:         orderID,
 		CustomerID: customerID,
 		Weight:     oderWeight,
-		Cost:       fullCost,
+		Cost:       orderCost,
 		Expiry:     orderExpiry,
-		Packaging:  pack,
+		Pack:       pack,
 		Status: models.Status{
 			Value: models.StatusToStorage,
 			Time:  s.GetCurrentTime(),
@@ -161,8 +179,8 @@ func (s *Service) GiveOrderToCustomer(orderIDs []models.IDType, customerID model
 		}
 
 		packagingName := ""
-		if order.Packaging != nil {
-			packagingName = order.Packaging.Name
+		if order.Pack != nil {
+			packagingName = order.Pack.Name
 		}
 
 		switch order.Status.Value {
@@ -268,8 +286,8 @@ func (s *Service) GetCustomerOrders(customerID models.IDType, n uint) ([]OrderID
 
 	for i, userOrder := range userOrders {
 		packagingName := ""
-		if userOrder.Packaging != nil {
-			packagingName = userOrder.Packaging.Name
+		if userOrder.Pack != nil {
+			packagingName = userOrder.Pack.Name
 		}
 
 		res[i] = OrderIDWithExpiryAndStatus{

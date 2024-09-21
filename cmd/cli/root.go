@@ -2,8 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/spf13/cobra"
 )
 
@@ -16,10 +14,13 @@ var rootCli = &cobra.Command{
 	},
 }
 
-func Execute() {
+func Execute() error {
+	var err error
 
-	if err := rootCli.Execute(); err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
+	err = rootCli.Execute()
+	if err != nil {
+		return err
 	}
+
+	return nil
 }

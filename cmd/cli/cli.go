@@ -2,6 +2,8 @@ package cli
 
 import (
 	"bufio"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
 	"os"
 	"time"
 
@@ -18,6 +20,19 @@ var in = bufio.NewReader(os.Stdin)
 var todayTime = time.Now().Truncate(24 * time.Hour)
 var todayStr = todayTime.Format("02.01.2006")
 var cliService = NewCliService()
+var packs []models.Pack
+
+func init() {
+	packet := packaging.NewPack("packet", 5, 10)
+	box := packaging.NewPack("box", 20, 30)
+	wrap := packaging.NewPack("wrap", 1, packaging.AnyWeight)
+
+	packs = []models.Pack{
+		packet,
+		box,
+		wrap,
+	}
+}
 
 type CliService struct {
 	srvc *srvc.Service
@@ -33,7 +48,12 @@ func (cs *CliService) getService(currTime time.Time) error {
 		return err
 	}
 
-	cs.srvc = srvc.NewService(orderStorage, currTime, time.Now().Truncate(24*time.Hour))
+	packService, err := packaging.NewPackaging(packs...)
+	if err != nil {
+		return err
+	}
+
+	cs.srvc = srvc.NewService(orderStorage, packService, currTime, time.Now().Truncate(24*time.Hour))
 	return nil
 }
 

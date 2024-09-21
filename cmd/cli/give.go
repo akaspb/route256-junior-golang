@@ -49,7 +49,7 @@ var giveCli = &cobra.Command{
 		}
 
 		maxMsgLen := 0
-		maxPackageNameLen := len("Packaging")
+		maxPackageNameLen := len("Pack")
 		for _, order := range orders {
 			maxMsgLen = max(maxMsgLen, len(order.Msg))
 			maxPackageNameLen = max(maxPackageNameLen, len(order.Package))
@@ -59,7 +59,7 @@ var giveCli = &cobra.Command{
 			"%8s|Give|%-"+strconv.Itoa(maxMsgLen)+"s|%"+strconv.Itoa(maxPackageNameLen)+"s|Cost",
 			"ID",
 			"Message",
-			"Packaging",
+			"Pack",
 		)
 		fmt.Println(tableTop)
 		for _, order := range orders {
