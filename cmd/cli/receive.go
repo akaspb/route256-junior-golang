@@ -131,8 +131,8 @@ func init() {
 	})
 
 	packagingNames := make([]string, 0, len(packs))
-	for packagingName, _ := range packs {
-		packagingNames = append(packagingNames, fmt.Sprintf("\n\t - %s", packagingName))
+	for _, packagingName := range packs {
+		packagingNames = append(packagingNames, fmt.Sprintf("\n\t - %s", packagingName.Name))
 	}
 
 	packagingUsage := strings.Join(packagingNames, "")
