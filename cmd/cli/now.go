@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -12,17 +13,23 @@ var nowCli = &cobra.Command{
 	Long:    `Get time in program`,
 	Example: "now",
 	Run: func(cmd *cobra.Command, args []string) {
-		if cliService.srvc == nil {
-			fmt.Println("this command should be use only in interactive mode")
-			return
+		if err := cliService.now(); err != nil {
+			fmt.Println(err)
 		}
-
-		fmt.Println(cliService.srvc.GetCurrentTime().Format("02.01.2006"))
 	},
 }
 
+func (s *CliService) now() error {
+	if s.srvc == nil {
+		return errors.New("this command should be use only in interactive mode")
+	}
+
+	fmt.Println(s.srvc.GetCurrentTime().Format("02.01.2006"))
+	return nil
+}
+
 func init() {
-	rootCli.AddCommand(nowCli)
+	RootCli.AddCommand(nowCli)
 
 	nowCli.AddCommand(&cobra.Command{
 		Use:   "help",

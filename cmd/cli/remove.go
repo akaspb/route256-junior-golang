@@ -40,7 +40,7 @@ var removeCli = &cobra.Command{
 }
 
 func init() {
-	rootCli.AddCommand(removeCli)
+	RootCli.AddCommand(removeCli)
 
 	removeCli.AddCommand(&cobra.Command{
 		Use:   "help",

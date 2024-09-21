@@ -29,8 +29,8 @@ var interCli = &cobra.Command{
 			res = strings.Replace(res, "-h", "help", -1)
 
 			argsFromLine := strings.Split(res, " ")
-			rootCli.SetArgs(argsFromLine)
-			if err := rootCli.Execute(); err != nil {
+			RootCli.SetArgs(argsFromLine)
+			if err := RootCli.Execute(); err != nil {
 				fmt.Println(err.Error())
 			}
 
@@ -40,7 +40,7 @@ var interCli = &cobra.Command{
 }
 
 func init() {
-	rootCli.AddCommand(interCli)
+	RootCli.AddCommand(interCli)
 
 	interCli.Flags().StringP("start", "s", todayStr, "PVZ start time in format DD.MM.YYYY")
 }

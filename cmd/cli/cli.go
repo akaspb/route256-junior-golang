@@ -13,16 +13,20 @@ import (
 )
 
 const (
-	jsonPath = "internal/storage/storage.json"
+	relativeJsonPath = /*"D:/Go/Ozon/Homework/" +*/ "internal/storage/storage.json"
 )
 
-var in = bufio.NewReader(os.Stdin)
-var todayTime = time.Now().Truncate(24 * time.Hour)
-var todayStr = todayTime.Format("02.01.2006")
-var cliService = NewCliService()
-var packs []models.Pack
+var (
+	in         = bufio.NewReader(os.Stdin)
+	todayTime  = time.Now().Truncate(24 * time.Hour)
+	todayStr   = todayTime.Format("02.01.2006")
+	cliService = NewCliService(relativeJsonPath)
+	packs      []models.Pack
+)
 
 func init() {
+	//absoluteJsonPath = "D:/Go/Ozon/Homework/" + relativeJsonPath
+
 	packet := packaging.NewPack("packet", 5, 10)
 	box := packaging.NewPack("box", 20, 30)
 	wrap := packaging.NewPack("wrap", 1, packaging.AnyWeight)
@@ -35,15 +39,16 @@ func init() {
 }
 
 type CliService struct {
-	srvc *srvc.Service
+	jsonPath string
+	srvc     *srvc.Service
 }
 
-func NewCliService() *CliService {
-	return &CliService{}
+func NewCliService(jsonPath string) *CliService {
+	return &CliService{jsonPath: jsonPath}
 }
 
 func (cs *CliService) getService(currTime time.Time) error {
-	orderStorage, err := storage.InitJsonStorage(jsonPath)
+	orderStorage, err := storage.InitJsonStorage(cs.jsonPath)
 	if err != nil {
 		return err
 	}
@@ -74,6 +79,17 @@ func (cs *CliService) getServiceInCommand(cmd *cobra.Command) error {
 
 	if cs.srvc == nil {
 		return cs.getService(todayTime)
+	}
+
+	return nil
+}
+
+func Execute() error {
+	var err error
+
+	err = RootCli.Execute()
+	if err != nil {
+		return err
 	}
 
 	return nil

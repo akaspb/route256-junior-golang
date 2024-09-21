@@ -117,7 +117,7 @@ var receiveCli = &cobra.Command{
 }
 
 func init() {
-	rootCli.AddCommand(receiveCli)
+	RootCli.AddCommand(receiveCli)
 
 	receiveCli.AddCommand(&cobra.Command{
 		Use:   "help",
