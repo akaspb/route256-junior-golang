@@ -90,30 +90,50 @@ var receiveCli = &cobra.Command{
 			return
 		}
 
-		var packPtr *models.Pack
-		if packName != "" {
-			pack, err := cliService.srvc.Packaging.GetPackagingByName(packName)
-			if err != nil {
-				fmt.Println(err.Error())
-				return
-			}
-
-			packPtr = &pack
-		}
-
-		if err := cliService.srvc.AcceptOrderFromCourier(service.AcceptOrderDTO{
-			OrderID:     orderID,
-			OrderCost:   cost,
-			OderWeight:  weight,
-			CustomerID:  customerID,
-			Pack:        packPtr,
-			OrderExpiry: orderExpiry,
-		}); err != nil {
-			fmt.Println("error:", err.Error())
-		} else {
-			fmt.Println("success: take order for storage in PVZ")
+		if err := cliService.receive(
+			orderID,
+			cost,
+			weight,
+			orderExpiry,
+			packName,
+			customerID,
+		); err != nil {
+			fmt.Println(err.Error())
 		}
 	},
+}
+
+func (s *CliService) receive(
+	orderID models.IDType,
+	orderCost models.CostType,
+	orderWeight models.WeightType,
+	orderExpiry time.Time,
+	packName string,
+	customerID models.IDType,
+) error {
+	var packPtr *models.Pack
+	if packName != "" {
+		pack, err := s.srvc.Packaging.GetPackagingByName(packName)
+		if err != nil {
+			return err
+		}
+
+		packPtr = &pack
+	}
+
+	if err := s.srvc.AcceptOrderFromCourier(service.AcceptOrderDTO{
+		OrderID:     orderID,
+		OrderCost:   orderCost,
+		OderWeight:  orderWeight,
+		CustomerID:  customerID,
+		Pack:        packPtr,
+		OrderExpiry: orderExpiry,
+	}); err != nil {
+		return fmt.Errorf("error: %w", err)
+	}
+
+	fmt.Println("success: take order for storage in PVZ")
+	return nil
 }
 
 func init() {
