@@ -1,0 +1,25 @@
+# 1. Запускаете ранее установленный Docker
+# 2. Скачиваете данный файл к себе на компьютер
+# 3. Переходите в директорию с файлом docker-compose.yml
+#  - Поднять базу данных можно при помощи команды: `docker-compose -f docker/docker-compose.yml up -d`
+#  - Остановить базу данных можно при помощи команды: `docker-compose -f docker/docker-compose.yml stop`
+#  - Проверить статус контейнера можно при помощи команды: `docker-compose -f docker/docker-compose.yml ps`
+
+version: '3.1'
+
+volumes:
+  postgresql_data:
+
+services:
+  route256_db:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    restart: always
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    container_name: route256_db
