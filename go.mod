@@ -3,6 +3,7 @@ module gitlab.ozon.dev/siralexpeter/Homework
 go 1.22.2
 
 require (
+	github.com/georgysavva/scany v1.2.2
 	github.com/jackc/pgconn v1.14.3
 	github.com/jackc/pgx/v4 v4.18.3
 	github.com/spf13/cobra v1.8.1
@@ -20,7 +21,6 @@ require (
 	github.com/jackc/pgtype v1.14.0 // indirect
 	github.com/jackc/puddle v1.3.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/crypto v0.20.0 // indirect

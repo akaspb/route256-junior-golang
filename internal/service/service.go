@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sort"
@@ -39,11 +40,11 @@ type Service struct {
 	Packaging       *packaging.Packaging
 	startTime       time.Time
 	systemStartTime time.Time
-	orderStorage    storage.Storage
+	orderStorage    storage.Facade
 }
 
 func NewService(
-	orderStorage storage.Storage,
+	orderStorage storage.Facade,
 	packagingSrvc *packaging.Packaging,
 	startTime time.Time,
 	systemStartTime time.Time,
@@ -66,6 +67,7 @@ type AcceptOrderDTO struct {
 }
 
 func (s *Service) AcceptOrderFromCourier(
+	ctx context.Context,
 	acceptOrderDTO AcceptOrderDTO,
 ) error {
 	orderID := acceptOrderDTO.OrderID
@@ -75,7 +77,7 @@ func (s *Service) AcceptOrderFromCourier(
 	pack := acceptOrderDTO.Pack
 	orderExpiry := acceptOrderDTO.OrderExpiry
 
-	_, err := s.orderStorage.GetOrder(orderID)
+	_, err := s.orderStorage.GetOrder(ctx, orderID)
 
 	if err == nil {
 		return fmt.Errorf("order with ID==%v was accepted earlier", orderID)
@@ -105,22 +107,19 @@ func (s *Service) AcceptOrderFromCourier(
 		orderCost += packCost
 	}
 
-	return s.orderStorage.CreateOrder(models.Order{
+	return s.orderStorage.CreateOrder(ctx, models.Order{
 		ID:         orderID,
 		CustomerID: customerID,
 		Weight:     oderWeight,
 		Cost:       orderCost,
 		Expiry:     orderExpiry,
 		Pack:       pack,
-		Status: models.Status{
-			Value: models.StatusToStorage,
-			Time:  s.GetCurrentTime(),
-		},
+		Status:     models.Status{Time: s.GetCurrentTime()},
 	})
 }
 
-func (s *Service) ReturnOrder(orderID models.IDType) error {
-	order, err := s.orderStorage.GetOrder(orderID)
+func (s *Service) ReturnOrder(ctx context.Context, orderID models.IDType) error {
+	order, err := s.orderStorage.GetOrder(ctx, orderID)
 
 	if err != nil {
 		if errors.Is(err, storage.ErrOrderNotFound) {
@@ -142,7 +141,7 @@ func (s *Service) ReturnOrder(orderID models.IDType) error {
 		return errors.New("unhandled error")
 	}
 
-	err = s.orderStorage.DeleteOrder(orderID)
+	err = s.orderStorage.DeleteOrder(ctx, orderID)
 	if err != nil {
 		return err
 	}
@@ -150,12 +149,12 @@ func (s *Service) ReturnOrder(orderID models.IDType) error {
 	return nil
 }
 
-func (s *Service) GiveOrderToCustomer(orderIDs []models.IDType, customerID models.IDType) ([]OrderIDWithMsg, error) {
+func (s *Service) GiveOrderToCustomer(ctx context.Context, orderIDs []models.IDType, customerID models.IDType) ([]OrderIDWithMsg, error) {
 	ordersWantedToBeGiven := make([]OrderIDWithMsg, 0)
 	currTime := s.GetCurrentTime()
 
 	for _, orderID := range orderIDs {
-		order, err := s.orderStorage.GetOrder(orderID)
+		order, err := s.orderStorage.GetOrder(ctx, orderID)
 		if err != nil {
 			if errors.Is(err, storage.ErrOrderNotFound) {
 				// if order has not been delivered to storage yet
@@ -227,7 +226,7 @@ func (s *Service) GiveOrderToCustomer(orderIDs []models.IDType, customerID model
 	// add this loop with purpose if error occurred in previous loop no change in DB were made
 	for _, order := range ordersWantedToBeGiven {
 		if order.Ok {
-			if err := s.orderStorage.ChangeOrderStatus(order.ID, models.Status{
+			if err := s.orderStorage.ChangeOrderStatus(ctx, order.ID, models.Status{
 				Value: models.StatusToCustomer,
 				Time:  currTime,
 			}); err != nil {
@@ -239,8 +238,8 @@ func (s *Service) GiveOrderToCustomer(orderIDs []models.IDType, customerID model
 	return ordersWantedToBeGiven, nil
 }
 
-func (s *Service) GetCustomerOrders(customerID models.IDType, n uint) ([]OrderIDWithExpiryAndStatus, error) {
-	userOrders, err := s.orderStorage.GetCustomerOrdersWithStatus(customerID, models.StatusToStorage)
+func (s *Service) GetCustomerOrders(ctx context.Context, customerID models.IDType, n uint) ([]OrderIDWithExpiryAndStatus, error) {
+	userOrders, err := s.orderStorage.GetCustomerOrdersWithStatus(ctx, customerID, models.StatusToStorage)
 	if err != nil {
 		return nil, err
 	}
@@ -279,10 +278,10 @@ func (s *Service) GetCustomerOrders(customerID models.IDType, n uint) ([]OrderID
 	return res, nil
 }
 
-func (s *Service) ReturnOrderFromCustomer(customerID, orderID models.IDType) error {
+func (s *Service) ReturnOrderFromCustomer(ctx context.Context, customerID, orderID models.IDType) error {
 	currTime := s.GetCurrentTime()
 
-	order, err := s.orderStorage.GetOrder(orderID)
+	order, err := s.orderStorage.GetOrder(ctx, orderID)
 
 	if err != nil {
 		if errors.Is(err, storage.ErrOrderNotFound) {
@@ -316,7 +315,7 @@ func (s *Service) ReturnOrderFromCustomer(customerID, orderID models.IDType) err
 		return fmt.Errorf("order with ID==%v return time elapsed", order.ID)
 	}
 
-	err = s.orderStorage.ChangeOrderStatus(order.ID, models.Status{
+	err = s.orderStorage.ChangeOrderStatus(ctx, order.ID, models.Status{
 		Value: models.StatusReturn,
 		Time:  currTime,
 	})
@@ -327,16 +326,16 @@ func (s *Service) ReturnOrderFromCustomer(customerID, orderID models.IDType) err
 	return nil
 }
 
-func (s *Service) GetReturnsList(offset, limit int) ([]ReturnOrderAndCustomer, error) {
+func (s *Service) GetReturnsList(ctx context.Context, offset, limit int) ([]ReturnOrderAndCustomer, error) {
 	orderIDsToReturn := make([]ReturnOrderAndCustomer, 0)
-	returnIDs, err := s.orderStorage.GetReturnIDs()
+	returnIDs, err := s.orderStorage.GetOrderIDsWhereStatus(ctx, models.StatusReturn)
 	if err != nil {
 		return nil, err
 	}
 
 	count := -offset
 	for _, orderID := range returnIDs {
-		order, err := s.orderStorage.GetOrder(orderID)
+		order, err := s.orderStorage.GetOrder(ctx, orderID)
 		if err != nil {
 			return nil, err
 		}

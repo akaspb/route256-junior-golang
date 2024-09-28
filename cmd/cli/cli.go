@@ -2,18 +2,23 @@ package cli
 
 import (
 	"bufio"
+	"context"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage/postgres"
+	"log"
 	"os"
 	"time"
 
 	"github.com/spf13/cobra"
 	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
-	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage"
 )
 
 const (
 	relativeJsonPath = /*"D:/Go/Ozon/Homework/" +*/ "internal/storage/storage.json"
+	psqlDSN          = "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
 )
 
 var (
@@ -47,8 +52,23 @@ func NewCliService(jsonPath string) *CliService {
 	return &CliService{jsonPath: jsonPath}
 }
 
+func newStorageFacade(pool *pgxpool.Pool) storage.Facade {
+	txManager := postgres.NewTxManager(pool)
+
+	pgRepository := postgres.NewPgStorage(txManager)
+
+	return storage.NewStorageFacade(txManager, pgRepository)
+}
+
 func (cs *CliService) getService(currTime time.Time) error {
-	orderStorage, err := storage.InitJsonStorage(cs.jsonPath)
+	ctx := context.Background()
+	pool, err := pgxpool.Connect(ctx, psqlDSN)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer pool.Close()
+
+	orderStorage := newStorageFacade(pool)
 	if err != nil {
 		return err
 	}

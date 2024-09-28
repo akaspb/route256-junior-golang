@@ -1,35 +1,221 @@
 package storage
 
 import (
+	"context"
 	"errors"
-
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage/postgres"
 )
 
-var ErrOrderNotFound = errors.New("order is not found")
+var (
+	ErrOrderNotFound     = errors.New("order is not found")
+	ErrOrderWithIdExists = errors.New("order with such id exist")
+	ErrStatusNotFound    = errors.New("status is not found")
+)
 
-//	type Storage interface {
-//		SetOrder(order models.Order) error
-//		GetOrder(orderId models.IDType) (models.Order, error)
-//		RemoveOrder(orderId models.IDType) error
-//		GetOrderIDs() ([]models.IDType, error)
-//		GetReturnIDs() ([]models.IDType, error)
-//	}
-//
-//go:generate mkdir -p mock
-//go:generate minimock -o ./mock/ -s .go -g
-type Storage interface {
-	CreateOrder(order models.Order) error
+type Facade interface {
+	CreateOrder(ctx context.Context, order models.Order) error
+	GetOrder(ctx context.Context, orderID models.IDType) (models.Order, error)
+	DeleteOrder(ctx context.Context, orderID models.IDType) error
+	ChangeOrderStatus(ctx context.Context, orderID models.IDType, val models.Status) error
+	GetCustomerOrdersWithStatus(ctx context.Context, customerID models.IDType, statusVal models.StatusVal) ([]models.Order, error)
+	GetOrderStatus(ctx context.Context, orderID models.IDType) (models.Status, error)
+	GetOrderIDsWhereStatus(ctx context.Context, statusVal models.StatusVal) ([]models.IDType, error)
+}
 
-	GetOrder(orderId models.IDType) (models.Order, error)
+type storageFacade struct {
+	txManager    postgres.TransactionManager
+	pgRepository *postgres.PgStorage
+}
 
-	DeleteOrder(orderId models.IDType) error
+func NewStorageFacade(
+	txManager postgres.TransactionManager,
+	pgRepository *postgres.PgStorage,
+) *storageFacade {
+	return &storageFacade{
+		txManager:    txManager,
+		pgRepository: pgRepository,
+	}
+}
 
-	ChangeOrderStatus(orderId models.IDType, val models.Status) error
+func (s *storageFacade) CreateOrder(ctx context.Context, order models.Order) error {
+	return s.txManager.RunSerializable(ctx, func(ctxTx context.Context) error {
+		var statusId models.IDType
+		var err error
 
-	GetCustomerOrdersWithStatus(customerId models.IDType, status models.StatusVal) ([]models.Order, error)
+		statusId, err = s.pgRepository.CreateStatus(ctx, postgres.Status{
+			Value: models.StatusToStorage,
+			Time:  order.Status.Time,
+		})
+		if err != nil {
+			return err
+		}
 
-	GetOrderStatus(orderId models.IDType) (models.Status, error)
+		_, err = s.pgRepository.GetOrder(ctx, order.ID)
+		if err == nil {
+			return ErrOrderWithIdExists
+		}
+		if err != nil && !errors.Is(err, postgres.ErrorOrderNotFound) {
+			return err
+		}
 
-	GetReturnIDs() ([]models.IDType, error)
+		err = s.pgRepository.CreateOrder(ctx, postgres.Order{
+			ID:         order.ID,
+			CustomerID: order.CustomerID,
+			Expiry:     order.Expiry,
+			Weight:     order.Weight,
+			Cost:       order.Cost,
+			StatusID:   statusId,
+		})
+		if err != nil {
+			return err
+		}
+
+		if order.Pack != nil {
+			err = s.pgRepository.CreatePack(ctx, postgres.Pack{
+				OrderID:        order.ID,
+				Name:           order.Pack.Name,
+				Cost:           order.Pack.Cost,
+				MaxOrderWeight: order.Pack.MaxOrderWeight,
+			})
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
+func (s *storageFacade) GetOrder(ctx context.Context, orderID models.IDType) (models.Order, error) {
+	storageOrder, err := s.pgRepository.GetOrder(ctx, orderID)
+	if err != nil {
+		return models.Order{}, err
+	}
+
+	storageStatus, err := s.pgRepository.GetStatus(ctx, storageOrder.StatusID)
+	if err != nil {
+		return models.Order{}, err
+	}
+
+	var packPtr *models.Pack
+	storagePack, err := s.pgRepository.GetPack(ctx, orderID)
+	if err != nil {
+		if !errors.Is(err, postgres.ErrorPackNotFound) {
+			return models.Order{}, err
+		}
+		packPtr = &models.Pack{
+			Name:           storagePack.Name,
+			Cost:           storagePack.Cost,
+			MaxOrderWeight: storagePack.MaxOrderWeight,
+		}
+	}
+
+	return models.Order{
+		ID:         storageOrder.ID,
+		CustomerID: storageOrder.CustomerID,
+		Expiry:     storageOrder.Expiry,
+		Weight:     storageOrder.Weight,
+		Cost:       storageOrder.Cost,
+		Pack:       packPtr,
+		Status: models.Status{
+			Value: storageStatus.Value,
+			Time:  storageStatus.Time,
+		},
+	}, nil
+}
+
+func (s *storageFacade) DeleteOrder(ctx context.Context, orderId models.IDType) error {
+	return s.txManager.RunSerializable(ctx, func(ctxTx context.Context) error {
+		if err := s.pgRepository.DeleteOrder(ctx, orderId); err != nil {
+			return err
+		}
+
+		if err := s.pgRepository.DeletePack(ctx, orderId); !errors.Is(err, postgres.ErrorPackNotFound) {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (s *storageFacade) ChangeOrderStatus(ctx context.Context, orderId models.IDType, status models.Status) error {
+	return s.txManager.RunSerializable(ctx, func(ctxTx context.Context) error {
+		storageStatus, err := s.pgRepository.GetStatus(ctx, orderId)
+		if err != nil {
+			return nil
+		}
+
+		return s.pgRepository.SetStatus(ctx, postgres.Status{
+			ID:    storageStatus.ID,
+			Value: status.Value,
+			Time:  status.Time,
+		})
+	})
+}
+
+func (s *storageFacade) GetCustomerOrdersWithStatus(ctx context.Context, customerId models.IDType, statusVal models.StatusVal) ([]models.Order, error) {
+	var orders []models.Order
+
+	storageOrders, err := s.pgRepository.GetCustomerOrdersWithStatus(ctx, customerId, statusVal)
+	if err != nil {
+		return nil, err
+	}
+
+	orders = make([]models.Order, len(storageOrders))
+	for i, storageOrder := range storageOrders {
+		var storagePack postgres.Pack
+		var packPtr *models.Pack
+		storagePack, err = s.pgRepository.GetPack(ctx, storageOrder.ID)
+		if err != nil {
+			if !errors.Is(err, postgres.ErrorPackNotFound) {
+				return nil, err
+			}
+			packPtr = &models.Pack{
+				Name:           storagePack.Name,
+				Cost:           storagePack.Cost,
+				MaxOrderWeight: storagePack.MaxOrderWeight,
+			}
+		}
+		orders[i] = models.Order{
+			ID:         storageOrder.ID,
+			CustomerID: storageOrder.CustomerID,
+			Expiry:     storageOrder.Expiry,
+			Weight:     storageOrder.Weight,
+			Cost:       storageOrder.Cost,
+			Pack:       packPtr,
+			Status:     models.Status{},
+		}
+	}
+
+	return orders, err
+}
+
+func (s *storageFacade) GetOrderStatus(ctx context.Context, orderId models.IDType) (models.Status, error) {
+	storageStatus, err := s.pgRepository.GetStatus(ctx, orderId)
+	if err != nil {
+		return models.Status{}, err
+	}
+
+	return models.Status{
+		Value: storageStatus.Value,
+		Time:  storageStatus.Time,
+	}, nil
+}
+
+func (s *storageFacade) GetOrderIDsWhereStatus(ctx context.Context, statusVal models.StatusVal) ([]models.IDType, error) {
+	var orderIDs []models.IDType
+
+	err := s.txManager.RunReadUncommitted(ctx, func(ctxTx context.Context) error {
+		var err error
+
+		orderIDs, err = s.pgRepository.GetOrderIDsWhereStatus(ctx, statusVal)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return orderIDs, err
 }
