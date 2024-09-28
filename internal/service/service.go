@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sort"
 	"time"
 
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
@@ -244,12 +243,12 @@ func (s *Service) GetCustomerOrders(ctx context.Context, customerID models.IDTyp
 		return nil, err
 	}
 
-	sort.Slice(userOrders, func(i, j int) bool {
-		if userOrders[i].Status.Time.Equal(userOrders[j].Status.Time) {
-			return userOrders[i].ID < userOrders[j].ID
-		}
-		return userOrders[i].Status.Time.Before(userOrders[j].Status.Time)
-	})
+	//sort.Slice(userOrders, func(i, j int) bool {
+	//	if userOrders[i].Status.Time.Equal(userOrders[j].Status.Time) {
+	//		return userOrders[i].ID < userOrders[j].ID
+	//	}
+	//	return userOrders[i].Status.Time.Before(userOrders[j].Status.Time)
+	//})
 
 	if n == 0 {
 		n = uint(len(userOrders))
