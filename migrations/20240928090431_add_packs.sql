@@ -1,0 +1,10 @@
+-- +goose Up
+CREATE TABLE packs (
+    order_id BIGINT PRIMARY KEY,
+    name VARCHAR(255) UNIQUE NOT NULL CONSTRAINT non_empty_name CHECK (LENGTH(name) > 0),
+    cost MONEY NOT NULL CONSTRAINT non_negative_cost CHECK (NOT (cost < 0::MONEY)),
+    FOREIGN KEY (order_id) REFERENCES orders ON DELETE CASCADE
+);
+
+-- +goose Down
+DROP TABLE IF EXISTS packs;
