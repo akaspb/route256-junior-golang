@@ -105,7 +105,7 @@ func (s *Service) AcceptOrderFromCourier(
 		orderCost += packCost
 	}
 
-	return s.orderStorage.SetOrder(models.Order{
+	return s.orderStorage.CreateOrder(models.Order{
 		ID:         orderID,
 		CustomerID: customerID,
 		Weight:     oderWeight,
@@ -142,7 +142,7 @@ func (s *Service) ReturnOrder(orderID models.IDType) error {
 		return errors.New("unhandled error")
 	}
 
-	err = s.orderStorage.RemoveOrder(orderID)
+	err = s.orderStorage.DeleteOrder(orderID)
 	if err != nil {
 		return err
 	}
@@ -151,7 +151,7 @@ func (s *Service) ReturnOrder(orderID models.IDType) error {
 }
 
 func (s *Service) GiveOrderToCustomer(orderIDs []models.IDType, customerID models.IDType) ([]OrderIDWithMsg, error) {
-	ordersToGive := make([]OrderIDWithMsg, 0)
+	ordersWantedToBeGiven := make([]OrderIDWithMsg, 0)
 	currTime := s.GetCurrentTime()
 
 	for _, orderID := range orderIDs {
@@ -159,11 +159,10 @@ func (s *Service) GiveOrderToCustomer(orderIDs []models.IDType, customerID model
 		if err != nil {
 			if errors.Is(err, storage.ErrOrderNotFound) {
 				// if order has not been delivered to storage yet
-				ordersToGive = append(ordersToGive, OrderIDWithMsg{
-					ID:      orderID,
-					Package: "",
-					Msg:     "Order has not been delivered to PVZ yet or was returned and given to courier",
-					Ok:      false,
+				ordersWantedToBeGiven = append(ordersWantedToBeGiven, OrderIDWithMsg{
+					ID:  orderID,
+					Msg: "Order has not been delivered to PVZ yet or was returned and given to courier",
+					Ok:  false,
 				})
 				continue
 			}
@@ -185,7 +184,7 @@ func (s *Service) GiveOrderToCustomer(orderIDs []models.IDType, customerID model
 
 		switch order.Status.Value {
 		case models.StatusToCustomer:
-			ordersToGive = append(ordersToGive, OrderIDWithMsg{
+			ordersWantedToBeGiven = append(ordersWantedToBeGiven, OrderIDWithMsg{
 				ID:      orderID,
 				Cost:    order.Cost,
 				Package: packagingName,
@@ -194,7 +193,7 @@ func (s *Service) GiveOrderToCustomer(orderIDs []models.IDType, customerID model
 			})
 			continue
 		case models.StatusReturn:
-			ordersToGive = append(ordersToGive, OrderIDWithMsg{
+			ordersWantedToBeGiven = append(ordersWantedToBeGiven, OrderIDWithMsg{
 				ID:      orderID,
 				Cost:    order.Cost,
 				Package: packagingName,
@@ -204,7 +203,7 @@ func (s *Service) GiveOrderToCustomer(orderIDs []models.IDType, customerID model
 			continue
 		case models.StatusToStorage:
 			if isLessOrEqualTime(currTime, order.Expiry) {
-				ordersToGive = append(ordersToGive, OrderIDWithMsg{
+				ordersWantedToBeGiven = append(ordersWantedToBeGiven, OrderIDWithMsg{
 					ID:      order.ID,
 					Cost:    order.Cost,
 					Package: packagingName,
@@ -212,7 +211,7 @@ func (s *Service) GiveOrderToCustomer(orderIDs []models.IDType, customerID model
 					Ok:      true,
 				})
 			} else {
-				ordersToGive = append(ordersToGive, OrderIDWithMsg{
+				ordersWantedToBeGiven = append(ordersWantedToBeGiven, OrderIDWithMsg{
 					ID:      order.ID,
 					Cost:    order.Cost,
 					Package: packagingName,
@@ -226,46 +225,24 @@ func (s *Service) GiveOrderToCustomer(orderIDs []models.IDType, customerID model
 	}
 
 	// add this loop with purpose if error occurred in previous loop no change in DB were made
-	for _, order := range ordersToGive {
+	for _, order := range ordersWantedToBeGiven {
 		if order.Ok {
-			orderPtr, err := s.orderStorage.GetOrder(order.ID)
-			if err != nil {
-				return nil, err
-			}
-
-			orderPtr.Status.Value = models.StatusToCustomer
-			orderPtr.Status.Time = currTime
-			err = s.orderStorage.SetOrder(orderPtr)
-			if err != nil {
+			if err := s.orderStorage.ChangeOrderStatus(order.ID, models.Status{
+				Value: models.StatusToCustomer,
+				Time:  currTime,
+			}); err != nil {
 				return nil, err
 			}
 		}
 	}
 
-	return ordersToGive, nil
+	return ordersWantedToBeGiven, nil
 }
 
 func (s *Service) GetCustomerOrders(customerID models.IDType, n uint) ([]OrderIDWithExpiryAndStatus, error) {
-	userOrders := make([]models.Order, 0)
-	allOrdersIDs, err := s.orderStorage.GetOrderIDs()
+	userOrders, err := s.orderStorage.GetCustomerOrdersWithStatus(customerID, models.StatusToStorage)
 	if err != nil {
 		return nil, err
-	}
-
-	for _, orderID := range allOrdersIDs {
-		order, err := s.orderStorage.GetOrder(orderID)
-		if err != nil {
-			if errors.Is(err, storage.ErrOrderNotFound) {
-				return nil, errors.New("unhandled error")
-			}
-			return nil, err
-		}
-
-		if order.CustomerID == customerID {
-			if order.Status.Value == models.StatusToStorage {
-				userOrders = append(userOrders, order)
-			}
-		}
 	}
 
 	sort.Slice(userOrders, func(i, j int) bool {
@@ -339,10 +316,10 @@ func (s *Service) ReturnOrderFromCustomer(customerID, orderID models.IDType) err
 		return fmt.Errorf("order with ID==%v return time elapsed", order.ID)
 	}
 
-	order.Status.Value = models.StatusReturn
-	order.Status.Time = currTime
-
-	err = s.orderStorage.SetOrder(order)
+	err = s.orderStorage.ChangeOrderStatus(order.ID, models.Status{
+		Value: models.StatusReturn,
+		Time:  currTime,
+	})
 	if err != nil {
 		return err
 	}
