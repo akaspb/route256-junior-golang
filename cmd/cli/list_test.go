@@ -15,11 +15,11 @@ func TestList(t *testing.T) {
 	}
 
 	cliService := NewCliService(jsonFileCopy)
-	if err := cliService.getService(todayTime); err != nil {
+	if err := cliService.updateTimeInService(todayTime); err != nil {
 		t.Fatalf("unexpected error before test: %v", err)
 	}
 
-	//if err := cliService.list(0, 100); err != nil {
+	//if err := CliServiceGlobal.list(0, 100); err != nil {
 	//	t.Errorf("unexpected error: %v", err)
 	//}
 }

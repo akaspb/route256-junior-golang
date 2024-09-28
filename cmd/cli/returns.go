@@ -12,7 +12,7 @@ var returnsCli = &cobra.Command{
 	Long:    `Get all orders, which must be given to courier/couriers for return from PVZ`,
 	Example: "returns -o=<offset> -l=<limit>",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := cliService.getServiceInCommand(cmd); err != nil {
+		if err := CliServiceGlobal.getServiceInCommand(cmd); err != nil {
 			fmt.Println(err.Error())
 			return
 		}
@@ -39,7 +39,7 @@ var returnsCli = &cobra.Command{
 			return
 		}
 
-		returns, err := cliService.srvc.GetReturnsList(offset, limit)
+		returns, err := CliServiceGlobal.srvc.GetReturnsList(CliServiceGlobal.ctx, offset, limit)
 		if err != nil {
 			fmt.Printf("error: %v\n", err)
 			return

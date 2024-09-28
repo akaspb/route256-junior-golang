@@ -13,7 +13,7 @@ var nowCli = &cobra.Command{
 	Long:    `Get time in program`,
 	Example: "now",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := cliService.now(); err != nil {
+		if err := CliServiceGlobal.now(); err != nil {
 			fmt.Println(err)
 		}
 	},

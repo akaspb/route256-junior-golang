@@ -14,7 +14,7 @@ var removeCli = &cobra.Command{
 	Long:    `Return order from PVZ to courier`,
 	Example: "remove <orderID>",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := cliService.getServiceInCommand(cmd); err != nil {
+		if err := CliServiceGlobal.getServiceInCommand(cmd); err != nil {
 			fmt.Println(err.Error())
 			return
 		}
@@ -31,7 +31,7 @@ var removeCli = &cobra.Command{
 		}
 		orderID := models.IDType(orderIDint64)
 
-		if err := cliService.srvc.ReturnOrder(orderID); err != nil {
+		if err := CliServiceGlobal.srvc.ReturnOrder(CliServiceGlobal.ctx, orderID); err != nil {
 			fmt.Printf("error: %v\n", err)
 		} else {
 			fmt.Println("success: order can be given to courier for return")

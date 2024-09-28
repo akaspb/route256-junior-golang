@@ -16,7 +16,7 @@ func TestGive(t *testing.T) {
 	}
 
 	cliService := NewCliService(jsonFileCopy)
-	if err := cliService.getService(todayTime); err != nil {
+	if err := cliService.updateTimeInService(todayTime); err != nil {
 		t.Fatalf("unexpected error before test: %v", err)
 	}
 

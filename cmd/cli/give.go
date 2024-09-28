@@ -14,7 +14,7 @@ var giveCli = &cobra.Command{
 	Long:    `Give orders by their ids from PVZ to customer`,
 	Example: "give <userID> <orderID_1> ... <orderID_N>",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := cliService.getServiceInCommand(cmd); err != nil {
+		if err := CliServiceGlobal.getServiceInCommand(cmd); err != nil {
 			fmt.Println(err.Error())
 			return
 		}
@@ -37,7 +37,7 @@ var giveCli = &cobra.Command{
 		customerID := ids[0]
 		orderIDs := ids[1:]
 
-		if err := cliService.give(customerID, orderIDs); err != nil {
+		if err := CliServiceGlobal.give(customerID, orderIDs); err != nil {
 			fmt.Println(err.Error())
 		}
 	},

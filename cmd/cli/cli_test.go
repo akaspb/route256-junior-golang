@@ -41,7 +41,7 @@ func TestGetCliService(t *testing.T) {
 		t.Run(tc.testName, func(t *testing.T) {
 			t.Parallel()
 			cliService := NewCliService(fmt.Sprintf("/TestCliService_%s_storage.json", tc.testName))
-			err := cliService.getService(tc.currUserSpecifiedTime)
+			err := cliService.updateTimeInService(tc.currUserSpecifiedTime)
 
 			if tc.isErr {
 				if err == nil {
@@ -93,7 +93,7 @@ func TestGetCliNowCmdCommand(t *testing.T) {
 			}
 
 			cliService := NewCliService(fmt.Sprintf("/TestGetCliNowCmdCommand_%s_storage.json", tc.testName))
-			err := cliService.getServiceInCommand(cmd)
+			err := cliService.updateTimeInServiceInCmd(cmd)
 
 			if tc.isErr {
 				if err == nil {

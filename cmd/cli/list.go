@@ -33,14 +33,14 @@ var listCli = &cobra.Command{
 		}
 		customerID := models.IDType(customerIDint64)
 
-		if err := cliService.list(customerID, n); err != nil {
+		if err := CliServiceGlobal.list(customerID, n); err != nil {
 			fmt.Println(err.Error())
 		}
 	},
 }
 
 func (s *CliService) list(customerID models.IDType, lastN uint) error {
-	orders, err := cliService.srvc.GetCustomerOrders(customerID, lastN)
+	orders, err := CliServiceGlobal.srvc.GetCustomerOrders(customerID, lastN)
 	if err != nil {
 		return fmt.Errorf("error: %w", err)
 	}

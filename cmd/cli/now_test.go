@@ -6,7 +6,7 @@ import (
 
 func TestNowCmdCommand(t *testing.T) {
 	cliServiceFullInited := NewCliService("/TestNowCmdCommand_storage.json")
-	if err := cliServiceFullInited.getService(todayTime); err != nil {
+	if err := cliServiceFullInited.updateTimeInService(todayTime); err != nil {
 		t.Fatalf("unexpected error before test: %v", err)
 	}
 

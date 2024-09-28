@@ -12,7 +12,7 @@ var interCli = &cobra.Command{
 	Short: "Start program in interactive mode",
 	Long:  `Start program in interactive mode`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := cliService.getServiceInCommand(cmd); err != nil {
+		if err := CliServiceGlobal.getServiceInCommand(cmd); err != nil {
 			fmt.Println(err.Error())
 		}
 

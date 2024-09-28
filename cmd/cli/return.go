@@ -13,7 +13,7 @@ var returnCli = &cobra.Command{
 	Long:    `Get order from customer to return`,
 	Example: "return -o=<orderID> -c=<customerID>",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := cliService.getServiceInCommand(cmd); err != nil {
+		if err := CliServiceGlobal.getServiceInCommand(cmd); err != nil {
 			fmt.Println(err.Error())
 			return
 		}
@@ -42,7 +42,7 @@ var returnCli = &cobra.Command{
 			return
 		}
 
-		if err := cliService.srvc.ReturnOrderFromCustomer(customerID, orderID); err != nil {
+		if err := CliServiceGlobal.srvc.ReturnOrderFromCustomer(CliServiceGlobal.ctx, customerID, orderID); err != nil {
 			fmt.Printf("error: %v\n", err)
 		} else {
 			fmt.Println("success: take order from customer to store it in PVZ")

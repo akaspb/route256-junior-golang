@@ -16,7 +16,7 @@ var receiveCli = &cobra.Command{
 	Long:    `Receive order from courier to PVZ`,
 	Example: "receive -o=<orderID> -m=<order cost> -w=<order weight> -c=<customerID> -e=<expiry in DD.MM.YYYY format> [-p=<packaging name>]",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := cliService.getServiceInCommand(cmd); err != nil {
+		if err := CliServiceGlobal.getServiceInCommand(cmd); err != nil {
 			fmt.Println(err.Error())
 			return
 		}
@@ -90,7 +90,7 @@ var receiveCli = &cobra.Command{
 			return
 		}
 
-		if err := cliService.receive(
+		if err := CliServiceGlobal.receive(
 			orderID,
 			cost,
 			weight,
@@ -121,7 +121,7 @@ func (s *CliService) receive(
 		packPtr = &pack
 	}
 
-	if err := s.srvc.AcceptOrderFromCourier(service.AcceptOrderDTO{
+	if err := s.srvc.AcceptOrderFromCourier(s.ctx, service.AcceptOrderDTO{
 		OrderID:     orderID,
 		OrderCost:   orderCost,
 		OderWeight:  orderWeight,
