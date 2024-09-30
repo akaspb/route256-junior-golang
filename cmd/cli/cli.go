@@ -21,7 +21,6 @@ type CliService struct {
 func NewCliService(ctx context.Context, orderStorage storage.Facade, packService packaging.Packaging, service srvc.Service) *CliService {
 	cliService := &CliService{
 		ctx:          ctx,
-		rootCli:      getRootCli(),
 		orderStorage: orderStorage,
 		packService:  packService,
 		srvc:         service,
