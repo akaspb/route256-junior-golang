@@ -8,39 +8,8 @@ import (
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 )
 
-var listCli = &cobra.Command{
-	Use:     "list",
-	Short:   "Get customer orders, which are contained in PVZ now",
-	Long:    `Get customer orders, which are contained in PVZ now`,
-	Example: "list <userID> [-n=<N last orders count>]",
-	Run: func(cmd *cobra.Command, args []string) {
-
-		if len(args) < 1 {
-			fmt.Println("customer ID is not given, check 'list --help'")
-			return
-		}
-
-		n, err := cmd.Flags().GetUint("n")
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-
-		customerIDint64, err := strconv.ParseInt(args[0], 10, 64)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-		customerID := models.IDType(customerIDint64)
-
-		if err := CliServiceGlobal.list(customerID, n); err != nil {
-			fmt.Println(err.Error())
-		}
-	},
-}
-
-func (s *CliService) list(customerID models.IDType, lastN uint) error {
-	orders, err := CliServiceGlobal.srvc.GetCustomerOrders(customerID, lastN)
+func (c *CliService) list(customerID models.IDType, lastN uint) error {
+	orders, err := c.srvc.GetCustomerOrders(customerID, lastN)
 	if err != nil {
 		return fmt.Errorf("error: %w", err)
 	}
@@ -73,7 +42,55 @@ func (s *CliService) list(customerID models.IDType, lastN uint) error {
 	return nil
 }
 
-func init() {
+//func init() {
+//	rootCli.AddCommand(listCli)
+//
+//	listCli.AddCommand(&cobra.Command{
+//		Use:   "help",
+//		Short: "Help about command",
+//		Long:  `Help about command`,
+//		Run: func(cmd *cobra.Command, args []string) {
+//			if err := listCli.Help(); err != nil {
+//				fmt.Println(err.Error())
+//			}
+//		},
+//	})
+//
+//	listCli.Flags().UintP("n", "n", 0, "N last orders count")
+//}
+
+func (c *CliService) initListCmd(rootCli *cobra.Command) {
+	var listCli = &cobra.Command{
+		Use:     "list",
+		Short:   "Get customer orders, which are contained in PVZ now",
+		Long:    `Get customer orders, which are contained in PVZ now`,
+		Example: "list <userID> [-n=<N last orders count>]",
+		Run: func(cmd *cobra.Command, args []string) {
+
+			if len(args) < 1 {
+				fmt.Println("customer ID is not given, check 'list --help'")
+				return
+			}
+
+			n, err := cmd.Flags().GetUint("n")
+			if err != nil {
+				fmt.Println(err.Error())
+				return
+			}
+
+			customerIDint64, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil {
+				fmt.Println(err.Error())
+				return
+			}
+			customerID := models.IDType(customerIDint64)
+
+			if err := c.list(customerID, n); err != nil {
+				fmt.Println(err.Error())
+			}
+		},
+	}
+
 	rootCli.AddCommand(listCli)
 
 	listCli.AddCommand(&cobra.Command{

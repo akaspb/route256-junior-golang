@@ -6,60 +6,78 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var returnsCli = &cobra.Command{
-	Use:     "returns",
-	Short:   "Get all orders, which must be given to courier/couriers for return from PVZ",
-	Long:    `Get all orders, which must be given to courier/couriers for return from PVZ`,
-	Example: "returns -o=<offset> -l=<limit>",
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := CliServiceGlobal.getServiceInCommand(cmd); err != nil {
-			fmt.Println(err.Error())
-			return
-		}
+//func init() {
+//	rootCli.AddCommand(returnsCli)
+//
+//	returnsCli.AddCommand(&cobra.Command{
+//		Use:   "help",
+//		Short: "Help about command",
+//		Long:  `Help about command`,
+//		Run: func(cmd *cobra.Command, args []string) {
+//			if err := returnsCli.Help(); err != nil {
+//				fmt.Println(err.Error())
+//			}
+//		},
+//	})
+//
+//	returnsCli.Flags().IntP("limit", "l", 0, "limit of results")
+//	returnsCli.Flags().IntP("offset", "o", 0, "offset of results, starts from 0")
+//}
 
-		var offset, limit int
-		var err error
+func (c *CliService) initReturnsCmd(rootCli *cobra.Command) {
+	var returnsCli = &cobra.Command{
+		Use:     "returns",
+		Short:   "Get all orders, which must be given to courier/couriers for return from PVZ",
+		Long:    `Get all orders, which must be given to courier/couriers for return from PVZ`,
+		Example: "returns -o=<offset> -l=<limit>",
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := c.updateTimeInServiceInCmd(cmd); err != nil {
+				fmt.Println(err.Error())
+				return
+			}
 
-		if !cmd.Flags().Changed("offset") {
-			fmt.Println("offset flag is not defined, check 'returns --help'")
-			return
-		}
-		offset, err = cmd.Flags().GetInt("offset")
-		if err != nil {
-			fmt.Println(err.Error())
-		}
+			var offset, limit int
+			var err error
 
-		if !cmd.Flags().Changed("limit") {
-			fmt.Println("limit flag is not defined, check 'returns --help'")
-			return
-		}
-		limit, err = cmd.Flags().GetInt("limit")
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
+			if !cmd.Flags().Changed("offset") {
+				fmt.Println("offset flag is not defined, check 'returns --help'")
+				return
+			}
+			offset, err = cmd.Flags().GetInt("offset")
+			if err != nil {
+				fmt.Println(err.Error())
+			}
 
-		returns, err := CliServiceGlobal.srvc.GetReturnsList(CliServiceGlobal.ctx, offset, limit)
-		if err != nil {
-			fmt.Printf("error: %v\n", err)
-			return
-		}
+			if !cmd.Flags().Changed("limit") {
+				fmt.Println("limit flag is not defined, check 'returns --help'")
+				return
+			}
+			limit, err = cmd.Flags().GetInt("limit")
+			if err != nil {
+				fmt.Println(err.Error())
+				return
+			}
 
-		if len(returns) == 0 {
-			fmt.Println("No orders")
-			return
-		}
+			returns, err := c.srvc.GetReturnsList(offset, limit)
+			if err != nil {
+				fmt.Printf("error: %v\n", err)
+				return
+			}
 
-		tableTop := fmt.Sprintf("%8s|%11s", "Order ID", "Customer ID")
-		fmt.Println(tableTop)
-		for _, raw := range returns {
-			tableRow := fmt.Sprintf("%8v|%11v", raw.OrderID, raw.CustomerID)
-			fmt.Println(tableRow)
-		}
-	},
-}
+			if len(returns) == 0 {
+				fmt.Println("No orders")
+				return
+			}
 
-func init() {
+			tableTop := fmt.Sprintf("%8s|%11s", "Order ID", "Customer ID")
+			fmt.Println(tableTop)
+			for _, raw := range returns {
+				tableRow := fmt.Sprintf("%8v|%11v", raw.OrderID, raw.CustomerID)
+				fmt.Println(tableRow)
+			}
+		},
+	}
+
 	rootCli.AddCommand(returnsCli)
 
 	returnsCli.AddCommand(&cobra.Command{

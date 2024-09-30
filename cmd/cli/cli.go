@@ -9,12 +9,11 @@ import (
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage"
 )
 
-var CliServiceGlobal CliService
-
 type CliService struct {
 	orderStorage storage.Facade
 	packService  packaging.Packaging
 	srvc         srvc.Service
+	rootCli      *cobra.Command
 }
 
 func NewCliService(orderStorage storage.Facade, packService packaging.Packaging, service srvc.Service) *CliService {
@@ -25,20 +24,33 @@ func NewCliService(orderStorage storage.Facade, packService packaging.Packaging,
 	//	packs     []models.Pack
 	//)
 
-	return &CliService{
+	cliService := &CliService{
+		rootCli:      getRootCli(),
 		orderStorage: orderStorage,
 		packService:  packService,
 		srvc:         service,
 	}
+
+	cliService.rootCli = getRootCli()
+	cliService.initGiveCmd(cliService.rootCli)
+	cliService.initInterCmd(cliService.rootCli)
+	cliService.initListCmd(cliService.rootCli)
+	cliService.initNowCmd(cliService.rootCli)
+	cliService.iniReceiveCmd(cliService.rootCli)
+	cliService.initRemoveCmd(cliService.rootCli)
+	cliService.initReturnCmd(cliService.rootCli)
+	cliService.initReturnsCmd(cliService.rootCli)
+
+	return cliService
 }
 
-func (cs *CliService) updateTimeInService(currTime time.Time) error {
-	cs.srvc.StartTime = currTime
+//func (cs *CliService) updateTimeInService(currTime time.Time) error {
+//	cs.srvc.startTime = currTime
+//
+//	return nil
+//}
 
-	return nil
-}
-
-func (cs *CliService) updateTimeInServiceInCmd(cmd *cobra.Command) error {
+func (c *CliService) updateTimeInServiceInCmd(cmd *cobra.Command) error {
 	if cmd.Flags().Changed("start") {
 		startStr, err := cmd.Flags().GetString("start")
 		if err != nil {
@@ -50,16 +62,20 @@ func (cs *CliService) updateTimeInServiceInCmd(cmd *cobra.Command) error {
 			return err
 		}
 
-		return cs.updateTimeInService(startTime)
+		c.srvc.SetStartTime(startTime)
 	}
 
 	return nil
 }
 
-func (cs *CliService) Execute() error {
+func (c *CliService) getToday() string {
+	return time.Now().Truncate(24 * time.Hour).Format("02.01.2006")
+}
+
+func (c *CliService) Execute() error {
 	var err error
 
-	err = rootCli.Execute()
+	err = c.rootCli.Execute()
 	if err != nil {
 		return err
 	}

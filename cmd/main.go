@@ -22,6 +22,7 @@ func main() {
 	pool, err := pgxpool.Connect(ctx, psqlDSN)
 	if err != nil {
 		fmt.Printf("error in main func: %v\n", err)
+		return
 	}
 	defer pool.Close()
 
@@ -34,17 +35,18 @@ func main() {
 	packService, err := packaging.NewPackaging(packet, box, wrap)
 	if err != nil {
 		fmt.Printf("error in main func: %v\n", err)
+		return
 	}
 
 	now := time.Now().Truncate(24 * time.Hour)
 	service := srvc.NewService(ctx, orderStorage, packService, now, now)
 
 	cliService := cli.NewCliService(orderStorage, *packService, *service)
-	cli.CliServiceGlobal = *cliService
 
 	err = cliService.Execute()
 	if err != nil {
 		fmt.Printf("error in main func: %v\n", err)
+		return
 	}
 }
 

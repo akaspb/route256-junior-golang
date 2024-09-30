@@ -8,43 +8,8 @@ import (
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 )
 
-var giveCli = &cobra.Command{
-	Use:     "give",
-	Short:   "Give orders by their ids from PVZ to customer",
-	Long:    `Give orders by their ids from PVZ to customer`,
-	Example: "give <userID> <orderID_1> ... <orderID_N>",
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := CliServiceGlobal.getServiceInCommand(cmd); err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-
-		if len(args) < 2 {
-			fmt.Println("IDs count is less then 2, check 'give --help'")
-			return
-		}
-
-		ids := make([]models.IDType, len(args))
-		for i, idStr := range args {
-			id, err := strconv.ParseInt(idStr, 10, 64)
-			if err != nil {
-				fmt.Println(err.Error())
-				return
-			}
-			ids[i] = models.IDType(id)
-		}
-
-		customerID := ids[0]
-		orderIDs := ids[1:]
-
-		if err := CliServiceGlobal.give(customerID, orderIDs); err != nil {
-			fmt.Println(err.Error())
-		}
-	},
-}
-
-func (s *CliService) give(customerID models.IDType, orderIDs []models.IDType) error {
-	orders, err := s.srvc.GiveOrderToCustomer(orderIDs, customerID)
+func (c *CliService) give(customerID models.IDType, orderIDs []models.IDType) error {
+	orders, err := c.srvc.GiveOrderToCustomer(orderIDs, customerID)
 	if err != nil {
 		return fmt.Errorf("error: %w", err)
 	}
@@ -81,7 +46,42 @@ func (s *CliService) give(customerID models.IDType, orderIDs []models.IDType) er
 	return nil
 }
 
-func init() {
+func (c *CliService) initGiveCmd(rootCli *cobra.Command) {
+	var giveCli = &cobra.Command{
+		Use:     "give",
+		Short:   "Give orders by their ids from PVZ to customer",
+		Long:    `Give orders by their ids from PVZ to customer`,
+		Example: "give <userID> <orderID_1> ... <orderID_N>",
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := c.updateTimeInServiceInCmd(cmd); err != nil {
+				fmt.Println(err.Error())
+				return
+			}
+
+			if len(args) < 2 {
+				fmt.Println("IDs count is less then 2, check 'give --help'")
+				return
+			}
+
+			ids := make([]models.IDType, len(args))
+			for i, idStr := range args {
+				id, err := strconv.ParseInt(idStr, 10, 64)
+				if err != nil {
+					fmt.Println(err.Error())
+					return
+				}
+				ids[i] = models.IDType(id)
+			}
+
+			customerID := ids[0]
+			orderIDs := ids[1:]
+
+			if err := c.give(customerID, orderIDs); err != nil {
+				fmt.Println(err.Error())
+			}
+		},
+	}
+
 	rootCli.AddCommand(giveCli)
 
 	giveCli.AddCommand(&cobra.Command{

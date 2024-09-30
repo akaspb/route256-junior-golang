@@ -35,6 +35,15 @@ func NewPackaging(packs ...models.Pack) (*Packaging, error) {
 	return &Packaging{Packs: packsMap}, nil
 }
 
+func (p *Packaging) GetAllPacks() []models.Pack {
+	packs := make([]models.Pack, 0, len(p.Packs))
+	for _, pack := range p.Packs {
+		packs = append(packs, pack)
+	}
+
+	return packs
+}
+
 //func DefaultPackaging() *Packaging {
 //	packet := NewPack("packet", 5, 10)
 //	box := NewPack("box", 20, 30)

@@ -38,7 +38,7 @@ type ReturnOrderAndCustomer struct {
 type Service struct {
 	ctx             context.Context
 	Packaging       *packaging.Packaging
-	StartTime       time.Time
+	startTime       time.Time
 	systemStartTime time.Time
 	orderStorage    storage.Facade
 }
@@ -53,7 +53,7 @@ func NewService(
 	return &Service{
 		ctx:             ctx,
 		Packaging:       packagingSrvc,
-		StartTime:       startTime,
+		startTime:       startTime,
 		systemStartTime: systemStartTime,
 		orderStorage:    orderStorage,
 	}
@@ -361,9 +361,13 @@ func (s *Service) GetReturnsList(offset, limit int) ([]ReturnOrderAndCustomer, e
 }
 
 func (s *Service) GetCurrentTime() time.Time {
-	return s.StartTime.Add(time.Now().Sub(s.systemStartTime))
+	return s.startTime.Add(time.Now().Sub(s.systemStartTime))
 }
 
 func isLessOrEqualTime(t1, t2 time.Time) bool {
 	return t1.Equal(t2) || t1.Before(t2)
+}
+
+func (s *Service) SetStartTime(startTime time.Time) {
+	s.startTime = startTime
 }
