@@ -9,7 +9,7 @@ import (
 )
 
 func (c *CliService) list(customerID models.IDType, lastN uint) error {
-	orders, err := c.srvc.GetCustomerOrders(customerID, lastN)
+	orders, err := c.srvc.GetCustomerOrders(c.ctx, customerID, lastN)
 	if err != nil {
 		return fmt.Errorf("error: %w", err)
 	}

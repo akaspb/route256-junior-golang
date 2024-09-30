@@ -9,12 +9,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//func init() {
-//	rootCli.AddCommand(interCli)
-//
-//	interCli.Flags().StringP("start", "s", todayStr, "PVZ start time in format DD.MM.YYYY")
-//}
-
 func (c *CliService) initInterCmd(rootCli *cobra.Command) {
 	var interCli = &cobra.Command{
 		Use:   "inter",

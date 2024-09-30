@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -10,21 +11,16 @@ import (
 )
 
 type CliService struct {
+	ctx          context.Context
 	orderStorage storage.Facade
 	packService  packaging.Packaging
 	srvc         srvc.Service
 	rootCli      *cobra.Command
 }
 
-func NewCliService(orderStorage storage.Facade, packService packaging.Packaging, service srvc.Service) *CliService {
-	//var (
-	//	in        = bufio.NewReader(os.Stdin)
-	//	todayTime = time.Now().Truncate(24 * time.Hour)
-	//	todayStr  = todayTime.Format("02.01.2006")
-	//	packs     []models.Pack
-	//)
-
+func NewCliService(ctx context.Context, orderStorage storage.Facade, packService packaging.Packaging, service srvc.Service) *CliService {
 	cliService := &CliService{
+		ctx:          ctx,
 		rootCli:      getRootCli(),
 		orderStorage: orderStorage,
 		packService:  packService,

@@ -9,7 +9,7 @@ import (
 )
 
 func (c *CliService) give(customerID models.IDType, orderIDs []models.IDType) error {
-	orders, err := c.srvc.GiveOrderToCustomer(orderIDs, customerID)
+	orders, err := c.srvc.GiveOrderToCustomer(c.ctx, orderIDs, customerID)
 	if err != nil {
 		return fmt.Errorf("error: %w", err)
 	}

@@ -15,21 +15,6 @@ func (c *CliService) now() error {
 	return nil
 }
 
-//func init() {
-//	rootCli.AddCommand(nowCli)
-//
-//	nowCli.AddCommand(&cobra.Command{
-//		Use:   "help",
-//		Short: "Help about command",
-//		Long:  `Help about command`,
-//		Run: func(cmd *cobra.Command, args []string) {
-//			if err := nowCli.Help(); err != nil {
-//				fmt.Println(err.Error())
-//			}
-//		},
-//	})
-//}
-
 func (c *CliService) initNowCmd(rootCli *cobra.Command) {
 	var nowCli = &cobra.Command{
 		Use:     "now",

@@ -7,24 +7,6 @@ import (
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 )
 
-//func init() {
-//	rootCli.AddCommand(returnCli)
-//
-//	returnCli.AddCommand(&cobra.Command{
-//		Use:   "help",
-//		Short: "Help about command",
-//		Long:  `Help about command`,
-//		Run: func(cmd *cobra.Command, args []string) {
-//			if err := returnCli.Help(); err != nil {
-//				fmt.Println(err.Error())
-//			}
-//		},
-//	})
-//
-//	returnCli.Flags().Int64P("order", "o", 0, "unique order ID")
-//	returnCli.Flags().Int64P("customer", "c", 0, "unique customer ID")
-//}
-
 func (c *CliService) initReturnCmd(rootCli *cobra.Command) {
 	var returnCli = &cobra.Command{
 		Use:     "return",
@@ -61,7 +43,7 @@ func (c *CliService) initReturnCmd(rootCli *cobra.Command) {
 				return
 			}
 
-			if err := c.srvc.ReturnOrderFromCustomer(customerID, orderID); err != nil {
+			if err := c.srvc.ReturnOrderFromCustomer(c.ctx, customerID, orderID); err != nil {
 				fmt.Printf("error: %v\n", err)
 			} else {
 				fmt.Println("success: take order from customer to store it in PVZ")

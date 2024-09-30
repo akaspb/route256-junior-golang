@@ -8,21 +8,6 @@ import (
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 )
 
-//func init() {
-//	rootCli.AddCommand(removeCli)
-//
-//	removeCli.AddCommand(&cobra.Command{
-//		Use:   "help",
-//		Short: "Help about command",
-//		Long:  `Help about command`,
-//		Run: func(cmd *cobra.Command, args []string) {
-//			if err := removeCli.Help(); err != nil {
-//				fmt.Println(err.Error())
-//			}
-//		},
-//	})
-//}
-
 func (c *CliService) initRemoveCmd(rootCli *cobra.Command) {
 	var removeCli = &cobra.Command{
 		Use:     "remove",
@@ -47,7 +32,7 @@ func (c *CliService) initRemoveCmd(rootCli *cobra.Command) {
 			}
 			orderID := models.IDType(orderIDint64)
 
-			if err := c.srvc.ReturnOrder(orderID); err != nil {
+			if err := c.srvc.ReturnOrder(c.ctx, orderID); err != nil {
 				fmt.Printf("error: %v\n", err)
 			} else {
 				fmt.Println("success: order can be given to courier for return")

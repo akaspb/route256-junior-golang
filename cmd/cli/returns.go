@@ -6,24 +6,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//func init() {
-//	rootCli.AddCommand(returnsCli)
-//
-//	returnsCli.AddCommand(&cobra.Command{
-//		Use:   "help",
-//		Short: "Help about command",
-//		Long:  `Help about command`,
-//		Run: func(cmd *cobra.Command, args []string) {
-//			if err := returnsCli.Help(); err != nil {
-//				fmt.Println(err.Error())
-//			}
-//		},
-//	})
-//
-//	returnsCli.Flags().IntP("limit", "l", 0, "limit of results")
-//	returnsCli.Flags().IntP("offset", "o", 0, "offset of results, starts from 0")
-//}
-
 func (c *CliService) initReturnsCmd(rootCli *cobra.Command) {
 	var returnsCli = &cobra.Command{
 		Use:     "returns",
@@ -58,7 +40,7 @@ func (c *CliService) initReturnsCmd(rootCli *cobra.Command) {
 				return
 			}
 
-			returns, err := c.srvc.GetReturnsList(offset, limit)
+			returns, err := c.srvc.GetReturnsList(c.ctx, offset, limit)
 			if err != nil {
 				fmt.Printf("error: %v\n", err)
 				return

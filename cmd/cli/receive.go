@@ -28,7 +28,7 @@ func (c *CliService) receive(
 		packPtr = &pack
 	}
 
-	if err := c.srvc.AcceptOrderFromCourier(service.AcceptOrderDTO{
+	if err := c.srvc.AcceptOrderFromCourier(c.ctx, service.AcceptOrderDTO{
 		OrderID:     orderID,
 		OrderCost:   orderCost,
 		OderWeight:  orderWeight,
@@ -42,38 +42,6 @@ func (c *CliService) receive(
 	fmt.Println("success: take order for storage in PVZ")
 	return nil
 }
-
-//func init() {
-//	rootCli.AddCommand(receiveCli)
-//
-//	receiveCli.AddCommand(&cobra.Command{
-//		Use:   "help",
-//		Short: "Help about command",
-//		Long:  `Help about command`,
-//		Run: func(cmd *cobra.Command, args []string) {
-//			if err := receiveCli.Help(); err != nil {
-//				fmt.Println(err.Error())
-//			}
-//		},
-//	})
-//
-//	packagingNames := make([]string, 0, len(packs))
-//	for _, packagingName := range packs {
-//		packagingNames = append(packagingNames, fmt.Sprintf("\n\t - %s", packagingName.Name))
-//	}
-//
-//	packagingUsage := strings.Join(packagingNames, "")
-//
-//	receiveCli.Flags().Int64P("order", "o", 0, "unique order ID")
-//	receiveCli.Flags().Float32P("money", "m", 0, "order cost")
-//	receiveCli.Flags().Float32P("weight", "w", 0, "order weight")
-//	receiveCli.Flags().Int64P("customer", "c", 0, "unique customer ID")
-//	receiveCli.Flags().StringP("expiry", "e", "", "expiry time in format DD.MM.YYYY")
-//	receiveCli.Flags().StringP("pack", "p", "", fmt.Sprintf(
-//		"packaging name: %s",
-//		packagingUsage,
-//	))
-//}
 
 func (c *CliService) iniReceiveCmd(rootCli *cobra.Command) {
 	var receiveCli = &cobra.Command{
