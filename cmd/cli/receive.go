@@ -27,7 +27,7 @@ func (c *CliService) receive(
 
 		packPtr = &pack
 	}
-
+	fmt.Println("$$ c.srvc.AcceptOrderFromCourier")
 	if err := c.srvc.AcceptOrderFromCourier(c.ctx, service.AcceptOrderDTO{
 		OrderID:     orderID,
 		OrderCost:   orderCost,

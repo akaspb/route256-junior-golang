@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"errors"
+	"fmt"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage/postgres"
 )
@@ -39,6 +40,7 @@ func NewStorageFacade(
 }
 
 func (s *storageFacade) CreateOrder(ctx context.Context, order models.Order) error {
+	fmt.Println("$ CreateOrder")
 	return s.txManager.RunSerializable(ctx, func(ctxTx context.Context) error {
 		var statusId models.IDType
 		var err error
@@ -47,17 +49,19 @@ func (s *storageFacade) CreateOrder(ctx context.Context, order models.Order) err
 			Value: models.StatusToStorage,
 			Time:  order.Status.Time,
 		})
+		fmt.Println("$", statusId, err)
 		if err != nil {
 			return err
 		}
 
-		_, err = s.pgRepository.GetOrder(ctx, order.ID)
-		if err == nil {
-			return ErrOrderWithIdExists
-		}
-		if err != nil && !errors.Is(err, postgres.ErrorOrderNotFound) {
-			return err
-		}
+		//something, err := s.pgRepository.GetOrder(ctx, order.ID)
+		//fmt.Println("$$", something, err)
+		//if err == nil {
+		//	return ErrOrderWithIdExists
+		//}
+		//if err != nil && !errors.Is(err, postgres.ErrorOrderNotFound) {
+		//	return err
+		//}
 
 		err = s.pgRepository.CreateOrder(ctx, postgres.Order{
 			ID:         order.ID,
@@ -72,12 +76,14 @@ func (s *storageFacade) CreateOrder(ctx context.Context, order models.Order) err
 		}
 
 		if order.Pack != nil {
-			err = s.pgRepository.CreatePack(ctx, postgres.Pack{
+			pack := postgres.Pack{
 				OrderID:        order.ID,
 				Name:           order.Pack.Name,
 				Cost:           order.Pack.Cost,
 				MaxOrderWeight: order.Pack.MaxOrderWeight,
-			})
+			}
+			fmt.Println("$", pack)
+			err = s.pgRepository.CreatePack(ctx, pack)
 			if err != nil {
 				return err
 			}
@@ -90,11 +96,17 @@ func (s *storageFacade) CreateOrder(ctx context.Context, order models.Order) err
 func (s *storageFacade) GetOrder(ctx context.Context, orderID models.IDType) (models.Order, error) {
 	storageOrder, err := s.pgRepository.GetOrder(ctx, orderID)
 	if err != nil {
+		if errors.Is(err, postgres.ErrorOrderNotFound) {
+			return models.Order{}, ErrOrderNotFound
+		}
 		return models.Order{}, err
 	}
 
 	storageStatus, err := s.pgRepository.GetStatus(ctx, storageOrder.StatusID)
 	if err != nil {
+		if errors.Is(err, postgres.ErrorStatusNotFound) {
+			return models.Order{}, ErrOrderNotFound
+		}
 		return models.Order{}, err
 	}
 
@@ -104,6 +116,7 @@ func (s *storageFacade) GetOrder(ctx context.Context, orderID models.IDType) (mo
 		if !errors.Is(err, postgres.ErrorPackNotFound) {
 			return models.Order{}, err
 		}
+	} else {
 		packPtr = &models.Pack{
 			Name:           storagePack.Name,
 			Cost:           storagePack.Cost,

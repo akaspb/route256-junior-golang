@@ -62,6 +62,10 @@ func (p *Packaging) GetPackagingByName(packagingName string) (models.Pack, error
 }
 
 func (p *Packaging) PackOrder(pack models.Pack, orderWeight models.WeightType) (cost models.CostType, err error) {
+	if pack.MaxOrderWeight != AnyWeight && !(pack.MaxOrderWeight > 0) {
+		return 0, errors.New("error pack: not pack.MaxOrderWeight > 0")
+	}
+
 	if pack.MaxOrderWeight != AnyWeight && orderWeight >= pack.MaxOrderWeight {
 		return 0, fmt.Errorf(
 			"order weight==%v reached max packaging '%s' weight==%v",

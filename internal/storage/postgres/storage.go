@@ -114,7 +114,7 @@ func (s *PgStorage) SetStatus(ctx context.Context, status Status) error {
 	tx := s.txManager.GetQueryEngine(ctx)
 
 	result, err := tx.Exec(ctx, `
-		UPDATE status SET "value" = $1 ,"time" = $2 WHERE id = $3
+		UPDATE statuses SET "value" = $1 ,"time" = $2 WHERE id = $3
 	`, status.Value, status.Time, status.ID)
 	if err != nil {
 		return err
