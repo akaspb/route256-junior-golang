@@ -39,12 +39,6 @@ func NewCliService(ctx context.Context, orderStorage storage.Facade, packService
 	return cliService
 }
 
-//func (cs *CliService) updateTimeInService(currTime time.Time) error {
-//	cs.srvc.startTime = currTime
-//
-//	return nil
-//}
-
 func (c *CliService) updateTimeInServiceInCmd(cmd *cobra.Command) error {
 	if cmd.Flags().Changed("start") {
 		startStr, err := cmd.Flags().GetString("start")
