@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -13,16 +14,31 @@ import (
 	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 )
 
-func receive(
-	ctx context.Context,
-	service *srvc.Service,
-	orderID models.IDType,
-	orderCost models.CostType,
-	orderWeight models.WeightType,
-	orderExpiry time.Time,
-	packName string,
-	customerID models.IDType,
+type ReceiveHandlerDTO struct {
+	Ctx         context.Context
+	Buffer      *bytes.Buffer
+	Service     *srvc.Service
+	OrderID     models.IDType
+	OrderCost   models.CostType
+	OrderWeight models.WeightType
+	OrderExpiry time.Time
+	PackName    string
+	CustomerID  models.IDType
+}
+
+func ReceiveHandler(
+	receiveHandlerDTO ReceiveHandlerDTO,
 ) error {
+	ctx := receiveHandlerDTO.Ctx
+	buffer := receiveHandlerDTO.Buffer
+	service := receiveHandlerDTO.Service
+	orderID := receiveHandlerDTO.OrderID
+	orderCost := receiveHandlerDTO.OrderCost
+	orderWeight := receiveHandlerDTO.OrderWeight
+	orderExpiry := receiveHandlerDTO.OrderExpiry
+	packName := receiveHandlerDTO.PackName
+	customerID := receiveHandlerDTO.CustomerID
+
 	var packPtr *models.Pack
 	if packName != "" {
 		pack, err := service.Packaging.GetPackagingByName(packName)
@@ -44,7 +60,7 @@ func receive(
 		return fmt.Errorf("error: %w", err)
 	}
 
-	fmt.Println("success: take order for storage in PVZ")
+	fmt.Fprintln(buffer, "success: take order for storage in PVZ")
 	return nil
 }
 
@@ -133,18 +149,23 @@ func getReceiveCmd(ctx context.Context, service *srvc.Service, packService *pack
 				return
 			}
 
-			if err := receive(
-				ctx,
-				service,
-				orderID,
-				cost,
-				weight,
-				orderExpiry,
-				packName,
-				customerID,
+			var buffer bytes.Buffer
+			if err := ReceiveHandler(
+				ReceiveHandlerDTO{
+					Ctx:         ctx,
+					Buffer:      &buffer,
+					Service:     service,
+					OrderID:     orderID,
+					OrderCost:   cost,
+					OrderWeight: weight,
+					OrderExpiry: orderExpiry,
+					PackName:    packName,
+					CustomerID:  customerID,
+				},
 			); err != nil {
 				fmt.Println(err.Error())
 			}
+			fmt.Print(buffer.String())
 		},
 	}
 

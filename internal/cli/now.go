@@ -1,30 +1,35 @@
 package cli
 
 import (
+	"bytes"
 	"fmt"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 
 	"github.com/spf13/cobra"
 )
 
-func now() error {
+func NowHandler(buffer *bytes.Buffer, service *service.Service) error {
 	//if c.srvc == nil {
 	//	return errors.New("this command should be use only in interactive mode")
 	//}
 
-	fmt.Println(getToday())
+	fmt.Fprintln(buffer, getToday(service))
 	return nil
 }
 
-func getNowCmd() *cobra.Command {
+func getNowCmd(service *service.Service) *cobra.Command {
 	var nowCli = &cobra.Command{
 		Use:     "now",
 		Short:   "Get time in program",
 		Long:    `Get time in program`,
 		Example: "now",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := now(); err != nil {
+			var buffer bytes.Buffer
+			if err := NowHandler(&buffer, service); err != nil {
 				fmt.Println(err)
+				return
 			}
+			fmt.Print(buffer.String())
 		},
 	}
 

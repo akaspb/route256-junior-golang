@@ -14,6 +14,14 @@ import (
 const Day = 24 * time.Hour
 const MaxReturnTime = 2 * Day
 
+var (
+	ErrorCustomerID          = errors.New("this customer is not the owner of some order")
+	ErrorOrderWasAccepted    = errors.New("order was accepted earlier")
+	ErrorOrderExpiredAlready = errors.New("order expiry time can't be before current time")
+	ErrorOderNegativeCost    = errors.New("order cost can't be negative")
+	ErrorOderNegativeWeight  = errors.New("order weight can't be negative")
+)
+
 type OrderIDWithMsg struct {
 	ID      models.IDType
 	Cost    models.CostType
@@ -79,7 +87,7 @@ func (s *Service) AcceptOrderFromCourier(
 	_, err := s.orderStorage.GetOrder(ctx, orderID)
 
 	if err == nil {
-		return fmt.Errorf("order with ID==%v was accepted earlier", orderID)
+		return ErrorOrderWasAccepted
 	}
 
 	if !errors.Is(err, storage.ErrOrderNotFound) {
@@ -87,15 +95,15 @@ func (s *Service) AcceptOrderFromCourier(
 	}
 
 	if !isLessOrEqualTime(s.GetCurrentTime(), orderExpiry) {
-		return errors.New("order expiry time can't be before current time")
+		return ErrorOrderExpiredAlready
 	}
 
 	if orderCost < 0 {
-		return errors.New("order cost can't be negative")
+		return ErrorOderNegativeCost
 	}
 
 	if oderWeight < 0 {
-		return errors.New("order weight can't be negative")
+		return ErrorOderNegativeWeight
 	}
 
 	if pack != nil {
@@ -170,10 +178,7 @@ func (s *Service) GiveOrderToCustomer(ctx context.Context, orderIDs []models.IDT
 
 		// if order's customer is other person return error immediately
 		if order.CustomerID != customerID {
-			return nil, fmt.Errorf(
-				"customer %v can't get the information about order with ID==%v",
-				customerID, order.ID,
-			)
+			return nil, ErrorCustomerID
 		}
 
 		packagingName := ""

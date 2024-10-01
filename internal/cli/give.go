@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -11,14 +12,14 @@ import (
 	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 )
 
-func give(ctx context.Context, service *srvc.Service, customerID models.IDType, orderIDs []models.IDType) error {
+func GiveHandler(ctx context.Context, buffer *bytes.Buffer, service *srvc.Service, customerID models.IDType, orderIDs []models.IDType) error {
 	orders, err := service.GiveOrderToCustomer(ctx, orderIDs, customerID)
 	if err != nil {
 		return fmt.Errorf("error: %w", err)
 	}
 
 	if len(orders) == 0 {
-		fmt.Println("No orders")
+		fmt.Fprintln(buffer, "No orders")
 		return nil
 	}
 
@@ -35,7 +36,7 @@ func give(ctx context.Context, service *srvc.Service, customerID models.IDType, 
 		"Message",
 		"Pack",
 	)
-	fmt.Println(tableTop)
+	fmt.Fprintln(buffer, tableTop)
 	for _, order := range orders {
 		give := "NO"
 		if order.Ok {
@@ -44,7 +45,7 @@ func give(ctx context.Context, service *srvc.Service, customerID models.IDType, 
 		tableRow := fmt.Sprintf(
 			"%8v|%4s|%-"+strconv.Itoa(maxMsgLen)+"s|%-"+strconv.Itoa(maxPackageNameLen)+"s|%v",
 			order.ID, give, order.Msg, order.Package, order.Cost)
-		fmt.Println(tableRow)
+		fmt.Fprintln(buffer, tableRow)
 	}
 	return nil
 }
@@ -66,7 +67,7 @@ func getGiveCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
 			}
 
 			if len(args) < 2 {
-				fmt.Println("IDs count is less then 2, check 'give --help'")
+				fmt.Println("IDs count is less then 2, check 'GiveHandler --help'")
 				return
 			}
 
@@ -83,9 +84,11 @@ func getGiveCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
 			customerID := ids[0]
 			orderIDs := ids[1:]
 
-			if err := give(ctx, service, customerID, orderIDs); err != nil {
+			var buffer bytes.Buffer
+			if err := GiveHandler(ctx, &buffer, service, customerID, orderIDs); err != nil {
 				fmt.Println(err.Error())
 			}
+			fmt.Print(buffer.String())
 		},
 	}
 

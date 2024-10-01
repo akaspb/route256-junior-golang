@@ -40,3 +40,11 @@ func CopyFile(fileName, copyFileName string) error {
 	// Write data to dst
 	return ioutil.WriteFile(copyFileName, data, 0755)
 }
+
+func KeepСhars(in string) string {
+	return strings.ReplaceAll(
+		strings.ReplaceAll(
+			strings.TrimSpace(in), " ", "",
+		), "\n", "",
+	)
+}

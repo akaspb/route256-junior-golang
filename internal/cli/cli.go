@@ -35,7 +35,7 @@ func NewCliService(ctx context.Context, orderStorage storage.Facade, packService
 	c.rootCli.AddCommand(getGiveCmd(ctx, service))
 	c.rootCli.AddCommand(getInterCmd(service, c.rootCli))
 	c.rootCli.AddCommand(getListCmd(ctx, service))
-	c.rootCli.AddCommand(getNowCmd())
+	c.rootCli.AddCommand(getNowCmd(service))
 	c.rootCli.AddCommand(getReceiveCmd(ctx, service, packService))
 	c.rootCli.AddCommand(getRemoveCmd(ctx, service))
 	c.rootCli.AddCommand(getReturnCmd(ctx, service))
@@ -80,8 +80,8 @@ func getStartTimeInCmd(cmd *cobra.Command) (time.Time, error) {
 	return startTime, nil
 }
 
-func getToday() string {
-	return time.Now().Truncate(24 * time.Hour).Format("02.01.2006")
+func getToday(service *srvc.Service) string {
+	return service.GetCurrentTime().Truncate(24 * time.Hour).Format("02.01.2006")
 }
 
 func (c *CliService) Execute() error {

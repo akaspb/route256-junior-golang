@@ -50,7 +50,7 @@ func getInterCmd(service *srvc.Service, rootCli *cobra.Command) *cobra.Command {
 		},
 	}
 
-	interCli.Flags().StringP("start", "s", getToday(), "PVZ start time in format DD.MM.YYYY")
+	interCli.Flags().StringP("start", "s", getToday(service), "PVZ start time in format DD.MM.YYYY")
 
 	return interCli
 }

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -10,6 +11,16 @@ import (
 	"github.com/spf13/cobra"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 )
+
+func RemoveHandler(ctx context.Context, buffer *bytes.Buffer, service *srvc.Service, orderID models.IDType) error {
+	if err := service.ReturnOrder(ctx, orderID); err != nil {
+		return fmt.Errorf("error: %v\n", err)
+	}
+
+	fmt.Fprintln(buffer, "success: order can be given to courier for return")
+
+	return nil
+}
 
 func getRemoveCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
 	var removeCli = &cobra.Command{
@@ -39,11 +50,13 @@ func getRemoveCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
 			}
 			orderID := models.IDType(orderIDint64)
 
-			if err := service.ReturnOrder(ctx, orderID); err != nil {
-				fmt.Printf("error: %v\n", err)
-			} else {
-				fmt.Println("success: order can be given to courier for return")
+			var buffer bytes.Buffer
+			err = RemoveHandler(ctx, &buffer, service, orderID)
+			if err != nil {
+				fmt.Println(err.Error())
+				return
 			}
+			fmt.Print(buffer.String())
 		},
 	}
 

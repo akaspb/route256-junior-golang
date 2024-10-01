@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -9,6 +10,16 @@ import (
 	"github.com/spf13/cobra"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 )
+
+func ReturnHandler(ctx context.Context, buffer *bytes.Buffer, service *srvc.Service, customerID, orderID models.IDType) error {
+	if err := service.ReturnOrderFromCustomer(ctx, customerID, orderID); err != nil {
+		return fmt.Errorf("error: %v\n", err)
+	}
+
+	fmt.Fprintln(buffer, "success: take order from customer to store it in PVZ")
+
+	return nil
+}
 
 func getReturnCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
 	var returnCli = &cobra.Command{
@@ -50,11 +61,13 @@ func getReturnCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
 				return
 			}
 
-			if err := service.ReturnOrderFromCustomer(ctx, customerID, orderID); err != nil {
-				fmt.Printf("error: %v\n", err)
-			} else {
-				fmt.Println("success: take order from customer to store it in PVZ")
+			var buffer bytes.Buffer
+			err = ReturnHandler(ctx, &buffer, service, customerID, orderID)
+			if err != nil {
+				fmt.Println(err.Error())
+				return
 			}
+			fmt.Print(buffer.String())
 		},
 	}
 

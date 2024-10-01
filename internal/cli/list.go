@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
@@ -10,14 +11,14 @@ import (
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 )
 
-func list(ctx context.Context, service *srvc.Service, customerID models.IDType, lastN uint) error {
+func ListHandler(ctx context.Context, buffer *bytes.Buffer, service *srvc.Service, customerID models.IDType, lastN uint) error {
 	orders, err := service.GetCustomerOrders(ctx, customerID, lastN)
 	if err != nil {
 		return fmt.Errorf("error: %w", err)
 	}
 
 	if len(orders) == 0 {
-		fmt.Println("No orders")
+		fmt.Fprintln(buffer, "No orders")
 		return nil
 	}
 
@@ -27,7 +28,7 @@ func list(ctx context.Context, service *srvc.Service, customerID models.IDType, 
 	}
 
 	tableTop := fmt.Sprintf("%8s|    Expiry|Expired|%"+strconv.Itoa(maxPackageNameLen)+"s|Cost", "ID", "Pack")
-	fmt.Println(tableTop)
+	fmt.Fprintln(buffer, tableTop)
 
 	for _, order := range orders {
 		expired := "NO"
@@ -39,7 +40,7 @@ func list(ctx context.Context, service *srvc.Service, customerID models.IDType, 
 			"%8v|%-10s|%7s|%"+strconv.Itoa(maxPackageNameLen)+"s|%v",
 			order.ID, order.Expiry.Format("02.01.2006"), expired, order.Package, order.Cost,
 		)
-		fmt.Println(tableRow)
+		fmt.Fprintln(buffer, tableRow)
 	}
 	return nil
 }
@@ -70,9 +71,11 @@ func getListCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
 			}
 			customerID := models.IDType(customerIDint64)
 
-			if err := list(ctx, service, customerID, n); err != nil {
+			var buffer bytes.Buffer
+			if err := ListHandler(ctx, &buffer, service, customerID, n); err != nil {
 				fmt.Println(err.Error())
 			}
+			fmt.Print(buffer.String())
 		},
 	}
 

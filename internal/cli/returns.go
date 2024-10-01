@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -8,6 +9,32 @@ import (
 
 	"github.com/spf13/cobra"
 )
+
+func returns(
+	ctx context.Context,
+	buffer *bytes.Buffer,
+	service *srvc.Service,
+	offset, limit int,
+) error {
+	returnsSlc, err := service.GetReturnsList(ctx, offset, limit)
+	if err != nil {
+		return fmt.Errorf("error: %v\n", err)
+
+	}
+
+	if len(returnsSlc) == 0 {
+		fmt.Println()
+		return errors.New("No orders")
+	}
+
+	fmt.Fprintf(buffer, "%8s|%11s", "Order ID", "Customer ID")
+	for _, raw := range returnsSlc {
+		tableRow := fmt.Sprintf("%8v|%11v", raw.OrderID, raw.CustomerID)
+		fmt.Fprintln(buffer, tableRow)
+	}
+
+	return nil
+}
 
 func getReturnsCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
 	var returnsCli = &cobra.Command{
@@ -47,23 +74,13 @@ func getReturnsCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
 				return
 			}
 
-			returns, err := service.GetReturnsList(ctx, offset, limit)
+			var buffer bytes.Buffer
+			err = returns(ctx, &buffer, service, offset, limit)
 			if err != nil {
-				fmt.Printf("error: %v\n", err)
+				fmt.Println(err.Error())
 				return
 			}
-
-			if len(returns) == 0 {
-				fmt.Println("No orders")
-				return
-			}
-
-			tableTop := fmt.Sprintf("%8s|%11s", "Order ID", "Customer ID")
-			fmt.Println(tableTop)
-			for _, raw := range returns {
-				tableRow := fmt.Sprintf("%8v|%11v", raw.OrderID, raw.CustomerID)
-				fmt.Println(tableRow)
-			}
+			fmt.Print(buffer.String())
 		},
 	}
 
