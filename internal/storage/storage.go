@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"errors"
-	"fmt"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage/postgres"
 )
@@ -40,36 +39,23 @@ func NewStorageFacade(
 }
 
 func (s *storageFacade) CreateOrder(ctx context.Context, order models.Order) error {
-	fmt.Println("$ CreateOrder")
 	return s.txManager.RunSerializable(ctx, func(ctxTx context.Context) error {
-		var statusId models.IDType
 		var err error
-
-		statusId, err = s.pgRepository.CreateStatus(ctx, postgres.Status{
-			Value: models.StatusToStorage,
-			Time:  order.Status.Time,
-		})
-		fmt.Println("$", statusId, err)
-		if err != nil {
-			return err
-		}
-
-		//something, err := s.pgRepository.GetOrder(ctx, order.ID)
-		//fmt.Println("$$", something, err)
-		//if err == nil {
-		//	return ErrOrderWithIdExists
-		//}
-		//if err != nil && !errors.Is(err, postgres.ErrorOrderNotFound) {
-		//	return err
-		//}
-
 		err = s.pgRepository.CreateOrder(ctx, postgres.Order{
 			ID:         order.ID,
 			CustomerID: order.CustomerID,
 			Expiry:     order.Expiry,
 			Weight:     order.Weight,
 			Cost:       order.Cost,
-			StatusID:   statusId,
+		})
+		if err != nil {
+			return err
+		}
+
+		err = s.pgRepository.CreateStatus(ctx, postgres.Status{
+			Value:   models.StatusToStorage,
+			Time:    order.Status.Time,
+			OrderID: order.ID,
 		})
 		if err != nil {
 			return err
@@ -82,7 +68,6 @@ func (s *storageFacade) CreateOrder(ctx context.Context, order models.Order) err
 				Cost:           order.Pack.Cost,
 				MaxOrderWeight: order.Pack.MaxOrderWeight,
 			}
-			fmt.Println("$", pack)
 			err = s.pgRepository.CreatePack(ctx, pack)
 			if err != nil {
 				return err
@@ -102,7 +87,7 @@ func (s *storageFacade) GetOrder(ctx context.Context, orderID models.IDType) (mo
 		return models.Order{}, err
 	}
 
-	storageStatus, err := s.pgRepository.GetStatus(ctx, storageOrder.StatusID)
+	storageStatus, err := s.pgRepository.GetStatus(ctx, orderID)
 	if err != nil {
 		if errors.Is(err, postgres.ErrorStatusNotFound) {
 			return models.Order{}, ErrOrderNotFound
@@ -153,17 +138,10 @@ func (s *storageFacade) DeleteOrder(ctx context.Context, orderId models.IDType) 
 }
 
 func (s *storageFacade) ChangeOrderStatus(ctx context.Context, orderId models.IDType, status models.Status) error {
-	return s.txManager.RunSerializable(ctx, func(ctxTx context.Context) error {
-		storageStatus, err := s.pgRepository.GetStatus(ctx, orderId)
-		if err != nil {
-			return nil
-		}
-
-		return s.pgRepository.SetStatus(ctx, postgres.Status{
-			ID:    storageStatus.ID,
-			Value: status.Value,
-			Time:  status.Time,
-		})
+	return s.pgRepository.SetStatus(ctx, postgres.Status{
+		OrderID: orderId,
+		Value:   status.Value,
+		Time:    status.Time,
 	})
 }
 

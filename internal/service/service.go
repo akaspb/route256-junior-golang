@@ -154,6 +154,7 @@ func (s *Service) GiveOrderToCustomer(ctx context.Context, orderIDs []models.IDT
 
 	for _, orderID := range orderIDs {
 		order, err := s.orderStorage.GetOrder(ctx, orderID)
+
 		if err != nil {
 			if errors.Is(err, storage.ErrOrderNotFound) {
 				// if order has not been delivered to storage yet
@@ -326,10 +327,22 @@ func (s *Service) ReturnOrderFromCustomer(ctx context.Context, customerID, order
 }
 
 func (s *Service) GetReturnsList(ctx context.Context, offset, limit int) ([]ReturnOrderAndCustomer, error) {
+	if offset < 0 {
+		return nil, errors.New("offset value must be >= 0")
+	}
+
+	if limit <= 0 {
+		return nil, errors.New("limit value must be > 0")
+	}
+
 	orderIDsToReturn := make([]ReturnOrderAndCustomer, 0)
 	returnIDs, err := s.orderStorage.GetOrderIDsWhereStatus(ctx, models.StatusReturn)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(returnIDs) == 0 {
+		return nil, errors.New("no orders for return")
 	}
 
 	count := -offset
