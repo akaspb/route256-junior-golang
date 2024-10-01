@@ -1,23 +1,30 @@
 package cli
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 	"strconv"
 
 	"github.com/spf13/cobra"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 )
 
-func (c *CliService) initRemoveCmd(rootCli *cobra.Command) {
+func getRemoveCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
 	var removeCli = &cobra.Command{
 		Use:     "remove",
 		Short:   "Return order from PVZ to courier",
 		Long:    `Return order from PVZ to courier`,
 		Example: "remove <orderID>",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := c.updateTimeInServiceInCmd(cmd); err != nil {
-				fmt.Println(err.Error())
-				return
+			if startTime, err := getStartTimeInCmd(cmd); err != nil {
+				if !errors.Is(err, ErrorNoStartTimeInCMD) {
+					fmt.Println(err.Error())
+					return
+				}
+			} else {
+				service.SetStartTime(startTime)
 			}
 
 			if len(args) < 1 {
@@ -32,15 +39,13 @@ func (c *CliService) initRemoveCmd(rootCli *cobra.Command) {
 			}
 			orderID := models.IDType(orderIDint64)
 
-			if err := c.srvc.ReturnOrder(c.ctx, orderID); err != nil {
+			if err := service.ReturnOrder(ctx, orderID); err != nil {
 				fmt.Printf("error: %v\n", err)
 			} else {
 				fmt.Println("success: order can be given to courier for return")
 			}
 		},
 	}
-
-	rootCli.AddCommand(removeCli)
 
 	removeCli.AddCommand(&cobra.Command{
 		Use:   "help",
@@ -52,4 +57,6 @@ func (c *CliService) initRemoveCmd(rootCli *cobra.Command) {
 			}
 		},
 	})
+
+	return removeCli
 }

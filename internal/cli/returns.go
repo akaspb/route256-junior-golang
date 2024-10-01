@@ -1,21 +1,28 @@
 package cli
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 
 	"github.com/spf13/cobra"
 )
 
-func (c *CliService) initReturnsCmd(rootCli *cobra.Command) {
+func getReturnsCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
 	var returnsCli = &cobra.Command{
 		Use:     "returns",
 		Short:   "Get all orders, which must be given to courier/couriers for return from PVZ",
 		Long:    `Get all orders, which must be given to courier/couriers for return from PVZ`,
 		Example: "returns -o=<offset> -l=<limit>",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := c.updateTimeInServiceInCmd(cmd); err != nil {
-				fmt.Println(err.Error())
-				return
+			if startTime, err := getStartTimeInCmd(cmd); err != nil {
+				if !errors.Is(err, ErrorNoStartTimeInCMD) {
+					fmt.Println(err.Error())
+					return
+				}
+			} else {
+				service.SetStartTime(startTime)
 			}
 
 			var offset, limit int
@@ -40,7 +47,7 @@ func (c *CliService) initReturnsCmd(rootCli *cobra.Command) {
 				return
 			}
 
-			returns, err := c.srvc.GetReturnsList(c.ctx, offset, limit)
+			returns, err := service.GetReturnsList(ctx, offset, limit)
 			if err != nil {
 				fmt.Printf("error: %v\n", err)
 				return
@@ -60,8 +67,6 @@ func (c *CliService) initReturnsCmd(rootCli *cobra.Command) {
 		},
 	}
 
-	rootCli.AddCommand(returnsCli)
-
 	returnsCli.AddCommand(&cobra.Command{
 		Use:   "help",
 		Short: "Help about command",
@@ -75,4 +80,6 @@ func (c *CliService) initReturnsCmd(rootCli *cobra.Command) {
 
 	returnsCli.Flags().IntP("limit", "l", 0, "limit of results")
 	returnsCli.Flags().IntP("offset", "o", 0, "offset of results, starts from 0")
+
+	return returnsCli
 }

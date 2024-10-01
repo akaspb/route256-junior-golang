@@ -2,21 +2,28 @@ package cli
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
+	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 )
 
-func (c *CliService) initInterCmd(rootCli *cobra.Command) {
+func getInterCmd(service *srvc.Service, rootCli *cobra.Command) *cobra.Command {
 	var interCli = &cobra.Command{
 		Use:   "inter",
 		Short: "Start program in interactive mode",
 		Long:  `Start program in interactive mode`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := c.updateTimeInServiceInCmd(cmd); err != nil {
-				fmt.Println(err.Error())
+			if startTime, err := getStartTimeInCmd(cmd); err != nil {
+				if !errors.Is(err, ErrorNoStartTimeInCMD) {
+					fmt.Println(err.Error())
+					return
+				}
+			} else {
+				service.SetStartTime(startTime)
 			}
 
 			in := bufio.NewReader(os.Stdin)
@@ -43,7 +50,7 @@ func (c *CliService) initInterCmd(rootCli *cobra.Command) {
 		},
 	}
 
-	rootCli.AddCommand(interCli)
+	interCli.Flags().StringP("start", "s", getToday(), "PVZ start time in format DD.MM.YYYY")
 
-	interCli.Flags().StringP("start", "s", c.getToday(), "PVZ start time in format DD.MM.YYYY")
+	return interCli
 }

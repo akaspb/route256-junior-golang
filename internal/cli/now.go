@@ -6,28 +6,27 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *CliService) now() error {
+func now() error {
 	//if c.srvc == nil {
 	//	return errors.New("this command should be use only in interactive mode")
 	//}
 
-	fmt.Println(c.getToday())
+	fmt.Println(getToday())
 	return nil
 }
 
-func (c *CliService) initNowCmd(rootCli *cobra.Command) {
+func getNowCmd() *cobra.Command {
 	var nowCli = &cobra.Command{
 		Use:     "now",
 		Short:   "Get time in program",
 		Long:    `Get time in program`,
 		Example: "now",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := c.now(); err != nil {
+			if err := now(); err != nil {
 				fmt.Println(err)
 			}
 		},
 	}
-	rootCli.AddCommand(nowCli)
 
 	nowCli.AddCommand(&cobra.Command{
 		Use:   "help",
@@ -39,4 +38,6 @@ func (c *CliService) initNowCmd(rootCli *cobra.Command) {
 			}
 		},
 	})
+
+	return nowCli
 }

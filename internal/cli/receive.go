@@ -1,16 +1,21 @@
 package cli
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"gitlab.ozon.dev/siralexpeter/Homework/internal/service"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
+	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 )
 
-func (c *CliService) receive(
+func receive(
+	ctx context.Context,
+	service *srvc.Service,
 	orderID models.IDType,
 	orderCost models.CostType,
 	orderWeight models.WeightType,
@@ -20,7 +25,7 @@ func (c *CliService) receive(
 ) error {
 	var packPtr *models.Pack
 	if packName != "" {
-		pack, err := c.srvc.Packaging.GetPackagingByName(packName)
+		pack, err := service.Packaging.GetPackagingByName(packName)
 		if err != nil {
 			return err
 		}
@@ -28,7 +33,7 @@ func (c *CliService) receive(
 		packPtr = &pack
 	}
 
-	if err := c.srvc.AcceptOrderFromCourier(c.ctx, service.AcceptOrderDTO{
+	if err := service.AcceptOrderFromCourier(ctx, srvc.AcceptOrderDTO{
 		OrderID:     orderID,
 		OrderCost:   orderCost,
 		OderWeight:  orderWeight,
@@ -43,16 +48,20 @@ func (c *CliService) receive(
 	return nil
 }
 
-func (c *CliService) iniReceiveCmd(rootCli *cobra.Command) {
+func getReceiveCmd(ctx context.Context, service *srvc.Service, packService *packaging.Packaging) *cobra.Command {
 	var receiveCli = &cobra.Command{
 		Use:     "receive",
 		Short:   "Receive order from courier to PVZ",
 		Long:    `Receive order from courier to PVZ`,
 		Example: "receive -o=<orderID> -m=<order cost> -w=<order weight> -c=<customerID> -e=<expiry in DD.MM.YYYY format> [-p=<packaging name>]",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := c.updateTimeInServiceInCmd(cmd); err != nil {
-				fmt.Println(err.Error())
-				return
+			if startTime, err := getStartTimeInCmd(cmd); err != nil {
+				if !errors.Is(err, ErrorNoStartTimeInCMD) {
+					fmt.Println(err.Error())
+					return
+				}
+			} else {
+				service.SetStartTime(startTime)
 			}
 
 			var orderID, customerID models.IDType
@@ -124,7 +133,9 @@ func (c *CliService) iniReceiveCmd(rootCli *cobra.Command) {
 				return
 			}
 
-			if err := c.receive(
+			if err := receive(
+				ctx,
+				service,
 				orderID,
 				cost,
 				weight,
@@ -137,8 +148,6 @@ func (c *CliService) iniReceiveCmd(rootCli *cobra.Command) {
 		},
 	}
 
-	rootCli.AddCommand(receiveCli)
-
 	receiveCli.AddCommand(&cobra.Command{
 		Use:   "help",
 		Short: "Help about command",
@@ -150,7 +159,7 @@ func (c *CliService) iniReceiveCmd(rootCli *cobra.Command) {
 		},
 	})
 
-	packs := c.packService.GetAllPacks()
+	packs := packService.GetAllPacks()
 	packagingNames := make([]string, 0, len(packs))
 	for _, pack := range packs {
 		packagingNames = append(packagingNames, fmt.Sprintf("\n\t - %s", pack.Name))
@@ -167,4 +176,6 @@ func (c *CliService) iniReceiveCmd(rootCli *cobra.Command) {
 		"packaging name: %s",
 		packagingUsage,
 	))
+
+	return receiveCli
 }

@@ -1,15 +1,17 @@
 package cli
 
 import (
+	"context"
 	"fmt"
+	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 	"strconv"
 
 	"github.com/spf13/cobra"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 )
 
-func (c *CliService) list(customerID models.IDType, lastN uint) error {
-	orders, err := c.srvc.GetCustomerOrders(c.ctx, customerID, lastN)
+func list(ctx context.Context, service *srvc.Service, customerID models.IDType, lastN uint) error {
+	orders, err := service.GetCustomerOrders(ctx, customerID, lastN)
 	if err != nil {
 		return fmt.Errorf("error: %w", err)
 	}
@@ -42,24 +44,7 @@ func (c *CliService) list(customerID models.IDType, lastN uint) error {
 	return nil
 }
 
-//func init() {
-//	rootCli.AddCommand(listCli)
-//
-//	listCli.AddCommand(&cobra.Command{
-//		Use:   "help",
-//		Short: "Help about command",
-//		Long:  `Help about command`,
-//		Run: func(cmd *cobra.Command, args []string) {
-//			if err := listCli.Help(); err != nil {
-//				fmt.Println(err.Error())
-//			}
-//		},
-//	})
-//
-//	listCli.Flags().UintP("n", "n", 0, "N last orders count")
-//}
-
-func (c *CliService) initListCmd(rootCli *cobra.Command) {
+func getListCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
 	var listCli = &cobra.Command{
 		Use:     "list",
 		Short:   "Get customer orders, which are contained in PVZ now",
@@ -85,13 +70,11 @@ func (c *CliService) initListCmd(rootCli *cobra.Command) {
 			}
 			customerID := models.IDType(customerIDint64)
 
-			if err := c.list(customerID, n); err != nil {
+			if err := list(ctx, service, customerID, n); err != nil {
 				fmt.Println(err.Error())
 			}
 		},
 	}
-
-	rootCli.AddCommand(listCli)
 
 	listCli.AddCommand(&cobra.Command{
 		Use:   "help",
@@ -105,4 +88,6 @@ func (c *CliService) initListCmd(rootCli *cobra.Command) {
 	})
 
 	listCli.Flags().UintP("n", "n", 0, "N last orders count")
+
+	return listCli
 }

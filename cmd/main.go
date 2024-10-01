@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v4/pgxpool"
-	"gitlab.ozon.dev/siralexpeter/Homework/cmd/cli"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/cli"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
 	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage"
@@ -41,7 +41,7 @@ func main() {
 	now := time.Now().Truncate(24 * time.Hour)
 	service := srvc.NewService(orderStorage, packService, now, now)
 
-	cliService := cli.NewCliService(ctx, orderStorage, *packService, *service)
+	cliService := cli.NewCliService(ctx, orderStorage, packService, service)
 
 	err = cliService.Execute()
 	if err != nil {

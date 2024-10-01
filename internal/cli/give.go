@@ -1,15 +1,18 @@
 package cli
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"strconv"
 
 	"github.com/spf13/cobra"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
+	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 )
 
-func (c *CliService) give(customerID models.IDType, orderIDs []models.IDType) error {
-	orders, err := c.srvc.GiveOrderToCustomer(c.ctx, orderIDs, customerID)
+func give(ctx context.Context, service *srvc.Service, customerID models.IDType, orderIDs []models.IDType) error {
+	orders, err := service.GiveOrderToCustomer(ctx, orderIDs, customerID)
 	if err != nil {
 		return fmt.Errorf("error: %w", err)
 	}
@@ -46,16 +49,20 @@ func (c *CliService) give(customerID models.IDType, orderIDs []models.IDType) er
 	return nil
 }
 
-func (c *CliService) initGiveCmd(rootCli *cobra.Command) {
+func getGiveCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
 	var giveCli = &cobra.Command{
 		Use:     "give",
 		Short:   "Give orders by their ids from PVZ to customer",
 		Long:    `Give orders by their ids from PVZ to customer`,
 		Example: "give <userID> <orderID_1> ... <orderID_N>",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := c.updateTimeInServiceInCmd(cmd); err != nil {
-				fmt.Println(err.Error())
-				return
+			if startTime, err := getStartTimeInCmd(cmd); err != nil {
+				if !errors.Is(err, ErrorNoStartTimeInCMD) {
+					fmt.Println(err.Error())
+					return
+				}
+			} else {
+				service.SetStartTime(startTime)
 			}
 
 			if len(args) < 2 {
@@ -76,13 +83,11 @@ func (c *CliService) initGiveCmd(rootCli *cobra.Command) {
 			customerID := ids[0]
 			orderIDs := ids[1:]
 
-			if err := c.give(customerID, orderIDs); err != nil {
+			if err := give(ctx, service, customerID, orderIDs); err != nil {
 				fmt.Println(err.Error())
 			}
 		},
 	}
-
-	rootCli.AddCommand(giveCli)
 
 	giveCli.AddCommand(&cobra.Command{
 		Use:   "help",
@@ -94,4 +99,6 @@ func (c *CliService) initGiveCmd(rootCli *cobra.Command) {
 			}
 		},
 	})
+
+	return giveCli
 }

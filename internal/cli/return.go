@@ -1,22 +1,29 @@
 package cli
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 
 	"github.com/spf13/cobra"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 )
 
-func (c *CliService) initReturnCmd(rootCli *cobra.Command) {
+func getReturnCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
 	var returnCli = &cobra.Command{
 		Use:     "return",
 		Short:   "Get order from customer to return",
 		Long:    `Get order from customer to return`,
 		Example: "return -o=<orderID> -c=<customerID>",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := c.updateTimeInServiceInCmd(cmd); err != nil {
-				fmt.Println(err.Error())
-				return
+			if startTime, err := getStartTimeInCmd(cmd); err != nil {
+				if !errors.Is(err, ErrorNoStartTimeInCMD) {
+					fmt.Println(err.Error())
+					return
+				}
+			} else {
+				service.SetStartTime(startTime)
 			}
 
 			var orderID, customerID models.IDType
@@ -43,15 +50,13 @@ func (c *CliService) initReturnCmd(rootCli *cobra.Command) {
 				return
 			}
 
-			if err := c.srvc.ReturnOrderFromCustomer(c.ctx, customerID, orderID); err != nil {
+			if err := service.ReturnOrderFromCustomer(ctx, customerID, orderID); err != nil {
 				fmt.Printf("error: %v\n", err)
 			} else {
 				fmt.Println("success: take order from customer to store it in PVZ")
 			}
 		},
 	}
-
-	rootCli.AddCommand(returnCli)
 
 	returnCli.AddCommand(&cobra.Command{
 		Use:   "help",
@@ -66,4 +71,6 @@ func (c *CliService) initReturnCmd(rootCli *cobra.Command) {
 
 	returnCli.Flags().Int64P("order", "o", 0, "unique order ID")
 	returnCli.Flags().Int64P("customer", "c", 0, "unique customer ID")
+
+	return returnCli
 }
