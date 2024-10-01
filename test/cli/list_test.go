@@ -8,7 +8,7 @@ import (
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
 	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 	"gitlab.ozon.dev/siralexpeter/Homework/test/helpers"
-	"gitlab.ozon.dev/siralexpeter/Homework/test/storage"
+	"gitlab.ozon.dev/siralexpeter/Homework/test/helpers/storage"
 	"testing"
 	"time"
 )
@@ -92,7 +92,6 @@ func TestListCmd(t *testing.T) {
 		}
 		if output != tc.output {
 			t.Errorf("wrong output: %v", output)
-			t.Errorf("$$: \n%v\n%v", output, tc.output)
 		}
 	}
 }

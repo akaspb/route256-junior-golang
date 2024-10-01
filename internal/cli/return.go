@@ -13,7 +13,7 @@ import (
 
 func ReturnHandler(ctx context.Context, buffer *bytes.Buffer, service *srvc.Service, customerID, orderID models.IDType) error {
 	if err := service.ReturnOrderFromCustomer(ctx, customerID, orderID); err != nil {
-		return fmt.Errorf("error: %v\n", err)
+		return err
 	}
 
 	fmt.Fprintln(buffer, "success: take order from customer to store it in PVZ")

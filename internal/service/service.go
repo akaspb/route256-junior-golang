@@ -15,11 +15,13 @@ const Day = 24 * time.Hour
 const MaxReturnTime = 2 * Day
 
 var (
-	ErrorCustomerID          = errors.New("this customer is not the owner of some order")
-	ErrorOrderWasAccepted    = errors.New("order was accepted earlier")
-	ErrorOrderExpiredAlready = errors.New("order expiry time can't be before current time")
-	ErrorOderNegativeCost    = errors.New("order cost can't be negative")
-	ErrorOderNegativeWeight  = errors.New("order weight can't be negative")
+	ErrorCustomerID              = errors.New("operation is forbidden for not this order customer")
+	ErrorOrderWasAccepted        = errors.New("order was accepted earlier")
+	ErrorOrderExpiredAlready     = errors.New("order expired")
+	ErrorOderNegativeCost        = errors.New("order cost can't be negative")
+	ErrorOderNegativeWeight      = errors.New("order weight can't be negative")
+	ErrorOrderWasTakenByCustomer = errors.New("order was taken by customer")
+	ErrorOrderWasNotFounded      = errors.New("order is not in PVZ or has already been returned and given to courier")
 )
 
 type OrderIDWithMsg struct {
@@ -130,14 +132,14 @@ func (s *Service) ReturnOrder(ctx context.Context, orderID models.IDType) error 
 
 	if err != nil {
 		if errors.Is(err, storage.ErrOrderNotFound) {
-			return fmt.Errorf("order with ID==%v is not in PVZ or has already been returned and given to courier", orderID)
+			return ErrorOrderWasNotFounded
 		}
 		return err
 	}
 
 	switch order.Status.Value {
 	case models.StatusToCustomer:
-		return fmt.Errorf("order with orderId==%v was taken by customer", orderID)
+		return ErrorOrderWasTakenByCustomer
 	case models.StatusReturn:
 		break
 	case models.StatusToStorage:
@@ -290,16 +292,13 @@ func (s *Service) ReturnOrderFromCustomer(ctx context.Context, customerID, order
 
 	if err != nil {
 		if errors.Is(err, storage.ErrOrderNotFound) {
-			return fmt.Errorf("order with ID==%v is not in PVZ or has already been returned", orderID)
+			return ErrorOrderWasNotFounded
 		}
 		return err
 	}
 
 	if order.CustomerID != customerID {
-		return fmt.Errorf(
-			"order with ID==%v can't be accepted for return from other customer %v",
-			order.ID, customerID,
-		)
+		return ErrorCustomerID
 	}
 
 	if order.Status.Value == models.StatusReturn {
@@ -317,7 +316,7 @@ func (s *Service) ReturnOrderFromCustomer(ctx context.Context, customerID, order
 	}
 
 	if !isLessOrEqualTime(currTime, order.Status.Time.Add(MaxReturnTime)) {
-		return fmt.Errorf("order with ID==%v return time elapsed", order.ID)
+		return ErrorOrderExpiredAlready
 	}
 
 	err = s.orderStorage.ChangeOrderStatus(ctx, order.ID, models.Status{

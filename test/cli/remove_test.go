@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-func TestGiveCmd(t *testing.T) {
+func TestRemoveCmd(t *testing.T) {
 	ctx := context.Background()
 	testStorage := storage.NewStorage()
 
@@ -24,26 +24,35 @@ func TestGiveCmd(t *testing.T) {
 
 	baseOrder := models.Order{
 		ID:         0,
-		CustomerID: 0,
-		Expiry:     futureTime,
+		CustomerID: 1,
 		Weight:     1,
 		Cost:       1,
-		Pack:       nil,
 		Status: models.Status{
-			Value: models.StatusToStorage,
-			Time:  prevTime,
+			Time: prevTime,
 		},
 	}
 
-	orderUser1 := baseOrder
-	orderUser1.ID = 1
-	orderUser1.CustomerID = 1
+	order1 := baseOrder
+	order1.ID = 1
+	order1.Status.Value = models.StatusToStorage
+	order1.Expiry = prevTime
 
-	orderUser2 := baseOrder
-	orderUser2.ID = 2
-	orderUser2.CustomerID = 2
+	order2 := baseOrder
+	order2.ID = 2
+	order2.Status.Value = models.StatusReturn
+	order2.Expiry = futureTime
 
-	err := testStorage.FillWithOrders(ctx, orderUser1, orderUser2)
+	order3 := baseOrder
+	order3.ID = 3
+	order3.Status.Value = models.StatusToCustomer
+	order3.Expiry = futureTime
+
+	someUnknownOrder := baseOrder
+	someUnknownOrder.ID = 4
+	someUnknownOrder.Status.Value = models.StatusToStorage
+	someUnknownOrder.Expiry = prevTime
+
+	err := testStorage.FillWithOrders(ctx, order1, order2, order3)
 	if err != nil {
 		t.Fatalf("unexpected error before test: %v", err)
 	}
@@ -56,29 +65,35 @@ func TestGiveCmd(t *testing.T) {
 	service := srvc.NewService(testStorage, packService, nowTime, time.Now())
 
 	tests := []struct {
-		customerID models.IDType
-		orderIDs   []models.IDType
-		output     string
-		err        error
+		order  models.Order
+		output string
+		err    error
 	}{
 		{
-			customerID: 1,
-			orderIDs:   []models.IDType{1},
+			order: order1,
 			output: helpers.KeepСhars(`
-				ID|Give|Message               |Pack|Cost
-				 1| YES|Give order to customer|    |1
+				success: order can be given to courier for return
 			`),
 		},
 		{
-			customerID: 1,
-			orderIDs:   []models.IDType{1, 2},
-			err:        srvc.ErrorCustomerID,
+			order: order2,
+			output: helpers.KeepСhars(`
+				success: order can be given to courier for return
+			`),
+		},
+		{
+			order: order3,
+			err:   srvc.ErrorOrderWasTakenByCustomer,
+		},
+		{
+			order: someUnknownOrder,
+			err:   srvc.ErrorOrderWasNotFounded,
 		},
 	}
 
 	for _, tc := range tests {
 		var buffer bytes.Buffer
-		err = cli.GiveHandler(ctx, &buffer, service, tc.customerID, tc.orderIDs)
+		err = cli.RemoveHandler(ctx, &buffer, service, tc.order.ID)
 
 		output := buffer.String()
 		output = helpers.KeepСhars(output)

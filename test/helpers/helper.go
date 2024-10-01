@@ -41,10 +41,32 @@ func CopyFile(fileName, copyFileName string) error {
 	return ioutil.WriteFile(copyFileName, data, 0755)
 }
 
+func isChar(char rune) bool {
+	if 'a' <= char && char <= 'z' {
+		return true
+	}
+	if 'A' <= char && char <= 'Z' {
+		return true
+	}
+	return false
+}
+
 func KeepСhars(in string) string {
-	return strings.ReplaceAll(
-		strings.ReplaceAll(
-			strings.TrimSpace(in), " ", "",
-		), "\n", "",
-	)
+	buffer := make([]rune, 0, len(in))
+	for _, char := range in {
+		if isChar(char) {
+			buffer = append(buffer, char)
+		}
+	}
+	return string(buffer)
+}
+
+func CountNewlines(text string) int {
+	count := 0
+	for _, char := range text {
+		if char == '\n' {
+			count += 1
+		}
+	}
+	return count
 }

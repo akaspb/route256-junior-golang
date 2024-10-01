@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-func TestGiveCmd(t *testing.T) {
+func TestReturnCmd(t *testing.T) {
 	ctx := context.Background()
 	testStorage := storage.NewStorage()
 
@@ -24,26 +24,28 @@ func TestGiveCmd(t *testing.T) {
 
 	baseOrder := models.Order{
 		ID:         0,
-		CustomerID: 0,
-		Expiry:     futureTime,
+		CustomerID: 1,
 		Weight:     1,
 		Cost:       1,
-		Pack:       nil,
 		Status: models.Status{
-			Value: models.StatusToStorage,
-			Time:  prevTime,
+			Time:  nowTime,
+			Value: models.StatusToCustomer,
 		},
 	}
 
-	orderUser1 := baseOrder
-	orderUser1.ID = 1
-	orderUser1.CustomerID = 1
+	order1 := baseOrder
+	order1.ID = 1
+	order1.Expiry = futureTime
 
-	orderUser2 := baseOrder
-	orderUser2.ID = 2
-	orderUser2.CustomerID = 2
+	order2 := baseOrder
+	order2.ID = 2
+	order2.Status.Time = prevTime
 
-	err := testStorage.FillWithOrders(ctx, orderUser1, orderUser2)
+	order3 := baseOrder
+	order3.ID = 3
+	order3.Expiry = futureTime
+
+	err := testStorage.FillWithOrders(ctx, order1, order2, order3)
 	if err != nil {
 		t.Fatalf("unexpected error before test: %v", err)
 	}
@@ -56,29 +58,38 @@ func TestGiveCmd(t *testing.T) {
 	service := srvc.NewService(testStorage, packService, nowTime, time.Now())
 
 	tests := []struct {
+		orderID    models.IDType
 		customerID models.IDType
-		orderIDs   []models.IDType
 		output     string
 		err        error
 	}{
 		{
+			orderID:    1,
 			customerID: 1,
-			orderIDs:   []models.IDType{1},
 			output: helpers.KeepСhars(`
-				ID|Give|Message               |Pack|Cost
-				 1| YES|Give order to customer|    |1
+				success: take order from customer to store it in PVZ
 			`),
 		},
 		{
+			orderID:    2,
 			customerID: 1,
-			orderIDs:   []models.IDType{1, 2},
+			err:        srvc.ErrorOrderExpiredAlready,
+		},
+		{
+			orderID:    3,
+			customerID: 2,
 			err:        srvc.ErrorCustomerID,
+		},
+		{
+			orderID:    4,
+			customerID: 1,
+			err:        srvc.ErrorOrderWasNotFounded,
 		},
 	}
 
 	for _, tc := range tests {
 		var buffer bytes.Buffer
-		err = cli.GiveHandler(ctx, &buffer, service, tc.customerID, tc.orderIDs)
+		err = cli.ReturnHandler(ctx, &buffer, service, tc.customerID, tc.orderID)
 
 		output := buffer.String()
 		output = helpers.KeepСhars(output)

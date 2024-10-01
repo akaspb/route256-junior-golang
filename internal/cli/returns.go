@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func returns(
+func ReturnsHandler(
 	ctx context.Context,
 	buffer *bytes.Buffer,
 	service *srvc.Service,
@@ -27,7 +27,7 @@ func returns(
 		return errors.New("No orders")
 	}
 
-	fmt.Fprintf(buffer, "%8s|%11s", "Order ID", "Customer ID")
+	fmt.Fprintf(buffer, "%8s|%11s\n", "Order ID", "Customer ID")
 	for _, raw := range returnsSlc {
 		tableRow := fmt.Sprintf("%8v|%11v", raw.OrderID, raw.CustomerID)
 		fmt.Fprintln(buffer, tableRow)
@@ -75,7 +75,7 @@ func getReturnsCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
 			}
 
 			var buffer bytes.Buffer
-			err = returns(ctx, &buffer, service, offset, limit)
+			err = ReturnsHandler(ctx, &buffer, service, offset, limit)
 			if err != nil {
 				fmt.Println(err.Error())
 				return

@@ -14,7 +14,7 @@ import (
 
 func RemoveHandler(ctx context.Context, buffer *bytes.Buffer, service *srvc.Service, orderID models.IDType) error {
 	if err := service.ReturnOrder(ctx, orderID); err != nil {
-		return fmt.Errorf("error: %v\n", err)
+		return err
 	}
 
 	fmt.Fprintln(buffer, "success: order can be given to courier for return")

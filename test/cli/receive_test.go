@@ -9,7 +9,7 @@ import (
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
 	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 	"gitlab.ozon.dev/siralexpeter/Homework/test/helpers"
-	"gitlab.ozon.dev/siralexpeter/Homework/test/storage"
+	"gitlab.ozon.dev/siralexpeter/Homework/test/helpers/storage"
 	"testing"
 	"time"
 )
@@ -97,8 +97,12 @@ func TestReceiveCmd(t *testing.T) {
 				t.Errorf("unexpected error: %v", err)
 			}
 		} else {
+			if tc.err != nil {
+				t.Errorf("error was expected: %v", tc.err)
+				continue
+			}
 			if output != tc.output {
-				t.Fatalf("wrong output: %v", output)
+				t.Errorf("wrong output: %v", output)
 			}
 		}
 	}

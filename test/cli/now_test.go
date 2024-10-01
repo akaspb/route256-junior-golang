@@ -5,7 +5,7 @@ import (
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/cli"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
 	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
-	"gitlab.ozon.dev/siralexpeter/Homework/test/storage"
+	"gitlab.ozon.dev/siralexpeter/Homework/test/helpers/storage"
 	"strings"
 	"testing"
 	"time"
@@ -34,6 +34,6 @@ func TestNowCmd(t *testing.T) {
 	output = strings.TrimSpace(output)
 
 	if output != correctResult {
-		t.Fatalf("wrong output: %v", output)
+		t.Errorf("wrong output: %v", output)
 	}
 }
