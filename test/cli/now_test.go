@@ -2,13 +2,14 @@ package test_cli
 
 import (
 	"bytes"
+	"strings"
+	"testing"
+	"time"
+
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/cli"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
 	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 	"gitlab.ozon.dev/siralexpeter/Homework/test/helpers/storage"
-	"strings"
-	"testing"
-	"time"
 )
 
 func TestNowCmd(t *testing.T) {

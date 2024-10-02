@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 	"strconv"
 
 	"github.com/spf13/cobra"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
+	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 )
 
 func ListHandler(ctx context.Context, buffer *bytes.Buffer, service *srvc.Service, customerID models.IDType, lastN uint) error {

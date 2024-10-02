@@ -1,8 +1,9 @@
 package postgres
 
 import (
-	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 	"time"
+
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 )
 
 type Order struct {

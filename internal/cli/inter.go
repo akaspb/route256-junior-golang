@@ -4,11 +4,11 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
+	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 )
 
 func getInterCmd(service *srvc.Service, rootCli *cobra.Command) *cobra.Command {

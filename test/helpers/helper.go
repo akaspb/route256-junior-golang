@@ -3,11 +3,12 @@ package helpers
 import (
 	"bytes"
 	"fmt"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/spf13/cobra"
 )
 
 func ExecuteCliCommand(t *testing.T, c *cobra.Command, args ...string) (string, error) {

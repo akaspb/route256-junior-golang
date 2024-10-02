@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+
 	"github.com/georgysavva/scany/pgxscan"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 )

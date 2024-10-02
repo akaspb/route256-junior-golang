@@ -5,11 +5,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 	"strconv"
 
 	"github.com/spf13/cobra"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
+	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 )
 
 func RemoveHandler(ctx context.Context, buffer *bytes.Buffer, service *srvc.Service, orderID models.IDType) error {

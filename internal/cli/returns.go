@@ -5,9 +5,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 
 	"github.com/spf13/cobra"
+	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 )
 
 func ReturnsHandler(

@@ -3,9 +3,9 @@ package cli
 import (
 	"bytes"
 	"fmt"
-	"gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 
 	"github.com/spf13/cobra"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 )
 
 func NowHandler(buffer *bytes.Buffer, service *service.Service) error {
