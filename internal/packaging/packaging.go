@@ -20,24 +20,44 @@ const (
 )
 
 type Packaging struct {
-	Packs map[string]models.Pack
+	packsMap map[string]models.Pack
 }
 
-func NewPackaging(packs ...models.Pack) (*Packaging, error) {
-	packsMap := make(map[string]models.Pack, len(packs))
-	for _, pack := range packs {
-		if _, ok := packsMap[pack.Name]; ok {
-			return nil, fmt.Errorf("non unique name '%s' in packs param", pack.Name)
-		}
-		packsMap[pack.Name] = pack
+func NewPackaging() (*Packaging, error) {
+	p := &Packaging{packsMap: make(map[string]models.Pack)}
+
+	packet := NewPack("packet", 5, 10)
+	box := NewPack("box", 20, 30)
+	wrap := NewPack("wrap", 1, AnyWeight)
+
+	if err := p.AddPacks(packet, box, wrap); err != nil {
+		return nil, err
 	}
 
-	return &Packaging{Packs: packsMap}, nil
+	return p, nil
+}
+
+func (p *Packaging) AddPacks(packs ...models.Pack) error {
+	for _, pack := range packs {
+		if err := p.AddPack(pack); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (p *Packaging) AddPack(pack models.Pack) error {
+	if _, ok := p.packsMap[pack.Name]; ok {
+		return fmt.Errorf("non unique name '%s' in packs param", pack.Name)
+	}
+
+	return nil
 }
 
 func (p *Packaging) GetAllPacks() []models.Pack {
-	packs := make([]models.Pack, 0, len(p.Packs))
-	for _, pack := range p.Packs {
+	packs := make([]models.Pack, 0, len(p.packsMap))
+	for _, pack := range p.packsMap {
 		packs = append(packs, pack)
 	}
 
@@ -54,7 +74,7 @@ func (p *Packaging) GetAllPacks() []models.Pack {
 //}
 
 func (p *Packaging) GetPackagingByName(packagingName string) (models.Pack, error) {
-	if pack, ok := p.Packs[packagingName]; ok {
+	if pack, ok := p.packsMap[packagingName]; ok {
 		return pack, nil
 	}
 

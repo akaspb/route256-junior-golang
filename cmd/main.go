@@ -28,11 +28,7 @@ func main() {
 
 	orderStorage := newStorageFacade(pool)
 
-	packet := packaging.NewPack("packet", 5, 10)
-	box := packaging.NewPack("box", 20, 30)
-	wrap := packaging.NewPack("wrap", 1, packaging.AnyWeight)
-
-	packService, err := packaging.NewPackaging(packet, box, wrap)
+	packService, err := packaging.NewPackaging()
 	if err != nil {
 		fmt.Printf("error in main func: %v\n", err)
 		return
