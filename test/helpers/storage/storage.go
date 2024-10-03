@@ -74,15 +74,15 @@ func (s *Storage) GetOrderStatus(ctx context.Context, orderID models.IDType) (mo
 	return s.orders[orderID].Status, nil
 }
 
-func (s *Storage) GetOrdersWhereStatus(ctx context.Context, statusVal models.StatusVal, offset, limit uint) ([]models.Order, error) {
-	orders := make([]models.Order, 0)
+func (s *Storage) GetOrderIDsWhereStatus(ctx context.Context, statusVal models.StatusVal, offset, limit uint) ([]models.IDType, error) {
+	orderIDs := make([]models.IDType, 0)
 	for _, order := range s.orders {
 		if order.Status.Value == statusVal {
 			if offset > 0 {
 				offset--
 			} else {
 				if limit > 0 {
-					orders = append(orders, order)
+					orderIDs = append(orderIDs, order.ID)
 					limit--
 				} else {
 					break
@@ -91,7 +91,15 @@ func (s *Storage) GetOrdersWhereStatus(ctx context.Context, statusVal models.Sta
 		}
 	}
 
-	return orders, nil
+	return orderIDs, nil
+}
+
+func (s *Storage) GetOrderCustomerID(ctx context.Context, orderID models.IDType) (models.IDType, error) {
+	if order, ok := s.orders[orderID]; ok {
+		return order.CustomerID, nil
+	}
+
+	return 0, storage.ErrOrderNotFound
 }
 
 func (s *Storage) FillWithOrders(ctx context.Context, orders ...models.Order) error {

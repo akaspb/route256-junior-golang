@@ -332,16 +332,21 @@ func (s *Service) GetReturnsList(ctx context.Context, offset, limit int) ([]Retu
 		return nil, errors.New("limit value must be > 0")
 	}
 
-	returnOrders, err := s.orderStorage.GetOrdersWhereStatus(ctx, models.StatusReturn, uint(offset), uint(limit))
+	returnOrderIDs, err := s.orderStorage.GetOrderIDsWhereStatus(ctx, models.StatusReturn, uint(offset), uint(limit))
 	if err != nil {
 		return nil, err
 	}
 
-	orderIDsToReturn := make([]ReturnOrderAndCustomer, len(returnOrders))
-	for i, returnOrder := range returnOrders {
+	orderIDsToReturn := make([]ReturnOrderAndCustomer, len(returnOrderIDs))
+	for i, orderID := range returnOrderIDs {
+		customerID, err := s.orderStorage.GetOrderCustomerID(ctx, orderID)
+		if err != nil {
+			return nil, err
+		}
+
 		orderIDsToReturn[i] = ReturnOrderAndCustomer{
-			OrderID:    returnOrder.ID,
-			CustomerID: returnOrder.CustomerID,
+			OrderID:    orderID,
+			CustomerID: customerID,
 		}
 	}
 

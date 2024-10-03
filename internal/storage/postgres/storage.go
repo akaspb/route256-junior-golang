@@ -54,15 +54,32 @@ func (s *PgStorage) CreatePack(ctx context.Context, pack Pack) error {
 	return err
 }
 
-func (s *PgStorage) GetOrdersWhereStatus(ctx context.Context, statusVal models.StatusVal, offset, limit uint) ([]Order, error) {
-	var orders []Order
+func (s *PgStorage) GetOrderIDsWhereStatus(ctx context.Context, statusVal models.StatusVal, offset, limit uint) ([]models.IDType, error) {
+	var orderIDs []models.IDType
 
 	tx := s.txManager.GetQueryEngine(ctx)
-	err := pgxscan.Select(ctx, tx, &orders, `
-		SELECT O.* FROM orders O JOIN statuses S ON O.id = S.order_id WHERE S."value" = $1 LIMIT $2 OFFSET $3
+	err := pgxscan.Select(ctx, tx, &orderIDs, `
+		SELECT O.id FROM orders O JOIN statuses S ON O.id = S.order_id WHERE S."value" = $1 LIMIT $2 OFFSET $3
 	`, statusVal, limit, offset)
 
-	return orders, err
+	return orderIDs, err
+}
+
+func (s *PgStorage) GetOrderCustomerID(ctx context.Context, orderID models.IDType) (models.IDType, error) {
+	var customerID models.IDType
+
+	tx := s.txManager.GetQueryEngine(ctx)
+	err := pgxscan.Get(ctx, tx, &customerID, `
+		SELECT customer_id FROM orders WHERE id = $1
+	`, orderID)
+	if err != nil {
+		if pgxscan.NotFound(err) {
+			return 0, ErrorOrderNotFound
+		}
+		return 0, err
+	}
+
+	return customerID, nil
 }
 
 func (s *PgStorage) GetOrder(ctx context.Context, orderID models.IDType) (Order, error) {
@@ -72,8 +89,11 @@ func (s *PgStorage) GetOrder(ctx context.Context, orderID models.IDType) (Order,
 	err := pgxscan.Get(ctx, tx, &order, `
 		SELECT * FROM orders WHERE id = $1
 	`, orderID)
-	if pgxscan.NotFound(err) {
-		return Order{}, ErrorOrderNotFound
+	if err != nil {
+		if pgxscan.NotFound(err) {
+			return Order{}, ErrorOrderNotFound
+		}
+		return Order{}, err
 	}
 
 	return order, err
@@ -86,8 +106,11 @@ func (s *PgStorage) GetStatus(ctx context.Context, orderID models.IDType) (Statu
 	err := pgxscan.Get(ctx, tx, &status, `
 		SELECT * FROM statuses WHERE order_id = $1
 	`, orderID)
-	if pgxscan.NotFound(err) {
-		return Status{}, ErrorStatusNotFound
+	if err != nil {
+		if pgxscan.NotFound(err) {
+			return Status{}, ErrorStatusNotFound
+		}
+		return Status{}, err
 	}
 
 	return status, err
@@ -100,8 +123,11 @@ func (s *PgStorage) GetPack(ctx context.Context, orderID models.IDType) (Pack, e
 	err := pgxscan.Get(ctx, tx, &pack, `
 		SELECT * FROM packs WHERE order_id = $1
 	`, orderID)
-	if pgxscan.NotFound(err) {
-		return Pack{}, ErrorPackNotFound
+	if err != nil {
+		if pgxscan.NotFound(err) {
+			return Pack{}, ErrorPackNotFound
+		}
+		return Pack{}, err
 	}
 
 	return pack, err
