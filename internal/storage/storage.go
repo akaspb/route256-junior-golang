@@ -10,7 +10,6 @@ import (
 var (
 	ErrOrderNotFound     = errors.New("order is not found")
 	ErrOrderWithIdExists = errors.New("order with such id exist")
-	ErrStatusNotFound    = errors.New("status is not found")
 )
 
 type Facade interface {
@@ -20,7 +19,7 @@ type Facade interface {
 	ChangeOrderStatus(ctx context.Context, orderID models.IDType, val models.Status) error
 	GetCustomerOrdersWithStatus(ctx context.Context, customerID models.IDType, statusVal models.StatusVal) ([]models.Order, error)
 	GetOrderStatus(ctx context.Context, orderID models.IDType) (models.Status, error)
-	GetOrderIDsWhereStatus(ctx context.Context, statusVal models.StatusVal) ([]models.IDType, error)
+	GetOrdersWhereStatus(ctx context.Context, statusVal models.StatusVal, offset, limit uint) ([]models.Order, error)
 }
 
 type storageFacade struct {
@@ -196,19 +195,58 @@ func (s *storageFacade) GetOrderStatus(ctx context.Context, orderId models.IDTyp
 	}, nil
 }
 
-func (s *storageFacade) GetOrderIDsWhereStatus(ctx context.Context, statusVal models.StatusVal) ([]models.IDType, error) {
-	var orderIDs []models.IDType
+func (s *storageFacade) GetOrdersWhereStatus(ctx context.Context, statusVal models.StatusVal, offset, limit uint) ([]models.Order, error) {
+	var orders []models.Order
 
 	err := s.txManager.RunReadUncommitted(ctx, func(ctxTx context.Context) error {
 		var err error
 
-		orderIDs, err = s.pgRepository.GetOrderIDsWhereStatus(ctx, statusVal)
+		storageOrders, err := s.pgRepository.GetOrdersWhereStatus(ctx, statusVal, offset, limit)
 		if err != nil {
 			return err
+		}
+
+		orders = make([]models.Order, len(storageOrders))
+
+		for i, storageOrder := range storageOrders {
+			storageStatus, err := s.pgRepository.GetStatus(ctx, storageOrder.ID)
+			if err != nil {
+				if errors.Is(err, postgres.ErrorStatusNotFound) {
+					return ErrOrderNotFound
+				}
+				return err
+			}
+
+			var packPtr *models.Pack
+			storagePack, err := s.pgRepository.GetPack(ctx, storageOrder.ID)
+			if err != nil {
+				if !errors.Is(err, postgres.ErrorPackNotFound) {
+					return err
+				}
+			} else {
+				packPtr = &models.Pack{
+					Name:           storagePack.Name,
+					Cost:           storagePack.Cost,
+					MaxOrderWeight: storagePack.MaxOrderWeight,
+				}
+			}
+
+			orders[i] = models.Order{
+				ID:         storageOrder.ID,
+				CustomerID: storageOrder.CustomerID,
+				Expiry:     storageOrder.Expiry,
+				Weight:     storageOrder.Weight,
+				Cost:       storageOrder.Cost,
+				Pack:       packPtr,
+				Status: models.Status{
+					Value:     storageStatus.Value,
+					ChangedAt: storageStatus.ChangedAt,
+				},
+			}
 		}
 
 		return nil
 	})
 
-	return orderIDs, err
+	return orders, err
 }

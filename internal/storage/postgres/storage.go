@@ -54,15 +54,15 @@ func (s *PgStorage) CreatePack(ctx context.Context, pack Pack) error {
 	return err
 }
 
-func (s *PgStorage) GetOrderIDsWhereStatus(ctx context.Context, statusVal models.StatusVal) ([]models.IDType, error) {
-	var orderIDs []models.IDType
+func (s *PgStorage) GetOrdersWhereStatus(ctx context.Context, statusVal models.StatusVal, offset, limit uint) ([]Order, error) {
+	var orders []Order
 
 	tx := s.txManager.GetQueryEngine(ctx)
-	err := pgxscan.Select(ctx, tx, &orderIDs, `
-		SELECT O.id FROM orders O JOIN statuses S ON O.id = S.order_id WHERE S."value" = $1 
-	`, statusVal)
+	err := pgxscan.Select(ctx, tx, &orders, `
+		SELECT O.* FROM orders O JOIN statuses S ON O.id = S.order_id WHERE S."value" = $1 LIMIT $2 OFFSET $3
+	`, statusVal, limit, offset)
 
-	return orderIDs, err
+	return orders, err
 }
 
 func (s *PgStorage) GetOrder(ctx context.Context, orderID models.IDType) (Order, error) {

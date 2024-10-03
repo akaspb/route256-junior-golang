@@ -2,8 +2,6 @@ package storage
 
 import (
 	"context"
-	"sort"
-
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage"
 )
@@ -76,24 +74,24 @@ func (s *Storage) GetOrderStatus(ctx context.Context, orderID models.IDType) (mo
 	return s.orders[orderID].Status, nil
 }
 
-func (s *Storage) GetOrderIDsWhereStatus(ctx context.Context, statusVal models.StatusVal) ([]models.IDType, error) {
+func (s *Storage) GetOrdersWhereStatus(ctx context.Context, statusVal models.StatusVal, offset, limit uint) ([]models.Order, error) {
 	orders := make([]models.Order, 0)
 	for _, order := range s.orders {
 		if order.Status.Value == statusVal {
-			orders = append(orders, order)
+			if offset > 0 {
+				offset--
+			} else {
+				if limit > 0 {
+					orders = append(orders, order)
+					limit--
+				} else {
+					break
+				}
+			}
 		}
 	}
 
-	sort.Slice(orders, func(i, j int) bool {
-		return orders[i].Status.ChangedAt.Before(orders[j].Status.ChangedAt)
-	})
-
-	orderIDs := make([]models.IDType, len(orders))
-	for i, order := range orders {
-		orderIDs[i] = order.ID
-	}
-
-	return orderIDs, nil
+	return orders, nil
 }
 
 func (s *Storage) FillWithOrders(ctx context.Context, orders ...models.Order) error {

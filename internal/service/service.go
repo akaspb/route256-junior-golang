@@ -332,37 +332,21 @@ func (s *Service) GetReturnsList(ctx context.Context, offset, limit int) ([]Retu
 		return nil, errors.New("limit value must be > 0")
 	}
 
-	orderIDsToReturn := make([]ReturnOrderAndCustomer, 0)
-	returnIDs, err := s.orderStorage.GetOrderIDsWhereStatus(ctx, models.StatusReturn)
+	returnOrders, err := s.orderStorage.GetOrdersWhereStatus(ctx, models.StatusReturn, uint(offset), uint(limit))
 	if err != nil {
 		return nil, err
 	}
 
-	if len(returnIDs) == 0 {
-		return nil, errors.New("no orders for return")
-	}
-
-	count := -offset
-	for _, orderID := range returnIDs {
-		order, err := s.orderStorage.GetOrder(ctx, orderID)
-		if err != nil {
-			return nil, err
-		}
-
-		if count >= 0 {
-			orderIDsToReturn = append(orderIDsToReturn, ReturnOrderAndCustomer{
-				OrderID:    order.ID,
-				CustomerID: order.CustomerID,
-			})
-		}
-		count++
-		if count == limit {
-			break
+	orderIDsToReturn := make([]ReturnOrderAndCustomer, len(returnOrders))
+	for i, returnOrder := range returnOrders {
+		orderIDsToReturn[i] = ReturnOrderAndCustomer{
+			OrderID:    returnOrder.ID,
+			CustomerID: returnOrder.CustomerID,
 		}
 	}
 
-	if count < 1 {
-		return nil, errors.New("offset value is too small")
+	if len(orderIDsToReturn) < 1 {
+		return nil, errors.New("no orders to show with such offset and limit")
 	}
 
 	return orderIDsToReturn, nil
