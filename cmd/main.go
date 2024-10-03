@@ -37,9 +37,9 @@ func main() {
 	now := time.Now().Truncate(24 * time.Hour)
 	service := srvc.NewService(orderStorage, packService, now, now)
 
-	cliService := cli.NewCliService(ctx, orderStorage, packService, service)
+	cliService := cli.NewCliService(orderStorage, packService, service)
 
-	err = cliService.Execute()
+	err = cliService.Execute(ctx)
 	if err != nil {
 		fmt.Printf("error in main func: %v\n", err)
 		return

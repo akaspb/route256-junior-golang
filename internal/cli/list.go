@@ -45,7 +45,7 @@ func ListHandler(ctx context.Context, buffer *bytes.Buffer, service *srvc.Servic
 	return nil
 }
 
-func getListCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
+func getListCmd(service *srvc.Service) *cobra.Command {
 	var listCli = &cobra.Command{
 		Use:     "list",
 		Short:   "Get customer orders, which are contained in PVZ now",
@@ -72,7 +72,7 @@ func getListCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
 			customerID := models.IDType(customerIDint64)
 
 			var buffer bytes.Buffer
-			if err := ListHandler(ctx, &buffer, service, customerID, n); err != nil {
+			if err := ListHandler(cmd.Context(), &buffer, service, customerID, n); err != nil {
 				fmt.Println(err.Error())
 			}
 			fmt.Print(buffer.String())

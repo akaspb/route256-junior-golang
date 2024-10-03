@@ -36,7 +36,7 @@ func ReturnsHandler(
 	return nil
 }
 
-func getReturnsCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
+func getReturnsCmd(service *srvc.Service) *cobra.Command {
 	var returnsCli = &cobra.Command{
 		Use:     "returns",
 		Short:   "Get all orders, which must be given to courier/couriers for return from PVZ",
@@ -75,7 +75,7 @@ func getReturnsCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
 			}
 
 			var buffer bytes.Buffer
-			err = ReturnsHandler(ctx, &buffer, service, offset, limit)
+			err = ReturnsHandler(cmd.Context(), &buffer, service, offset, limit)
 			if err != nil {
 				fmt.Println(err.Error())
 				return

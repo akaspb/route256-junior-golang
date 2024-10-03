@@ -22,7 +22,7 @@ func RemoveHandler(ctx context.Context, buffer *bytes.Buffer, service *srvc.Serv
 	return nil
 }
 
-func getRemoveCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
+func getRemoveCmd(service *srvc.Service) *cobra.Command {
 	var removeCli = &cobra.Command{
 		Use:     "remove",
 		Short:   "Return order from PVZ to courier",
@@ -51,7 +51,7 @@ func getRemoveCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
 			orderID := models.IDType(orderIDint64)
 
 			var buffer bytes.Buffer
-			err = RemoveHandler(ctx, &buffer, service, orderID)
+			err = RemoveHandler(cmd.Context(), &buffer, service, orderID)
 			if err != nil {
 				fmt.Println(err.Error())
 				return

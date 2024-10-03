@@ -64,7 +64,7 @@ func ReceiveHandler(
 	return nil
 }
 
-func getReceiveCmd(ctx context.Context, service *srvc.Service, packService *packaging.Packaging) *cobra.Command {
+func getReceiveCmd(service *srvc.Service, packService *packaging.Packaging) *cobra.Command {
 	var receiveCli = &cobra.Command{
 		Use:     "receive",
 		Short:   "Receive order from courier to PVZ",
@@ -152,7 +152,7 @@ func getReceiveCmd(ctx context.Context, service *srvc.Service, packService *pack
 			var buffer bytes.Buffer
 			if err := ReceiveHandler(
 				ReceiveHandlerDTO{
-					Ctx:         ctx,
+					Ctx:         cmd.Context(),
 					Buffer:      &buffer,
 					Service:     service,
 					OrderID:     orderID,

@@ -50,7 +50,7 @@ func GiveHandler(ctx context.Context, buffer *bytes.Buffer, service *srvc.Servic
 	return nil
 }
 
-func getGiveCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
+func getGiveCmd(service *srvc.Service) *cobra.Command {
 	var giveCli = &cobra.Command{
 		Use:     "give",
 		Short:   "Give orders by their ids from PVZ to customer",
@@ -85,7 +85,7 @@ func getGiveCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
 			orderIDs := ids[1:]
 
 			var buffer bytes.Buffer
-			if err := GiveHandler(ctx, &buffer, service, customerID, orderIDs); err != nil {
+			if err := GiveHandler(cmd.Context(), &buffer, service, customerID, orderIDs); err != nil {
 				fmt.Println(err.Error())
 			}
 			fmt.Print(buffer.String())

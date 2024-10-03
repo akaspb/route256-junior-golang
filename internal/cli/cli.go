@@ -16,51 +16,31 @@ var (
 )
 
 type CliService struct {
-	ctx          context.Context
 	orderStorage storage.Facade
 	packService  *packaging.Packaging
 	srvc         *srvc.Service
 	rootCli      *cobra.Command
 }
 
-func NewCliService(ctx context.Context, orderStorage storage.Facade, packService *packaging.Packaging, service *srvc.Service) *CliService {
+func NewCliService(orderStorage storage.Facade, packService *packaging.Packaging, service *srvc.Service) *CliService {
 	c := &CliService{
-		ctx:          ctx,
 		orderStorage: orderStorage,
 		packService:  packService,
 		srvc:         service,
 	}
 
 	c.rootCli = getRootCli()
-	c.rootCli.AddCommand(getGiveCmd(ctx, service))
+	c.rootCli.AddCommand(getGiveCmd(service))
 	c.rootCli.AddCommand(getInterCmd(service, c.rootCli))
-	c.rootCli.AddCommand(getListCmd(ctx, service))
+	c.rootCli.AddCommand(getListCmd(service))
 	c.rootCli.AddCommand(getNowCmd(service))
-	c.rootCli.AddCommand(getReceiveCmd(ctx, service, packService))
-	c.rootCli.AddCommand(getRemoveCmd(ctx, service))
-	c.rootCli.AddCommand(getReturnCmd(ctx, service))
-	c.rootCli.AddCommand(getReturnsCmd(ctx, service))
+	c.rootCli.AddCommand(getReceiveCmd(service, packService))
+	c.rootCli.AddCommand(getRemoveCmd(service))
+	c.rootCli.AddCommand(getReturnCmd(service))
+	c.rootCli.AddCommand(getReturnsCmd(service))
 
 	return c
 }
-
-//func (c *CliService) updateTimeInServiceInCmd(cmd *cobra.Command) error {
-//	if cmd.Flags().Changed("start") {
-//		startStr, err := cmd.Flags().GetString("start")
-//		if err != nil {
-//			return err
-//		}
-//
-//		startTime, err := time.Parse("02.01.2006", startStr)
-//		if err != nil {
-//			return err
-//		}
-//
-//		c.srvc.SetStartTime(startTime)
-//	}
-//
-//	return nil
-//}
 
 func getStartTimeInCmd(cmd *cobra.Command) (time.Time, error) {
 	if !cmd.Flags().Changed("start") {
@@ -84,10 +64,10 @@ func getToday(service *srvc.Service) string {
 	return service.GetCurrentTime().Truncate(24 * time.Hour).Format("02.01.2006")
 }
 
-func (c *CliService) Execute() error {
+func (c *CliService) Execute(ctx context.Context) error {
 	var err error
 
-	err = c.rootCli.Execute()
+	err = c.rootCli.ExecuteContext(ctx)
 	if err != nil {
 		return err
 	}

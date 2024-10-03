@@ -21,7 +21,7 @@ func ReturnHandler(ctx context.Context, buffer *bytes.Buffer, service *srvc.Serv
 	return nil
 }
 
-func getReturnCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
+func getReturnCmd(service *srvc.Service) *cobra.Command {
 	var returnCli = &cobra.Command{
 		Use:     "return",
 		Short:   "Get order from customer to return",
@@ -62,7 +62,7 @@ func getReturnCmd(ctx context.Context, service *srvc.Service) *cobra.Command {
 			}
 
 			var buffer bytes.Buffer
-			err = ReturnHandler(ctx, &buffer, service, customerID, orderID)
+			err = ReturnHandler(cmd.Context(), &buffer, service, customerID, orderID)
 			if err != nil {
 				fmt.Println(err.Error())
 				return
