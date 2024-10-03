@@ -8,4 +8,4 @@ CREATE TABLE orders (
 );
 
 -- +goose Down
-DROP TABLE IF EXISTS orders;
+DROP TABLE orders;

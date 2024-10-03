@@ -7,4 +7,4 @@ CREATE TABLE statuses (
 );
 
 -- +goose Down
-DROP TABLE IF EXISTS statuses;
+DROP TABLE statuses;

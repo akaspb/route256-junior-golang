@@ -7,4 +7,4 @@ CREATE TABLE packaging (
 );
 
 -- +goose Down
-DROP TABLE IF EXISTS packaging;
+DROP TABLE packaging;
