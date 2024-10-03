@@ -38,8 +38,8 @@ func (s *PgStorage) CreateOrder(ctx context.Context, order Order) error {
 func (s *PgStorage) CreateStatus(ctx context.Context, status Status) error {
 	tx := s.txManager.GetQueryEngine(ctx)
 	_, err := tx.Exec(ctx, `
-		INSERT INTO statuses(order_id, "value", "time") VALUES ($1, $2, $3)
-	`, status.OrderID, status.Value, status.Time)
+		INSERT INTO statuses(order_id, "value", changed_at) VALUES ($1, $2, $3)
+	`, status.OrderID, status.Value, status.ChangedAt)
 
 	return err
 }
@@ -111,8 +111,8 @@ func (s *PgStorage) SetStatus(ctx context.Context, status Status) error {
 	tx := s.txManager.GetQueryEngine(ctx)
 
 	result, err := tx.Exec(ctx, `
-		UPDATE statuses SET "value" = $1, "time" = $2 WHERE order_id = $3
-	`, status.Value, status.Time, status.OrderID)
+		UPDATE statuses SET "value" = $1, changed_at = $2 WHERE order_id = $3
+	`, status.Value, status.ChangedAt, status.OrderID)
 	if err != nil {
 		return err
 	}
@@ -168,7 +168,7 @@ func (s *PgStorage) GetCustomerOrdersWithStatus(ctx context.Context, customerId 
 	err := pgxscan.Select(ctx, tx, &orders, `
 		SELECT O.* FROM orders O JOIN statuses S ON O.id = S.order_id 
 		           WHERE O.customer_id = $1 AND S."value" = $2 
-		           ORDER BY S."time"
+		           ORDER BY S.changed_at
 	`, customerId, statusVal)
 
 	return orders, err

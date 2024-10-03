@@ -29,8 +29,8 @@ func TestReturnCmd(t *testing.T) {
 		Weight:     1,
 		Cost:       1,
 		Status: models.Status{
-			Time:  nowTime,
-			Value: models.StatusToCustomer,
+			ChangedAt: nowTime,
+			Value:     models.StatusToCustomer,
 		},
 	}
 
@@ -40,7 +40,7 @@ func TestReturnCmd(t *testing.T) {
 
 	order2 := baseOrder
 	order2.ID = 2
-	order2.Status.Time = prevTime
+	order2.Status.ChangedAt = prevTime
 
 	order3 := baseOrder
 	order3.ID = 3

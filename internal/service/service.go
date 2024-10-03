@@ -123,7 +123,7 @@ func (s *Service) AcceptOrderFromCourier(
 		Cost:       orderCost,
 		Expiry:     orderExpiry,
 		Pack:       pack,
-		Status:     models.Status{Time: s.GetCurrentTime()},
+		Status:     models.Status{ChangedAt: s.GetCurrentTime()},
 	})
 }
 
@@ -234,8 +234,8 @@ func (s *Service) GiveOrderToCustomer(ctx context.Context, orderIDs []models.IDT
 	for _, order := range ordersWantedToBeGiven {
 		if order.Ok {
 			if err := s.orderStorage.ChangeOrderStatus(ctx, order.ID, models.Status{
-				Value: models.StatusToCustomer,
-				Time:  currTime,
+				Value:     models.StatusToCustomer,
+				ChangedAt: currTime,
 			}); err != nil {
 				return nil, err
 			}
@@ -250,13 +250,6 @@ func (s *Service) GetCustomerOrders(ctx context.Context, customerID models.IDTyp
 	if err != nil {
 		return nil, err
 	}
-
-	//sort.Slice(userOrders, func(i, j int) bool {
-	//	if userOrders[i].Status.Time.Equal(userOrders[j].Status.Time) {
-	//		return userOrders[i].ID < userOrders[j].ID
-	//	}
-	//	return userOrders[i].Status.Time.Before(userOrders[j].Status.Time)
-	//})
 
 	if n == 0 {
 		n = uint(len(userOrders))
@@ -315,13 +308,13 @@ func (s *Service) ReturnOrderFromCustomer(ctx context.Context, customerID, order
 		)
 	}
 
-	if !isLessOrEqualTime(currTime, order.Status.Time.Add(MaxReturnTime)) {
+	if !isLessOrEqualTime(currTime, order.Status.ChangedAt.Add(MaxReturnTime)) {
 		return ErrorOrderExpiredAlready
 	}
 
 	err = s.orderStorage.ChangeOrderStatus(ctx, order.ID, models.Status{
-		Value: models.StatusReturn,
-		Time:  currTime,
+		Value:     models.StatusReturn,
+		ChangedAt: currTime,
 	})
 	if err != nil {
 		return err

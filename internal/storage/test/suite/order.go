@@ -42,8 +42,8 @@ func (s *ItemSuite) TestSetOrder() {
 		Cost:       1,
 		Pack:       nil,
 		Status: models.Status{
-			Value: models.StatusToStorage,
-			Time:  now,
+			Value:     models.StatusToStorage,
+			ChangedAt: now,
 		},
 	}
 

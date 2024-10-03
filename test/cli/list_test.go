@@ -30,8 +30,8 @@ func TestListCmd(t *testing.T) {
 		Cost:       1,
 		Pack:       nil,
 		Status: models.Status{
-			Value: models.StatusToStorage,
-			Time:  prevTime,
+			Value:     models.StatusToStorage,
+			ChangedAt: prevTime,
 		},
 	}
 
@@ -43,8 +43,8 @@ func TestListCmd(t *testing.T) {
 		Cost:       1,
 		Pack:       nil,
 		Status: models.Status{
-			Value: models.StatusToStorage,
-			Time:  prevTime,
+			Value:     models.StatusToStorage,
+			ChangedAt: prevTime,
 		},
 	}
 

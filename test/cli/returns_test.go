@@ -30,7 +30,7 @@ func TestReturnsCmd(t *testing.T) {
 		Weight:     1,
 		Cost:       1,
 		Status: models.Status{
-			Time: prevTime,
+			ChangedAt: prevTime,
 		},
 	}
 

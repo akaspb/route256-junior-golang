@@ -30,8 +30,8 @@ func TestReceiveCmd(t *testing.T) {
 		Weight:     1,
 		Cost:       1,
 		Status: models.Status{
-			Value: models.StatusToStorage,
-			Time:  prevTime,
+			Value:     models.StatusToStorage,
+			ChangedAt: prevTime,
 		},
 	}
 

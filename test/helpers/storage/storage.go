@@ -85,7 +85,7 @@ func (s *Storage) GetOrderIDsWhereStatus(ctx context.Context, statusVal models.S
 	}
 
 	sort.Slice(orders, func(i, j int) bool {
-		return orders[i].Status.Time.Before(orders[j].Status.Time)
+		return orders[i].Status.ChangedAt.Before(orders[j].Status.ChangedAt)
 	})
 
 	orderIDs := make([]models.IDType, len(orders))

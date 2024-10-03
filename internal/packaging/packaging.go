@@ -52,6 +52,8 @@ func (p *Packaging) AddPack(pack models.Pack) error {
 		return fmt.Errorf("non unique name '%s' in packs param", pack.Name)
 	}
 
+	p.packsMap[pack.Name] = pack
+
 	return nil
 }
 

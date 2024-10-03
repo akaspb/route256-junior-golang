@@ -15,9 +15,9 @@ type Order struct {
 }
 
 type Status struct {
-	OrderID models.IDType    `db:"order_id"`
-	Value   models.StatusVal `db:"value"`
-	Time    time.Time        `db:"time"`
+	OrderID   models.IDType    `db:"order_id"`
+	Value     models.StatusVal `db:"value"`
+	ChangedAt time.Time        `db:"changed_at"`
 }
 
 type Packaging struct {

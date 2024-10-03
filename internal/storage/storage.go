@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"errors"
-
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage/postgres"
 )
@@ -54,9 +53,9 @@ func (s *storageFacade) CreateOrder(ctx context.Context, order models.Order) err
 		}
 
 		err = s.pgRepository.CreateStatus(ctx, postgres.Status{
-			Value:   models.StatusToStorage,
-			Time:    order.Status.Time,
-			OrderID: order.ID,
+			Value:     models.StatusToStorage,
+			ChangedAt: order.Status.ChangedAt,
+			OrderID:   order.ID,
 		})
 		if err != nil {
 			return err
@@ -118,8 +117,8 @@ func (s *storageFacade) GetOrder(ctx context.Context, orderID models.IDType) (mo
 		Cost:       storageOrder.Cost,
 		Pack:       packPtr,
 		Status: models.Status{
-			Value: storageStatus.Value,
-			Time:  storageStatus.Time,
+			Value:     storageStatus.Value,
+			ChangedAt: storageStatus.ChangedAt,
 		},
 	}, nil
 }
@@ -140,9 +139,9 @@ func (s *storageFacade) DeleteOrder(ctx context.Context, orderId models.IDType) 
 
 func (s *storageFacade) ChangeOrderStatus(ctx context.Context, orderId models.IDType, status models.Status) error {
 	return s.pgRepository.SetStatus(ctx, postgres.Status{
-		OrderID: orderId,
-		Value:   status.Value,
-		Time:    status.Time,
+		OrderID:   orderId,
+		Value:     status.Value,
+		ChangedAt: status.ChangedAt,
 	})
 }
 
@@ -163,12 +162,14 @@ func (s *storageFacade) GetCustomerOrdersWithStatus(ctx context.Context, custome
 			if !errors.Is(err, postgres.ErrorPackNotFound) {
 				return nil, err
 			}
+		} else {
 			packPtr = &models.Pack{
 				Name:           storagePack.Name,
 				Cost:           storagePack.Cost,
 				MaxOrderWeight: storagePack.MaxOrderWeight,
 			}
 		}
+
 		orders[i] = models.Order{
 			ID:         storageOrder.ID,
 			CustomerID: storageOrder.CustomerID,
@@ -180,7 +181,7 @@ func (s *storageFacade) GetCustomerOrdersWithStatus(ctx context.Context, custome
 		}
 	}
 
-	return orders, err
+	return orders, nil
 }
 
 func (s *storageFacade) GetOrderStatus(ctx context.Context, orderId models.IDType) (models.Status, error) {
@@ -190,8 +191,8 @@ func (s *storageFacade) GetOrderStatus(ctx context.Context, orderId models.IDTyp
 	}
 
 	return models.Status{
-		Value: storageStatus.Value,
-		Time:  storageStatus.Time,
+		Value:     storageStatus.Value,
+		ChangedAt: storageStatus.ChangedAt,
 	}, nil
 }
 
