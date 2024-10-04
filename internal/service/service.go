@@ -9,6 +9,7 @@ import (
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage"
+	"golang.org/x/sync/errgroup"
 )
 
 const Day = 24 * time.Hour
@@ -323,7 +324,10 @@ func (s *Service) ReturnOrderFromCustomer(ctx context.Context, customerID, order
 	return nil
 }
 
-func (s *Service) GetReturnsList(ctx context.Context, offset, limit int) ([]ReturnOrderAndCustomer, error) {
+// GetReturnsList method is generator, it uses chan to return results from db
+func (s *Service) GetReturnsList(ctx context.Context, offset, limit int) (<-chan ReturnOrderAndCustomer, error) {
+	workersCount := ctx.Value("workersCount").(int)
+
 	if offset < 0 {
 		return nil, errors.New("offset value must be >= 0")
 	}
@@ -337,24 +341,51 @@ func (s *Service) GetReturnsList(ctx context.Context, offset, limit int) ([]Retu
 		return nil, err
 	}
 
-	orderIDsToReturn := make([]ReturnOrderAndCustomer, len(returnOrderIDs))
-	for i, orderID := range returnOrderIDs {
-		customerID, err := s.orderStorage.GetOrderCustomerID(ctx, orderID)
-		if err != nil {
-			return nil, err
-		}
-
-		orderIDsToReturn[i] = ReturnOrderAndCustomer{
-			OrderID:    orderID,
-			CustomerID: customerID,
-		}
-	}
-
-	if len(orderIDsToReturn) < 1 {
+	if len(returnOrderIDs) == 0 {
 		return nil, errors.New("no orders to show with such offset and limit")
 	}
 
-	return orderIDsToReturn, nil
+	// Worker Pool
+	group, ctx := errgroup.WithContext(ctx)
+	orderIDsChan := make(chan models.IDType, len(returnOrderIDs))
+	orderAndCustomerChan := make(chan ReturnOrderAndCustomer, len(returnOrderIDs))
+
+	for i := 0; i < workersCount; i++ {
+		group.Go(func() error {
+			for {
+				select {
+				case orderID, ok := <-orderIDsChan:
+					if !ok {
+						return nil
+					}
+
+					customerID, err := s.orderStorage.GetOrderCustomerID(ctx, orderID)
+					if err != nil {
+						return err
+					}
+
+					orderAndCustomerChan <- ReturnOrderAndCustomer{
+						OrderID:    orderID,
+						CustomerID: customerID,
+					}
+				case <-ctx.Done():
+					return nil
+				}
+			}
+		})
+	}
+
+	for _, orderID := range returnOrderIDs {
+		orderIDsChan <- orderID
+	}
+	close(orderIDsChan)
+
+	defer close(orderAndCustomerChan)
+	if err := group.Wait(); err != nil {
+		return nil, err
+	}
+
+	return orderAndCustomerChan, nil
 }
 
 func (s *Service) GetCurrentTime() time.Time {

@@ -16,19 +16,19 @@ func ReturnsHandler(
 	service *srvc.Service,
 	offset, limit int,
 ) error {
-	returnsSlc, err := service.GetReturnsList(ctx, offset, limit)
+	returnsChan, err := service.GetReturnsList(ctx, offset, limit)
 	if err != nil {
 		return fmt.Errorf("error: %v\n", err)
 
 	}
 
-	if len(returnsSlc) == 0 {
+	if len(returnsChan) == 0 {
 		fmt.Println()
 		return errors.New("No orders")
 	}
 
 	fmt.Fprintf(buffer, "%8s|%11s\n", "Order ID", "Customer ID")
-	for _, raw := range returnsSlc {
+	for raw := range returnsChan {
 		tableRow := fmt.Sprintf("%8v|%11v", raw.OrderID, raw.CustomerID)
 		fmt.Fprintln(buffer, tableRow)
 	}

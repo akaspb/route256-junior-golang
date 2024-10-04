@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -14,11 +17,18 @@ import (
 )
 
 const (
-	psqlDSN = "postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable"
+	psqlDSN      = "postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable"
+	workersCount = 2
 )
 
 func main() {
-	ctx := context.Background()
+	ctx := context.WithValue(context.Background(), "workersCount", workersCount)
+	ctx, cancel := context.WithCancel(ctx) // syscall.SIGINT, syscall.SIGTERM
+	defer cancel()
+
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+
 	pool, err := pgxpool.Connect(ctx, psqlDSN)
 	if err != nil {
 		fmt.Printf("error in main func: %v\n", err)
@@ -44,6 +54,9 @@ func main() {
 		fmt.Printf("error in main func: %v\n", err)
 		return
 	}
+
+	<-sigCh
+	fmt.Println("$$$ program finish")
 }
 
 func newStorageFacade(pool *pgxpool.Pool) storage.Facade {
