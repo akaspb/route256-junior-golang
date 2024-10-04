@@ -16,7 +16,7 @@ import (
 )
 
 func TestGiveCmd(t *testing.T) {
-	ctx := context.Background()
+	ctx := context.WithValue(context.Background(), "workersCount", workersCount)
 	testStorage := storage.NewStorage()
 
 	prevTime := time.Date(2020, time.January, 1, 0, 0, 0, 0, time.UTC)
