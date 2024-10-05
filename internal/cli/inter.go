@@ -5,13 +5,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"golang.org/x/sync/errgroup"
 	"io"
 	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
+	"golang.org/x/sync/errgroup"
 )
 
 var (
