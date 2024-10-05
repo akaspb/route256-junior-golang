@@ -303,18 +303,6 @@ func (s *Service) GiveOrderToCustomer(ctx context.Context, orderIDs []models.IDT
 		return nil, err
 	}
 
-	//// add this loop with purpose if error occurred in previous loop no change in DB were made
-	//for _, order := range ordersWantedToBeGiven {
-	//	if order.Ok {
-	//		if err := s.orderStorage.ChangeOrderStatus(ctx, order.ID, models.Status{
-	//			Value:     models.StatusToCustomer,
-	//			ChangedAt: currTime,
-	//		}); err != nil {
-	//			return nil, err
-	//		}
-	//	}
-	//}
-
 	res := make([]OrderIDWithMsg, 0, len(orderIDWithMsgChan))
 	for orderIDWithMsg := range orderIDWithMsgChan {
 		res = append(res, orderIDWithMsg)
