@@ -159,91 +159,166 @@ func (s *Service) ReturnOrder(ctx context.Context, orderID models.IDType) error 
 	return nil
 }
 
+func (s *Service) getCustomerOrderInfo(ctx context.Context, orderID, customerID models.IDType, currTime time.Time) (OrderIDWithMsg, error) {
+	order, err := s.orderStorage.GetOrder(ctx, orderID)
+
+	if err != nil {
+		if errors.Is(err, storage.ErrOrderNotFound) {
+			// if order has not been delivered to storage yet
+			return OrderIDWithMsg{
+				ID:  orderID,
+				Msg: "Order has not been delivered to PVZ yet or was returned and given to courier",
+				Ok:  false,
+			}, nil
+		}
+		return OrderIDWithMsg{}, err
+	}
+
+	// if order's customer is other person return error immediately
+	if order.CustomerID != customerID {
+		return OrderIDWithMsg{}, ErrorCustomerID
+	}
+
+	packagingName := ""
+	if order.Pack != nil {
+		packagingName = order.Pack.Name
+	}
+
+	switch order.Status.Value {
+	case models.StatusToCustomer:
+		return OrderIDWithMsg{
+			ID:      orderID,
+			Cost:    order.Cost,
+			Package: packagingName,
+			Msg:     "Order was given to customer earlier",
+			Ok:      false,
+		}, nil
+	case models.StatusReturn:
+		return OrderIDWithMsg{
+			ID:      orderID,
+			Cost:    order.Cost,
+			Package: packagingName,
+			Msg:     "Order was returned to PVZ by customer",
+			Ok:      false,
+		}, nil
+	case models.StatusToStorage:
+		if isLessOrEqualTime(currTime, order.Expiry) {
+			return OrderIDWithMsg{
+				ID:      order.ID,
+				Cost:    order.Cost,
+				Package: packagingName,
+				Msg:     "Give order to customer",
+				Ok:      true,
+			}, nil
+		} else {
+			return OrderIDWithMsg{
+				ID:      order.ID,
+				Cost:    order.Cost,
+				Package: packagingName,
+				Msg:     "Order expiry time was reached",
+				Ok:      false,
+			}, nil
+		}
+	default: // if some unknown status
+		return OrderIDWithMsg{}, errors.New("unhandled error (unknown order status value)")
+	}
+}
+
 func (s *Service) GiveOrderToCustomer(ctx context.Context, orderIDs []models.IDType, customerID models.IDType) ([]OrderIDWithMsg, error) {
-	ordersWantedToBeGiven := make([]OrderIDWithMsg, 0)
+	workersCount := ctx.Value("workersCount").(int)
 	currTime := s.GetCurrentTime()
 
+	// Worker Pool
+	group1, ctx1 := errgroup.WithContext(ctx)
+	orderIDsChan := make(chan models.IDType, len(orderIDs))
+	orderIDWithMsgChan := make(chan OrderIDWithMsg, len(orderIDs))
+	okOrderIDsChan := make(chan models.IDType, len(orderIDs))
+
+	for i := 0; i < workersCount; i++ {
+		group1.Go(func() error {
+			for {
+				select {
+				case <-ctx.Done():
+					return nil
+				case orderID, ok := <-orderIDsChan:
+					if !ok {
+						return nil
+					}
+
+					orderIDWithMsg, err := s.getCustomerOrderInfo(ctx1, orderID, customerID, currTime)
+					if err != nil {
+						return err
+					}
+
+					orderIDWithMsgChan <- orderIDWithMsg
+					if orderIDWithMsg.Ok {
+						okOrderIDsChan <- orderIDWithMsg.ID
+					}
+				}
+			}
+		})
+	}
+
 	for _, orderID := range orderIDs {
-		order, err := s.orderStorage.GetOrder(ctx, orderID)
+		orderIDsChan <- orderID
+	}
+	close(orderIDsChan)
 
-		if err != nil {
-			if errors.Is(err, storage.ErrOrderNotFound) {
-				// if order has not been delivered to storage yet
-				ordersWantedToBeGiven = append(ordersWantedToBeGiven, OrderIDWithMsg{
-					ID:  orderID,
-					Msg: "Order has not been delivered to PVZ yet or was returned and given to courier",
-					Ok:  false,
-				})
-				continue
+	if err := group1.Wait(); err != nil {
+		close(orderIDWithMsgChan)
+		close(okOrderIDsChan)
+		return nil, err
+	}
+	close(orderIDWithMsgChan)
+	close(okOrderIDsChan)
+
+	// add this goroutines with purpose if error occurred in previous loop no change in DB were made
+	group2, ctx2 := errgroup.WithContext(ctx)
+
+	for i := 0; i < workersCount; i++ {
+		group2.Go(func() error {
+			for {
+				select {
+				case <-ctx.Done():
+					return nil
+				case orderID, ok := <-okOrderIDsChan:
+					if !ok {
+						return nil
+					}
+
+					if err := s.orderStorage.ChangeOrderStatus(ctx2, orderID, models.Status{
+						Value:     models.StatusToCustomer,
+						ChangedAt: currTime,
+					}); err != nil {
+						return err
+					}
+				}
 			}
-			return nil, err
-		}
-
-		// if order's customer is other person return error immediately
-		if order.CustomerID != customerID {
-			return nil, ErrorCustomerID
-		}
-
-		packagingName := ""
-		if order.Pack != nil {
-			packagingName = order.Pack.Name
-		}
-
-		switch order.Status.Value {
-		case models.StatusToCustomer:
-			ordersWantedToBeGiven = append(ordersWantedToBeGiven, OrderIDWithMsg{
-				ID:      orderID,
-				Cost:    order.Cost,
-				Package: packagingName,
-				Msg:     "Order was given to customer earlier",
-				Ok:      false,
-			})
-			continue
-		case models.StatusReturn:
-			ordersWantedToBeGiven = append(ordersWantedToBeGiven, OrderIDWithMsg{
-				ID:      orderID,
-				Cost:    order.Cost,
-				Package: packagingName,
-				Msg:     "Order was returned to PVZ by customer",
-				Ok:      false,
-			})
-			continue
-		case models.StatusToStorage:
-			if isLessOrEqualTime(currTime, order.Expiry) {
-				ordersWantedToBeGiven = append(ordersWantedToBeGiven, OrderIDWithMsg{
-					ID:      order.ID,
-					Cost:    order.Cost,
-					Package: packagingName,
-					Msg:     "Give order to customer",
-					Ok:      true,
-				})
-			} else {
-				ordersWantedToBeGiven = append(ordersWantedToBeGiven, OrderIDWithMsg{
-					ID:      order.ID,
-					Cost:    order.Cost,
-					Package: packagingName,
-					Msg:     "Order expiry time was reached",
-					Ok:      false,
-				})
-			}
-		default: // if some unknown status
-			return nil, errors.New("unhandled error")
-		}
+		})
 	}
 
-	// add this loop with purpose if error occurred in previous loop no change in DB were made
-	for _, order := range ordersWantedToBeGiven {
-		if order.Ok {
-			if err := s.orderStorage.ChangeOrderStatus(ctx, order.ID, models.Status{
-				Value:     models.StatusToCustomer,
-				ChangedAt: currTime,
-			}); err != nil {
-				return nil, err
-			}
-		}
+	if err := group2.Wait(); err != nil {
+		return nil, err
 	}
 
-	return ordersWantedToBeGiven, nil
+	//// add this loop with purpose if error occurred in previous loop no change in DB were made
+	//for _, order := range ordersWantedToBeGiven {
+	//	if order.Ok {
+	//		if err := s.orderStorage.ChangeOrderStatus(ctx, order.ID, models.Status{
+	//			Value:     models.StatusToCustomer,
+	//			ChangedAt: currTime,
+	//		}); err != nil {
+	//			return nil, err
+	//		}
+	//	}
+	//}
+
+	res := make([]OrderIDWithMsg, 0, len(orderIDWithMsgChan))
+	for orderIDWithMsg := range orderIDWithMsgChan {
+		res = append(res, orderIDWithMsg)
+	}
+
+	return res, nil
 }
 
 func (s *Service) GetCustomerOrders(ctx context.Context, customerID models.IDType, n uint) ([]OrderIDWithExpiryAndStatus, error) {
@@ -354,6 +429,8 @@ func (s *Service) GetReturnsList(ctx context.Context, offset, limit int) (<-chan
 		group.Go(func() error {
 			for {
 				select {
+				case <-ctx.Done():
+					return nil
 				case orderID, ok := <-orderIDsChan:
 					if !ok {
 						return nil
@@ -368,8 +445,6 @@ func (s *Service) GetReturnsList(ctx context.Context, offset, limit int) (<-chan
 						OrderID:    orderID,
 						CustomerID: customerID,
 					}
-				case <-ctx.Done():
-					return nil
 				}
 			}
 		})
