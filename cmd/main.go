@@ -27,7 +27,11 @@ func main() {
 	defer cancel()
 
 	sigCh := make(chan os.Signal, 1)
+	defer close(sigCh)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+
+	serviceStopped := make(chan struct{})
+	defer close(serviceStopped)
 
 	pool, err := pgxpool.Connect(ctx, psqlDSN)
 	if err != nil {
@@ -53,14 +57,20 @@ func main() {
 
 	cliService := cli.NewCliService(orderStorage, packService, service)
 
-	err = cliService.Execute(ctx)
-	if err != nil {
-		fmt.Printf("error in main func: %v\n", err)
-		return
-	}
+	go func() {
+		if err := cliService.Execute(ctx); err != nil {
+			fmt.Printf("error in main func: %v\n", err)
+		}
+		serviceStopped <- struct{}{}
+	}()
 
-	<-sigCh
-	fmt.Println("$$$ program finish")
+	select {
+	case <-sigCh:
+		cancel()
+		<-serviceStopped
+	case <-serviceStopped:
+		cancel()
+	}
 }
 
 func newStorageFacade(pool *pgxpool.Pool) storage.Facade {
