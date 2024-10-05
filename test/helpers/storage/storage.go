@@ -5,7 +5,9 @@ import (
 	"errors"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage"
+	"sort"
 	"sync"
+	"time"
 )
 
 var (
@@ -84,23 +86,60 @@ func (s *Storage) ChangeOrderStatus(ctx context.Context, orderID models.IDType, 
 	return storage.ErrOrderNotFound
 }
 
-func (s *Storage) GetCustomerOrdersWithStatus(ctx context.Context, customerID models.IDType, statusVal models.StatusVal) ([]models.Order, error) {
+func (s *Storage) GetCustomerOrderIDsWithStatus(ctx context.Context, customerID models.IDType, statusVal models.StatusVal) ([]models.IDType, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ErrorContextDone
 	default:
 	}
 
-	orders := make([]models.Order, 0)
+	orderIDs := make([]models.IDType, 0)
 	s.orders.Range(func(_, orderAny interface{}) bool {
 		order := orderAny.(models.Order)
 		if order.CustomerID == customerID && order.Status.Value == statusVal {
-			orders = append(orders, order)
+			orderIDs = append(orderIDs, order.ID)
 		}
 		return true
 	})
 
-	return orders, nil
+	return orderIDs, nil
+}
+
+type orderIDWithChangedAtType struct {
+	OrderID   models.IDType
+	ChangedAt time.Time
+}
+
+func (s *Storage) GetNCustomerOrderIDsWithStatus(ctx context.Context, customerID models.IDType, statusVal models.StatusVal, n uint) ([]models.IDType, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ErrorContextDone
+	default:
+	}
+
+	orderIDsWithCreatedAt := make([]orderIDWithChangedAtType, 0)
+	s.orders.Range(func(_, orderAny interface{}) bool {
+		order := orderAny.(models.Order)
+		if order.CustomerID == customerID && order.Status.Value == statusVal {
+			orderIDsWithCreatedAt = append(orderIDsWithCreatedAt, orderIDWithChangedAtType{
+				OrderID:   order.ID,
+				ChangedAt: order.Status.ChangedAt,
+			})
+		}
+		return true
+	})
+
+	sort.Slice(orderIDsWithCreatedAt, func(i, j int) bool {
+		return orderIDsWithCreatedAt[j].ChangedAt.Before(orderIDsWithCreatedAt[i].ChangedAt)
+	})
+
+	resLen := min(int(n), len(orderIDsWithCreatedAt))
+	res := make([]models.IDType, resLen)
+	for i := 0; i < resLen; i++ {
+		res[i] = orderIDsWithCreatedAt[i].OrderID
+	}
+
+	return res, nil
 }
 
 func (s *Storage) GetOrderStatus(ctx context.Context, orderID models.IDType) (models.Status, error) {
