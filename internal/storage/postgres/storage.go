@@ -187,15 +187,27 @@ func (s *PgStorage) DeletePack(ctx context.Context, orderId models.IDType) error
 	return nil
 }
 
-func (s *PgStorage) GetCustomerOrdersWithStatus(ctx context.Context, customerId models.IDType, statusVal models.StatusVal) ([]Order, error) {
-	var orders []Order
+func (s *PgStorage) GetCustomerOrderIDsWithStatus(ctx context.Context, customerId models.IDType, statusVal models.StatusVal) ([]models.IDType, error) {
+	var orderIDs []models.IDType
 
 	tx := s.txManager.GetQueryEngine(ctx)
-	err := pgxscan.Select(ctx, tx, &orders, `
-		SELECT O.* FROM orders O JOIN statuses S ON O.id = S.order_id 
-		           WHERE O.customer_id = $1 AND S."value" = $2 
-		           ORDER BY S.changed_at
+	err := pgxscan.Select(ctx, tx, &orderIDs, `
+		SELECT O.id FROM orders O JOIN statuses S ON O.id = S.order_id 
+		           WHERE O.customer_id = $1 AND S."value" = $2
 	`, customerId, statusVal)
 
-	return orders, err
+	return orderIDs, err
+}
+
+func (s *PgStorage) GetNCustomerOrderIDsWithStatus(ctx context.Context, customerId models.IDType, statusVal models.StatusVal, n uint) ([]models.IDType, error) {
+	var orderIDs []models.IDType
+
+	tx := s.txManager.GetQueryEngine(ctx)
+	err := pgxscan.Select(ctx, tx, &orderIDs, `
+		SELECT O.id FROM orders O JOIN statuses S ON O.id = S.order_id 
+		           WHERE O.customer_id = $1 AND S."value" = $2 
+		           ORDER BY S.changed_at DESC LIMIT $3
+	`, customerId, statusVal, n)
+
+	return orderIDs, err
 }

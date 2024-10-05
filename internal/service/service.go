@@ -161,7 +161,7 @@ func (s *Service) ReturnOrder(ctx context.Context, orderID models.IDType) error 
 	return nil
 }
 
-func (s *Service) getCustomerOrderInfo(ctx context.Context, orderID, customerID models.IDType, currTime time.Time) (OrderIDWithMsg, error) {
+func (s *Service) getCustomerOrderIDWithMsg(ctx context.Context, orderID, customerID models.IDType, currTime time.Time) (OrderIDWithMsg, error) {
 	order, err := s.orderStorage.GetOrder(ctx, orderID)
 
 	if err != nil {
@@ -247,7 +247,7 @@ func (s *Service) GiveOrderToCustomer(ctx context.Context, orderIDs []models.IDT
 						return nil
 					}
 
-					orderIDWithMsg, err := s.getCustomerOrderInfo(ctx1, orderID, customerID, currTime)
+					orderIDWithMsg, err := s.getCustomerOrderIDWithMsg(ctx1, orderID, customerID, currTime)
 					if err != nil {
 						return err
 					}
@@ -311,34 +311,84 @@ func (s *Service) GiveOrderToCustomer(ctx context.Context, orderIDs []models.IDT
 	return res, nil
 }
 
-func (s *Service) GetCustomerOrders(ctx context.Context, customerID models.IDType, n uint) ([]OrderIDWithExpiryAndStatus, error) {
-	userOrders, err := s.orderStorage.GetCustomerOrdersWithStatus(ctx, customerID, models.StatusToStorage)
+func (s *Service) getOrderIDWithExpiryAndStatus(ctx context.Context, orderID models.IDType, currTime time.Time) (OrderIDWithExpiryAndStatus, error) {
+	order, err := s.orderStorage.GetOrder(ctx, orderID)
 	if err != nil {
-		return nil, err
+		return OrderIDWithExpiryAndStatus{}, err
 	}
+
+	packagingName := ""
+	if order.Pack != nil {
+		packagingName = order.Pack.Name
+	}
+
+	return OrderIDWithExpiryAndStatus{
+		ID:      order.ID,
+		Cost:    order.Cost,
+		Package: packagingName,
+		Expiry:  order.Expiry,
+		Expired: !isLessOrEqualTime(currTime, order.Expiry),
+	}, nil
+}
+
+func (s *Service) GetCustomerOrders(ctx context.Context, customerID models.IDType, n uint) ([]OrderIDWithExpiryAndStatus, error) {
+	var orderIDs []models.IDType
+	var err error
+	workersCount := ctx.Value("workersCount").(int)
+	currTime := s.GetCurrentTime()
 
 	if n == 0 {
-		n = uint(len(userOrders))
+		orderIDs, err = s.orderStorage.GetCustomerOrderIDsWithStatus(ctx, customerID, models.StatusToStorage)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		orderIDs, err = s.orderStorage.GetNCustomerOrderIDsWithStatus(ctx, customerID, models.StatusToStorage, n)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	n = min(n, uint(len(userOrders)))
+	// Worker Pool
+	group, ctx := errgroup.WithContext(ctx)
+	orderIDsChan := make(chan models.IDType, len(orderIDs))
+	resChan := make(chan OrderIDWithExpiryAndStatus, len(orderIDs))
 
-	userOrders = userOrders[len(userOrders)-int(n):]
-	res := make([]OrderIDWithExpiryAndStatus, n)
+	for i := 0; i < workersCount; i++ {
+		group.Go(func() error {
+			for {
+				select {
+				case <-ctx.Done():
+					return nil
+				case orderID, ok := <-orderIDsChan:
+					if !ok {
+						return nil
+					}
 
-	for i, userOrder := range userOrders {
-		packagingName := ""
-		if userOrder.Pack != nil {
-			packagingName = userOrder.Pack.Name
-		}
+					orderIDWithExpiryAndStatus, err := s.getOrderIDWithExpiryAndStatus(ctx, orderID, currTime)
+					if err != nil {
+						return err
+					}
+					resChan <- orderIDWithExpiryAndStatus
+				}
+			}
+		})
+	}
 
-		res[i] = OrderIDWithExpiryAndStatus{
-			ID:      userOrder.ID,
-			Cost:    userOrder.Cost,
-			Package: packagingName,
-			Expiry:  userOrder.Expiry,
-			Expired: !isLessOrEqualTime(s.GetCurrentTime(), userOrder.Expiry),
-		}
+	for _, orderID := range orderIDs {
+		orderIDsChan <- orderID
+	}
+	close(orderIDsChan)
+
+	if err := group.Wait(); err != nil {
+		close(resChan)
+		return nil, err
+	}
+	close(resChan)
+
+	res := make([]OrderIDWithExpiryAndStatus, 0, len(resChan))
+	for orderIDWithExpiryAndStatus := range resChan {
+		res = append(res, orderIDWithExpiryAndStatus)
 	}
 
 	return res, nil
