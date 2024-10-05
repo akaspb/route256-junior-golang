@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"runtime"
 	"time"
 
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
@@ -25,7 +26,7 @@ var (
 	ErrorOderNegativeWeight      = errors.New("order weight can't be negative")
 	ErrorOrderWasTakenByCustomer = errors.New("order was taken by customer")
 	ErrorOrderWasNotFounded      = errors.New("order is not in PVZ or has already been returned and given to courier")
-	ErrorInvalidWorkerCount      = errors.New("worker count must be > 0")
+	ErrorInvalidWorkerCount      = errors.New("worker count must be > 0 and <= max thread count")
 )
 
 type OrderIDWithMsg struct {
@@ -520,7 +521,7 @@ func (s *Service) SetStartTime(startTime time.Time) {
 }
 
 func (s *Service) ChangeWorkerCount(workerCount int) error {
-	if workerCount <= 0 {
+	if workerCount <= 0 || workerCount > runtime.GOMAXPROCS(0) {
 		return ErrorInvalidWorkerCount
 	}
 

@@ -38,6 +38,7 @@ func NewCliService(orderStorage storage.Facade, packService *packaging.Packaging
 	c.rootCli.AddCommand(getRemoveCmd(service))
 	c.rootCli.AddCommand(getReturnCmd(service))
 	c.rootCli.AddCommand(getReturnsCmd(service))
+	c.rootCli.AddCommand(getThreadsCmd(service))
 
 	return c
 }
