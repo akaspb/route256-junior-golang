@@ -16,7 +16,7 @@ import (
 )
 
 func TestGiveCmd(t *testing.T) {
-	ctx := context.WithValue(context.Background(), "workersCount", workersCount)
+	ctx := context.Background()
 	testStorage := storage.NewStorage()
 
 	prevTime := time.Date(2020, time.January, 1, 0, 0, 0, 0, time.UTC)
@@ -54,7 +54,10 @@ func TestGiveCmd(t *testing.T) {
 		t.Fatalf("unexpected error before test: %v", err)
 	}
 
-	service := srvc.NewService(testStorage, packService, nowTime, time.Now())
+	service, err := srvc.NewService(testStorage, packService, nowTime, time.Now(), workerCount)
+	if err != nil {
+		t.Fatalf("unexpected error before test: %v", err)
+	}
 
 	tests := []struct {
 		customerID models.IDType

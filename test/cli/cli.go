@@ -1,5 +1,5 @@
 package test_cli
 
 const (
-	workersCount = 2
+	workerCount = 2
 )

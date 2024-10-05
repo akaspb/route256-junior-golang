@@ -17,7 +17,7 @@ import (
 func TestReturnsCmd(t *testing.T) {
 	const correctOutputLen = 4
 
-	ctx := context.WithValue(context.Background(), "workersCount", workersCount)
+	ctx := context.Background()
 	testStorage := storage.NewStorage()
 
 	prevTime := time.Date(2020, time.January, 1, 0, 0, 0, 0, time.UTC)
@@ -59,7 +59,10 @@ func TestReturnsCmd(t *testing.T) {
 		t.Fatalf("unexpected error before test: %v", err)
 	}
 
-	service := srvc.NewService(testStorage, packService, nowTime, time.Now())
+	service, err := srvc.NewService(testStorage, packService, nowTime, time.Now(), workerCount)
+	if err != nil {
+		t.Fatalf("unexpected error before test: %v", err)
+	}
 
 	var buffer bytes.Buffer
 	err = cli.ReturnsHandler(ctx, &buffer, service, 0, 10)

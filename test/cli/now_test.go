@@ -23,7 +23,10 @@ func TestNowCmd(t *testing.T) {
 	startTime := time.Date(2020, time.January, 1, 0, 0, 0, 0, time.UTC)
 	correctResult := strings.TrimSpace(startTime.Truncate(24 * time.Hour).Format("02.01.2006"))
 
-	service := srvc.NewService(testStorage, packService, startTime, time.Now())
+	service, err := srvc.NewService(testStorage, packService, startTime, time.Now(), workerCount)
+	if err != nil {
+		t.Fatalf("unexpected error before test: %v", err)
+	}
 
 	var buffer bytes.Buffer
 	err = cli.NowHandler(&buffer, service)
