@@ -275,14 +275,14 @@ func (s *Service) GiveOrderToCustomer(ctx context.Context, orderIDs []models.IDT
 	close(orderIDsChan)
 
 	if err := group1.Wait(); err != nil {
-		close(orderIDWithMsgChan)
-		close(okOrderIDsChan)
+		defer close(orderIDWithMsgChan)
+		defer close(okOrderIDsChan)
 		return nil, err
 	}
 	close(orderIDWithMsgChan)
 	close(okOrderIDsChan)
 
-	// add this goroutines with purpose if error occurred in previous loop no change in DB were made
+	// add this goroutines with purpose if error occurred in previous goroutines no change in DB were made
 	group2, ctx2 := errgroup.WithContext(ctx)
 
 	for i := 0; i < s.workerCount; i++ {
@@ -388,7 +388,7 @@ func (s *Service) GetCustomerOrders(ctx context.Context, customerID models.IDTyp
 	close(orderIDsChan)
 
 	if err := group.Wait(); err != nil {
-		close(resChan)
+		defer close(resChan)
 		return nil, err
 	}
 	close(resChan)
