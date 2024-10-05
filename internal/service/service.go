@@ -12,8 +12,10 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-const Day = 24 * time.Hour
-const MaxReturnTime = 2 * Day
+const (
+	Day           = 24 * time.Hour
+	MaxReturnTime = 2 * Day
+)
 
 var (
 	ErrorCustomerID              = errors.New("operation is forbidden for not this order customer")
