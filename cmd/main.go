@@ -17,12 +17,12 @@ import (
 )
 
 const (
-	psqlDSN      = "postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable"
-	workersCount = 2
+	psqlDSN     = "postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable"
+	workerCount = 2
 )
 
 func main() {
-	ctx := context.WithValue(context.Background(), "workersCount", workersCount)
+	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx) // syscall.SIGINT, syscall.SIGTERM
 	defer cancel()
 
@@ -45,7 +45,11 @@ func main() {
 	}
 
 	now := time.Now().Truncate(24 * time.Hour)
-	service := srvc.NewService(orderStorage, packService, now, now)
+	service, err := srvc.NewService(orderStorage, packService, now, now, workerCount)
+	if err != nil {
+		fmt.Printf("error in main func: %v\n", err)
+		return
+	}
 
 	cliService := cli.NewCliService(orderStorage, packService, service)
 

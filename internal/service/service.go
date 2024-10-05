@@ -25,6 +25,7 @@ var (
 	ErrorOderNegativeWeight      = errors.New("order weight can't be negative")
 	ErrorOrderWasTakenByCustomer = errors.New("order was taken by customer")
 	ErrorOrderWasNotFounded      = errors.New("order is not in PVZ or has already been returned and given to courier")
+	ErrorInvalidWorkerCount      = errors.New("worker count must be > 0")
 )
 
 type OrderIDWithMsg struct {
@@ -53,6 +54,7 @@ type Service struct {
 	startTime       time.Time
 	systemStartTime time.Time
 	orderStorage    storage.Facade
+	workerCount     int
 }
 
 func NewService(
@@ -60,13 +62,19 @@ func NewService(
 	packagingSrvc *packaging.Packaging,
 	startTime time.Time,
 	systemStartTime time.Time,
-) *Service {
-	return &Service{
+	workerCount int,
+) (*Service, error) {
+	s := &Service{
 		Packaging:       packagingSrvc,
 		startTime:       startTime,
 		systemStartTime: systemStartTime,
 		orderStorage:    orderStorage,
 	}
+	if err := s.ChangeWorkerCount(workerCount); err != nil {
+		return nil, err
+	}
+
+	return s, nil
 }
 
 type AcceptOrderDTO struct {
@@ -227,7 +235,6 @@ func (s *Service) getCustomerOrderIDWithMsg(ctx context.Context, orderID, custom
 }
 
 func (s *Service) GiveOrderToCustomer(ctx context.Context, orderIDs []models.IDType, customerID models.IDType) ([]OrderIDWithMsg, error) {
-	workersCount := ctx.Value("workersCount").(int)
 	currTime := s.GetCurrentTime()
 
 	// Worker Pool
@@ -236,7 +243,7 @@ func (s *Service) GiveOrderToCustomer(ctx context.Context, orderIDs []models.IDT
 	orderIDWithMsgChan := make(chan OrderIDWithMsg, len(orderIDs))
 	okOrderIDsChan := make(chan models.IDType, len(orderIDs))
 
-	for i := 0; i < workersCount; i++ {
+	for i := 0; i < s.workerCount; i++ {
 		group1.Go(func() error {
 			for {
 				select {
@@ -277,7 +284,7 @@ func (s *Service) GiveOrderToCustomer(ctx context.Context, orderIDs []models.IDT
 	// add this goroutines with purpose if error occurred in previous loop no change in DB were made
 	group2, ctx2 := errgroup.WithContext(ctx)
 
-	for i := 0; i < workersCount; i++ {
+	for i := 0; i < s.workerCount; i++ {
 		group2.Go(func() error {
 			for {
 				select {
@@ -334,7 +341,6 @@ func (s *Service) getOrderIDWithExpiryAndStatus(ctx context.Context, orderID mod
 func (s *Service) GetCustomerOrders(ctx context.Context, customerID models.IDType, n uint) ([]OrderIDWithExpiryAndStatus, error) {
 	var orderIDs []models.IDType
 	var err error
-	workersCount := ctx.Value("workersCount").(int)
 	currTime := s.GetCurrentTime()
 
 	if n == 0 {
@@ -354,7 +360,7 @@ func (s *Service) GetCustomerOrders(ctx context.Context, customerID models.IDTyp
 	orderIDsChan := make(chan models.IDType, len(orderIDs))
 	resChan := make(chan OrderIDWithExpiryAndStatus, len(orderIDs))
 
-	for i := 0; i < workersCount; i++ {
+	for i := 0; i < s.workerCount; i++ {
 		group.Go(func() error {
 			for {
 				select {
@@ -441,8 +447,6 @@ func (s *Service) ReturnOrderFromCustomer(ctx context.Context, customerID, order
 
 // GetReturnsList method is generator, it uses chan to return results from db
 func (s *Service) GetReturnsList(ctx context.Context, offset, limit int) (<-chan ReturnOrderAndCustomer, error) {
-	workersCount := ctx.Value("workersCount").(int)
-
 	if offset < 0 {
 		return nil, errors.New("offset value must be >= 0")
 	}
@@ -465,7 +469,7 @@ func (s *Service) GetReturnsList(ctx context.Context, offset, limit int) (<-chan
 	orderIDsChan := make(chan models.IDType, len(returnOrderIDs))
 	orderAndCustomerChan := make(chan ReturnOrderAndCustomer, len(returnOrderIDs))
 
-	for i := 0; i < workersCount; i++ {
+	for i := 0; i < s.workerCount; i++ {
 		group.Go(func() error {
 			for {
 				select {
@@ -513,4 +517,18 @@ func isLessOrEqualTime(t1, t2 time.Time) bool {
 
 func (s *Service) SetStartTime(startTime time.Time) {
 	s.startTime = startTime
+}
+
+func (s *Service) ChangeWorkerCount(workerCount int) error {
+	if workerCount <= 0 {
+		return ErrorInvalidWorkerCount
+	}
+
+	s.workerCount = workerCount
+
+	return nil
+}
+
+func (s *Service) GetWorkerCount() int {
+	return s.workerCount
 }
