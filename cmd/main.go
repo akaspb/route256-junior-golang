@@ -23,7 +23,7 @@ const (
 
 func main() {
 	ctx := context.Background()
-	ctx, cancel := context.WithCancel(ctx) // syscall.SIGINT, syscall.SIGTERM
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	sigCh := make(chan os.Signal, 1)
