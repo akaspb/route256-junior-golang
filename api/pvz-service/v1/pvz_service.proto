@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package pvz;
+
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+//import "google/ty"
+
+service PvzService {
+  rpc GiveOrders (GiveOrdersRequest) returns (GiveOrdersResponse) {}
+  rpc GetCustomerOrders (GetCustomerOrdersRequest) returns (GetCustomerOrdersResponse) {}
+  rpc ReceiveOrder (ReceiveOrderRequest) returns (google.protobuf.Empty) {}
+  rpc RemoveOrder (RemoveOrderRequest) returns (google.protobuf.Empty) {}
+  rpc ReturnOrder (ReturnOrderRequest) returns (google.protobuf.Empty) {}
+  rpc GetReturnedOrders (GetReturnedOrdersRequest) returns (GetReturnedOrdersResponse) {}
+}
+
+message GiveOrdersRequest {
+  int64 customer_id = 1;
+  repeated int64 order_ids = 2;
+}
+
+message OrderToGiveInfo {
+    int64 order_id = 1;
+    float cost = 2; // todo change type
+    google.protobuf.StringValue packing = 3;
+    string message = 4;
+    bool ok_to_give = 5;
+}
+
+message GiveOrdersResponse {
+  repeated OrderToGiveInfo orders = 1;
+}
+
+message GetCustomerOrdersRequest {
+  int64 customer_id = 1;
+  google.protobuf.UInt32Value last_count = 2;
+}
+
+message CustomerOrderInfo {
+  int64 order_id = 1;
+//  float weight = 4; // todo подумать, может добавить
+  float cost = 2; // todo change type
+  google.protobuf.Timestamp expiry = 3;
+  bool expired = 4;
+  google.protobuf.StringValue packing = 5;
+}
+
+message GetCustomerOrdersResponse {
+  repeated CustomerOrderInfo orders = 1;
+}
+
+message ReceiveOrderRequest {
+  int64 id = 1;
+  int64 customer_id = 2;
+  google.protobuf.Timestamp expiry = 3;
+  float weight = 4;
+  float cost = 5; // todo change type
+  google.protobuf.StringValue packing = 6;
+}
+
+message RemoveOrderRequest {
+  int64 order_id = 1;
+}
+
+message ReturnOrderRequest {
+  int64 customer_id = 1;
+  int64 order_id = 2;
+}
+
+message GetReturnedOrdersRequest {
+  uint32 offset = 1;
+  uint32 limit = 2;
+}
+
+message ReturnedOrder {
+    int64 order_id = 1;
+    int64 customer_id = 2;
+}
+
+message GetReturnedOrdersResponse {
+  repeated ReturnedOrder orders = 1;
+}
+
