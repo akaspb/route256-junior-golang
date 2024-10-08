@@ -4,16 +4,19 @@ package pvz;
 
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/empty.proto";
-//import "google/ty"
 
 service PvzService {
   rpc GiveOrders (GiveOrdersRequest) returns (GiveOrdersResponse) {}
   rpc GetCustomerOrders (GetCustomerOrdersRequest) returns (GetCustomerOrdersResponse) {}
-  rpc ReceiveOrder (ReceiveOrderRequest) returns (google.protobuf.Empty) {}
-  rpc RemoveOrder (RemoveOrderRequest) returns (google.protobuf.Empty) {}
-  rpc ReturnOrder (ReturnOrderRequest) returns (google.protobuf.Empty) {}
+  rpc ReceiveOrder (ReceiveOrderRequest) returns (ReceiveOrderResponse) {}
+  rpc RemoveOrder (RemoveOrderRequest) returns (RemoveOrderResponse) {}
+  rpc ReturnOrder (ReturnOrderRequest) returns (ReturnOrderResponse) {}
   rpc GetReturnedOrders (GetReturnedOrdersRequest) returns (GetReturnedOrdersResponse) {}
+}
+
+message FixedPointNumber {
+  int32 mantissa = 1;
+  int32 fractional_length = 2;
 }
 
 message GiveOrdersRequest {
@@ -23,7 +26,7 @@ message GiveOrdersRequest {
 
 message OrderToGiveInfo {
     int64 order_id = 1;
-    float cost = 2; // todo change type
+    FixedPointNumber cost = 2;
     google.protobuf.StringValue packing = 3;
     string message = 4;
     bool ok_to_give = 5;
@@ -40,11 +43,11 @@ message GetCustomerOrdersRequest {
 
 message CustomerOrderInfo {
   int64 order_id = 1;
-//  float weight = 4; // todo подумать, может добавить
-  float cost = 2; // todo change type
-  google.protobuf.Timestamp expiry = 3;
-  bool expired = 4;
-  google.protobuf.StringValue packing = 5;
+  FixedPointNumber weight = 2;
+  FixedPointNumber cost = 3;
+  google.protobuf.Timestamp expiry = 4;
+  bool expired = 5;
+  google.protobuf.StringValue packing = 6;
 }
 
 message GetCustomerOrdersResponse {
@@ -55,18 +58,30 @@ message ReceiveOrderRequest {
   int64 id = 1;
   int64 customer_id = 2;
   google.protobuf.Timestamp expiry = 3;
-  float weight = 4;
-  float cost = 5; // todo change type
+  FixedPointNumber weight = 4;
+  FixedPointNumber cost = 5;
   google.protobuf.StringValue packing = 6;
+}
+
+message ReceiveOrderResponse {
+
 }
 
 message RemoveOrderRequest {
   int64 order_id = 1;
 }
 
+message RemoveOrderResponse {
+
+}
+
 message ReturnOrderRequest {
   int64 customer_id = 1;
   int64 order_id = 2;
+}
+
+message ReturnOrderResponse {
+
 }
 
 message GetReturnedOrdersRequest {
