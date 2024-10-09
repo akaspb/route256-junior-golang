@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package pvz;
 
+option go_package = "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service;pvz_service";
+
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/timestamp.proto";
 
