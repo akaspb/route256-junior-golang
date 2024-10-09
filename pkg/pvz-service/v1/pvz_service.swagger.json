@@ -1,0 +1,166 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "pvz-service/v1/pvz_service.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "PvzService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "pvzCustomerOrderInfo": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "weight": {
+          "$ref": "#/definitions/pvzFixedPointNumber"
+        },
+        "cost": {
+          "$ref": "#/definitions/pvzFixedPointNumber"
+        },
+        "expiry": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expired": {
+          "type": "boolean"
+        },
+        "packing": {
+          "type": "string"
+        }
+      }
+    },
+    "pvzFixedPointNumber": {
+      "type": "object",
+      "properties": {
+        "mantissa": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "fractionalLength": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "pvzGetCustomerOrdersResponse": {
+      "type": "object",
+      "properties": {
+        "orders": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/pvzCustomerOrderInfo"
+          }
+        }
+      }
+    },
+    "pvzGetReturnedOrdersResponse": {
+      "type": "object",
+      "properties": {
+        "orders": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/pvzReturnedOrder"
+          }
+        }
+      }
+    },
+    "pvzGiveOrdersResponse": {
+      "type": "object",
+      "properties": {
+        "orders": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/pvzOrderToGiveInfo"
+          }
+        }
+      }
+    },
+    "pvzOrderToGiveInfo": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "cost": {
+          "$ref": "#/definitions/pvzFixedPointNumber"
+        },
+        "packing": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "okToGive": {
+          "type": "boolean"
+        }
+      }
+    },
+    "pvzReceiveOrderResponse": {
+      "type": "object"
+    },
+    "pvzRemoveOrderResponse": {
+      "type": "object"
+    },
+    "pvzReturnOrderResponse": {
+      "type": "object"
+    },
+    "pvzReturnedOrder": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "customerId": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}
