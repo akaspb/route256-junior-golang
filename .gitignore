@@ -2,3 +2,4 @@
 pvz
 internal/storage/storage.json
 bin
+vendor.protogen
