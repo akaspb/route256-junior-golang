@@ -6,14 +6,45 @@ option go_package = "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service;pvz_s
 
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+import "google/api/field_behavior.proto";
+import "google/api/annotations.proto";
 
 service PvzService {
-  rpc GiveOrders (GiveOrdersRequest) returns (GiveOrdersResponse) {}
-  rpc GetCustomerOrders (GetCustomerOrdersRequest) returns (GetCustomerOrdersResponse) {}
-  rpc ReceiveOrder (ReceiveOrderRequest) returns (ReceiveOrderResponse) {}
-  rpc RemoveOrder (RemoveOrderRequest) returns (RemoveOrderResponse) {}
-  rpc ReturnOrder (ReturnOrderRequest) returns (ReturnOrderResponse) {}
-  rpc GetReturnedOrders (GetReturnedOrdersRequest) returns (GetReturnedOrdersResponse) {}
+  rpc GiveOrders (GiveOrdersRequest) returns (GiveOrdersResponse) {
+    option (google.api.http) = {
+      post: "/GiveOrders"
+      body: "*"
+    };
+  }
+  rpc GetCustomerOrders (GetCustomerOrdersRequest) returns (GetCustomerOrdersResponse) {
+    option (google.api.http) = {
+      get: "/GetCustomerOrders"
+    };
+  }
+  rpc ReceiveOrder (ReceiveOrderRequest) returns (ReceiveOrderResponse) {
+    option (google.api.http) = {
+      put: "/ReceiveOrder"
+      body: "*"
+    };
+  }
+  rpc RemoveOrder (RemoveOrderRequest) returns (RemoveOrderResponse) {
+    option (google.api.http) = {
+      delete: "/RemoveOrder"
+      body: "*"
+    };
+  }
+  rpc ReturnOrder (ReturnOrderRequest) returns (ReturnOrderResponse) {
+    option (google.api.http) = {
+      post: "/ReturnOrder"
+      body: "*"
+    };
+  }
+  rpc GetReturnedOrders (GetReturnedOrdersRequest) returns (GetReturnedOrdersResponse) {
+    option (google.api.http) = {
+      get: "/ReturnOrder"
+    };
+  }
 }
 
 message FixedPointNumber {
@@ -22,8 +53,12 @@ message FixedPointNumber {
 }
 
 message GiveOrdersRequest {
-  int64 customer_id = 1;
-  repeated int64 order_ids = 2;
+  int64 customer_id = 1 [
+    (google.api.field_behavior) = REQUIRED
+  ];
+  repeated int64 order_ids = 2 [
+    (google.api.field_behavior) = REQUIRED
+  ];
 }
 
 message OrderToGiveInfo {
@@ -39,8 +74,12 @@ message GiveOrdersResponse {
 }
 
 message GetCustomerOrdersRequest {
-  int64 customer_id = 1;
-  google.protobuf.UInt32Value last_count = 2;
+  int64 customer_id = 1 [
+    (google.api.field_behavior) = REQUIRED
+  ];
+  google.protobuf.UInt32Value last_count = 2 [
+    (google.api.field_behavior) = OPTIONAL
+  ];
 }
 
 message CustomerOrderInfo {
@@ -57,12 +96,24 @@ message GetCustomerOrdersResponse {
 }
 
 message ReceiveOrderRequest {
-  int64 id = 1;
-  int64 customer_id = 2;
-  google.protobuf.Timestamp expiry = 3;
-  FixedPointNumber weight = 4;
-  FixedPointNumber cost = 5;
-  google.protobuf.StringValue packing = 6;
+  int64 id = 1 [
+    (google.api.field_behavior) = REQUIRED
+  ];
+  int64 customer_id = 2 [
+    (google.api.field_behavior) = REQUIRED
+  ];
+  google.protobuf.Timestamp expiry = 3 [
+    (google.api.field_behavior) = REQUIRED
+  ];
+  FixedPointNumber weight = 4 [
+    (google.api.field_behavior) = REQUIRED
+  ];
+  FixedPointNumber cost = 5 [
+    (google.api.field_behavior) = REQUIRED
+  ];
+  google.protobuf.StringValue packing = 6 [
+    (google.api.field_behavior) = OPTIONAL
+  ];
 }
 
 message ReceiveOrderResponse {
@@ -70,7 +121,9 @@ message ReceiveOrderResponse {
 }
 
 message RemoveOrderRequest {
-  int64 order_id = 1;
+  int64 order_id = 1 [
+    (google.api.field_behavior) = REQUIRED
+  ];
 }
 
 message RemoveOrderResponse {
@@ -78,8 +131,12 @@ message RemoveOrderResponse {
 }
 
 message ReturnOrderRequest {
-  int64 customer_id = 1;
-  int64 order_id = 2;
+  int64 customer_id = 1 [
+    (google.api.field_behavior) = REQUIRED
+  ];
+  int64 order_id = 2 [
+    (google.api.field_behavior) = REQUIRED
+  ];
 }
 
 message ReturnOrderResponse {
@@ -87,8 +144,12 @@ message ReturnOrderResponse {
 }
 
 message GetReturnedOrdersRequest {
-  uint32 offset = 1;
-  uint32 limit = 2;
+  uint32 offset = 1 [
+    (google.api.field_behavior) = REQUIRED
+  ];
+  uint32 limit = 2 [
+    (google.api.field_behavior) = REQUIRED
+  ];
 }
 
 message ReturnedOrder {
