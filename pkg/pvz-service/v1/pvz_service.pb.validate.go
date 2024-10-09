@@ -35,22 +35,21 @@ var (
 	_ = sort.Sort
 )
 
-// Validate checks the field values on FixedPointNumber with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// first error encountered is returned, or nil if there are no violations.
-func (m *FixedPointNumber) Validate() error {
+// Validate checks the field values on Weight with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *Weight) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on FixedPointNumber with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// FixedPointNumberMultiError, or nil if none found.
-func (m *FixedPointNumber) ValidateAll() error {
+// ValidateAll checks the field values on Weight with the rules defined in the
+// proto definition for this message. If any rules are violated, the result is
+// a list of violation errors wrapped in WeightMultiError, or nil if none found.
+func (m *Weight) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *FixedPointNumber) validate(all bool) error {
+func (m *Weight) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -62,19 +61,18 @@ func (m *FixedPointNumber) validate(all bool) error {
 	// no validation rules for FractionalLength
 
 	if len(errors) > 0 {
-		return FixedPointNumberMultiError(errors)
+		return WeightMultiError(errors)
 	}
 
 	return nil
 }
 
-// FixedPointNumberMultiError is an error wrapping multiple validation errors
-// returned by FixedPointNumber.ValidateAll() if the designated constraints
-// aren't met.
-type FixedPointNumberMultiError []error
+// WeightMultiError is an error wrapping multiple validation errors returned by
+// Weight.ValidateAll() if the designated constraints aren't met.
+type WeightMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m FixedPointNumberMultiError) Error() string {
+func (m WeightMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -83,11 +81,11 @@ func (m FixedPointNumberMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m FixedPointNumberMultiError) AllErrors() []error { return m }
+func (m WeightMultiError) AllErrors() []error { return m }
 
-// FixedPointNumberValidationError is the validation error returned by
-// FixedPointNumber.Validate if the designated constraints aren't met.
-type FixedPointNumberValidationError struct {
+// WeightValidationError is the validation error returned by Weight.Validate if
+// the designated constraints aren't met.
+type WeightValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -95,22 +93,22 @@ type FixedPointNumberValidationError struct {
 }
 
 // Field function returns field value.
-func (e FixedPointNumberValidationError) Field() string { return e.field }
+func (e WeightValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e FixedPointNumberValidationError) Reason() string { return e.reason }
+func (e WeightValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e FixedPointNumberValidationError) Cause() error { return e.cause }
+func (e WeightValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e FixedPointNumberValidationError) Key() bool { return e.key }
+func (e WeightValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e FixedPointNumberValidationError) ErrorName() string { return "FixedPointNumberValidationError" }
+func (e WeightValidationError) ErrorName() string { return "WeightValidationError" }
 
 // Error satisfies the builtin error interface
-func (e FixedPointNumberValidationError) Error() string {
+func (e WeightValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -122,14 +120,14 @@ func (e FixedPointNumberValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sFixedPointNumber.%s: %s%s",
+		"invalid %sWeight.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = FixedPointNumberValidationError{}
+var _ error = WeightValidationError{}
 
 var _ interface {
 	Field() string
@@ -137,7 +135,109 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = FixedPointNumberValidationError{}
+} = WeightValidationError{}
+
+// Validate checks the field values on Cost with the rules defined in the proto
+// definition for this message. If any rules are violated, the first error
+// encountered is returned, or nil if there are no violations.
+func (m *Cost) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on Cost with the rules defined in the
+// proto definition for this message. If any rules are violated, the result is
+// a list of violation errors wrapped in CostMultiError, or nil if none found.
+func (m *Cost) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *Cost) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Mantissa
+
+	// no validation rules for FractionalLength
+
+	if len(errors) > 0 {
+		return CostMultiError(errors)
+	}
+
+	return nil
+}
+
+// CostMultiError is an error wrapping multiple validation errors returned by
+// Cost.ValidateAll() if the designated constraints aren't met.
+type CostMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CostMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CostMultiError) AllErrors() []error { return m }
+
+// CostValidationError is the validation error returned by Cost.Validate if the
+// designated constraints aren't met.
+type CostValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CostValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CostValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CostValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CostValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CostValidationError) ErrorName() string { return "CostValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CostValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCost.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CostValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CostValidationError{}
 
 // Validate checks the field values on GiveOrdersRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, the
@@ -162,6 +262,17 @@ func (m *GiveOrdersRequest) validate(all bool) error {
 	var errors []error
 
 	// no validation rules for CustomerId
+
+	if len(m.GetOrderIds()) < 1 {
+		err := GiveOrdersRequestValidationError{
+			field:  "OrderIds",
+			reason: "value must contain at least 1 item(s)",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	if len(errors) > 0 {
 		return GiveOrdersRequestMultiError(errors)
@@ -567,33 +678,19 @@ func (m *GetCustomerOrdersRequest) validate(all bool) error {
 
 	// no validation rules for CustomerId
 
-	if all {
-		switch v := interface{}(m.GetLastCount()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, GetCustomerOrdersRequestValidationError{
-					field:  "LastCount",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, GetCustomerOrdersRequestValidationError{
-					field:  "LastCount",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetLastCount()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return GetCustomerOrdersRequestValidationError{
+	if wrapper := m.GetLastCount(); wrapper != nil {
+
+		if wrapper.GetValue() < 1 {
+			err := GetCustomerOrdersRequestValidationError{
 				field:  "LastCount",
-				reason: "embedded message failed validation",
-				cause:  err,
+				reason: "value must be greater than or equal to 1",
 			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
 		}
+
 	}
 
 	if len(errors) > 0 {
@@ -1796,7 +1893,16 @@ func (m *GetReturnedOrdersRequest) validate(all bool) error {
 
 	// no validation rules for Offset
 
-	// no validation rules for Limit
+	if m.GetLimit() < 1 {
+		err := GetReturnedOrdersRequestValidationError{
+			field:  "Limit",
+			reason: "value must be greater than or equal to 1",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	if len(errors) > 0 {
 		return GetReturnedOrdersRequestMultiError(errors)

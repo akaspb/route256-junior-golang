@@ -31,7 +31,6 @@ service PvzService {
   rpc RemoveOrder (RemoveOrderRequest) returns (RemoveOrderResponse) {
     option (google.api.http) = {
       delete: "/RemoveOrder"
-      body: "*"
     };
   }
   rpc ReturnOrder (ReturnOrderRequest) returns (ReturnOrderResponse) {
@@ -47,9 +46,22 @@ service PvzService {
   }
 }
 
-message FixedPointNumber {
-  int32 mantissa = 1;
-  int32 fractional_length = 2;
+message Weight {
+  uint32 mantissa = 1 [
+    (google.api.field_behavior) = REQUIRED
+  ];
+  uint32 fractional_length = 2 [
+    (google.api.field_behavior) = REQUIRED
+  ];
+}
+
+message Cost {
+  uint32 mantissa = 1 [
+    (google.api.field_behavior) = REQUIRED
+  ];
+  uint32 fractional_length = 2 [
+    (google.api.field_behavior) = REQUIRED
+  ];
 }
 
 message GiveOrdersRequest {
@@ -57,13 +69,14 @@ message GiveOrdersRequest {
     (google.api.field_behavior) = REQUIRED
   ];
   repeated int64 order_ids = 2 [
+    (validate.rules).repeated.min_items = 1,
     (google.api.field_behavior) = REQUIRED
   ];
 }
 
 message OrderToGiveInfo {
     int64 order_id = 1;
-    FixedPointNumber cost = 2;
+    Cost cost = 2;
     google.protobuf.StringValue packing = 3;
     string message = 4;
     bool ok_to_give = 5;
@@ -78,14 +91,15 @@ message GetCustomerOrdersRequest {
     (google.api.field_behavior) = REQUIRED
   ];
   google.protobuf.UInt32Value last_count = 2 [
+    (validate.rules).uint32.gte = 1,
     (google.api.field_behavior) = OPTIONAL
   ];
 }
 
 message CustomerOrderInfo {
   int64 order_id = 1;
-  FixedPointNumber weight = 2;
-  FixedPointNumber cost = 3;
+  Weight weight = 2;
+  Cost cost = 3;
   google.protobuf.Timestamp expiry = 4;
   bool expired = 5;
   google.protobuf.StringValue packing = 6;
@@ -105,10 +119,10 @@ message ReceiveOrderRequest {
   google.protobuf.Timestamp expiry = 3 [
     (google.api.field_behavior) = REQUIRED
   ];
-  FixedPointNumber weight = 4 [
+  Weight weight = 4 [
     (google.api.field_behavior) = REQUIRED
   ];
-  FixedPointNumber cost = 5 [
+  Cost cost = 5 [
     (google.api.field_behavior) = REQUIRED
   ];
   google.protobuf.StringValue packing = 6 [
@@ -148,6 +162,7 @@ message GetReturnedOrdersRequest {
     (google.api.field_behavior) = REQUIRED
   ];
   uint32 limit = 2 [
+    (validate.rules).uint32.gte = 1,
     (google.api.field_behavior) = REQUIRED
   ];
 }

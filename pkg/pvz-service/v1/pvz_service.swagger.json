@@ -15,7 +15,209 @@
   "produces": [
     "application/json"
   ],
-  "paths": {},
+  "paths": {
+    "/GetCustomerOrders": {
+      "get": {
+        "operationId": "PvzService_GetCustomerOrders",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pvzGetCustomerOrdersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "lastCount",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "PvzService"
+        ]
+      }
+    },
+    "/GiveOrders": {
+      "post": {
+        "operationId": "PvzService_GiveOrders",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pvzGiveOrdersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/pvzGiveOrdersRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PvzService"
+        ]
+      }
+    },
+    "/ReceiveOrder": {
+      "put": {
+        "operationId": "PvzService_ReceiveOrder",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pvzReceiveOrderResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/pvzReceiveOrderRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PvzService"
+        ]
+      }
+    },
+    "/RemoveOrder": {
+      "delete": {
+        "operationId": "PvzService_RemoveOrder",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pvzRemoveOrderResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "PvzService"
+        ]
+      }
+    },
+    "/ReturnOrder": {
+      "get": {
+        "operationId": "PvzService_GetReturnedOrders",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pvzGetReturnedOrdersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "PvzService"
+        ]
+      },
+      "post": {
+        "operationId": "PvzService_ReturnOrder",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pvzReturnOrderResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/pvzReturnOrderRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PvzService"
+        ]
+      }
+    }
+  },
   "definitions": {
     "protobufAny": {
       "type": "object",
@@ -26,6 +228,23 @@
       },
       "additionalProperties": {}
     },
+    "pvzCost": {
+      "type": "object",
+      "properties": {
+        "mantissa": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "fractionalLength": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "required": [
+        "mantissa",
+        "fractionalLength"
+      ]
+    },
     "pvzCustomerOrderInfo": {
       "type": "object",
       "properties": {
@@ -34,10 +253,10 @@
           "format": "int64"
         },
         "weight": {
-          "$ref": "#/definitions/pvzFixedPointNumber"
+          "$ref": "#/definitions/pvzWeight"
         },
         "cost": {
-          "$ref": "#/definitions/pvzFixedPointNumber"
+          "$ref": "#/definitions/pvzCost"
         },
         "expiry": {
           "type": "string",
@@ -48,19 +267,6 @@
         },
         "packing": {
           "type": "string"
-        }
-      }
-    },
-    "pvzFixedPointNumber": {
-      "type": "object",
-      "properties": {
-        "mantissa": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "fractionalLength": {
-          "type": "integer",
-          "format": "int32"
         }
       }
     },
@@ -88,6 +294,26 @@
         }
       }
     },
+    "pvzGiveOrdersRequest": {
+      "type": "object",
+      "properties": {
+        "customerId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "orderIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "int64"
+          }
+        }
+      },
+      "required": [
+        "customerId",
+        "orderIds"
+      ]
+    },
     "pvzGiveOrdersResponse": {
       "type": "object",
       "properties": {
@@ -108,7 +334,7 @@
           "format": "int64"
         },
         "cost": {
-          "$ref": "#/definitions/pvzFixedPointNumber"
+          "$ref": "#/definitions/pvzCost"
         },
         "packing": {
           "type": "string"
@@ -121,11 +347,61 @@
         }
       }
     },
+    "pvzReceiveOrderRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "customerId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "expiry": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "weight": {
+          "$ref": "#/definitions/pvzWeight"
+        },
+        "cost": {
+          "$ref": "#/definitions/pvzCost"
+        },
+        "packing": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "customerId",
+        "expiry",
+        "weight",
+        "cost"
+      ]
+    },
     "pvzReceiveOrderResponse": {
       "type": "object"
     },
     "pvzRemoveOrderResponse": {
       "type": "object"
+    },
+    "pvzReturnOrderRequest": {
+      "type": "object",
+      "properties": {
+        "customerId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "orderId": {
+          "type": "string",
+          "format": "int64"
+        }
+      },
+      "required": [
+        "customerId",
+        "orderId"
+      ]
     },
     "pvzReturnOrderResponse": {
       "type": "object"
@@ -142,6 +418,23 @@
           "format": "int64"
         }
       }
+    },
+    "pvzWeight": {
+      "type": "object",
+      "properties": {
+        "mantissa": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "fractionalLength": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "required": [
+        "mantissa",
+        "fractionalLength"
+      ]
     },
     "rpcStatus": {
       "type": "object",
