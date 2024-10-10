@@ -228,23 +228,6 @@
       },
       "additionalProperties": {}
     },
-    "pvzCost": {
-      "type": "object",
-      "properties": {
-        "mantissa": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "fractionalLength": {
-          "type": "integer",
-          "format": "int64"
-        }
-      },
-      "required": [
-        "mantissa",
-        "fractionalLength"
-      ]
-    },
     "pvzCustomerOrderInfo": {
       "type": "object",
       "properties": {
@@ -253,10 +236,12 @@
           "format": "int64"
         },
         "weight": {
-          "$ref": "#/definitions/pvzWeight"
+          "type": "number",
+          "format": "float"
         },
         "cost": {
-          "$ref": "#/definitions/pvzCost"
+          "type": "number",
+          "format": "float"
         },
         "expiry": {
           "type": "string",
@@ -334,7 +319,8 @@
           "format": "int64"
         },
         "cost": {
-          "$ref": "#/definitions/pvzCost"
+          "type": "number",
+          "format": "float"
         },
         "packing": {
           "type": "string"
@@ -363,10 +349,12 @@
           "format": "date-time"
         },
         "weight": {
-          "$ref": "#/definitions/pvzWeight"
+          "type": "number",
+          "format": "float"
         },
         "cost": {
-          "$ref": "#/definitions/pvzCost"
+          "type": "number",
+          "format": "float"
         },
         "packing": {
           "type": "string"
@@ -418,23 +406,6 @@
           "format": "int64"
         }
       }
-    },
-    "pvzWeight": {
-      "type": "object",
-      "properties": {
-        "mantissa": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "fractionalLength": {
-          "type": "integer",
-          "format": "int64"
-        }
-      },
-      "required": [
-        "mantissa",
-        "fractionalLength"
-      ]
     },
     "rpcStatus": {
       "type": "object",

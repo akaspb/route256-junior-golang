@@ -46,24 +46,6 @@ service PvzService {
   }
 }
 
-message Weight {
-  uint32 mantissa = 1 [
-    (google.api.field_behavior) = REQUIRED
-  ];
-  uint32 fractional_length = 2 [
-    (google.api.field_behavior) = REQUIRED
-  ];
-}
-
-message Cost {
-  uint32 mantissa = 1 [
-    (google.api.field_behavior) = REQUIRED
-  ];
-  uint32 fractional_length = 2 [
-    (google.api.field_behavior) = REQUIRED
-  ];
-}
-
 message GiveOrdersRequest {
   int64 customer_id = 1 [
     (google.api.field_behavior) = REQUIRED
@@ -76,7 +58,7 @@ message GiveOrdersRequest {
 
 message OrderToGiveInfo {
     int64 order_id = 1;
-    Cost cost = 2;
+    float cost = 2;
     google.protobuf.StringValue packing = 3;
     string message = 4;
     bool ok_to_give = 5;
@@ -98,8 +80,8 @@ message GetCustomerOrdersRequest {
 
 message CustomerOrderInfo {
   int64 order_id = 1;
-  Weight weight = 2;
-  Cost cost = 3;
+  float weight = 2;
+  float cost = 3;
   google.protobuf.Timestamp expiry = 4;
   bool expired = 5;
   google.protobuf.StringValue packing = 6;
@@ -119,10 +101,12 @@ message ReceiveOrderRequest {
   google.protobuf.Timestamp expiry = 3 [
     (google.api.field_behavior) = REQUIRED
   ];
-  Weight weight = 4 [
+  float weight = 4 [
+    (validate.rules).float.gte = 0,
     (google.api.field_behavior) = REQUIRED
   ];
-  Cost cost = 5 [
+  float cost = 5 [
+    (validate.rules).float.gte = 0,
     (google.api.field_behavior) = REQUIRED
   ];
   google.protobuf.StringValue packing = 6 [

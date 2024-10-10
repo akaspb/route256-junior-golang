@@ -1,12 +1,16 @@
 package server
 
 import (
-	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 	desc "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
 )
 
 type Implementation struct {
-	storage storage.Facade
+	service service.Service
 
 	desc.UnimplementedPvzServiceServer
+}
+
+func NewImplementation(service service.Service) *Implementation {
+	return &Implementation{service: service}
 }

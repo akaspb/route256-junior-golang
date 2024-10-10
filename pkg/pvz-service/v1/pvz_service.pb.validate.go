@@ -35,210 +35,6 @@ var (
 	_ = sort.Sort
 )
 
-// Validate checks the field values on Weight with the rules defined in the
-// proto definition for this message. If any rules are violated, the first
-// error encountered is returned, or nil if there are no violations.
-func (m *Weight) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on Weight with the rules defined in the
-// proto definition for this message. If any rules are violated, the result is
-// a list of violation errors wrapped in WeightMultiError, or nil if none found.
-func (m *Weight) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *Weight) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Mantissa
-
-	// no validation rules for FractionalLength
-
-	if len(errors) > 0 {
-		return WeightMultiError(errors)
-	}
-
-	return nil
-}
-
-// WeightMultiError is an error wrapping multiple validation errors returned by
-// Weight.ValidateAll() if the designated constraints aren't met.
-type WeightMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m WeightMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m WeightMultiError) AllErrors() []error { return m }
-
-// WeightValidationError is the validation error returned by Weight.Validate if
-// the designated constraints aren't met.
-type WeightValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e WeightValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e WeightValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e WeightValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e WeightValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e WeightValidationError) ErrorName() string { return "WeightValidationError" }
-
-// Error satisfies the builtin error interface
-func (e WeightValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sWeight.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = WeightValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = WeightValidationError{}
-
-// Validate checks the field values on Cost with the rules defined in the proto
-// definition for this message. If any rules are violated, the first error
-// encountered is returned, or nil if there are no violations.
-func (m *Cost) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on Cost with the rules defined in the
-// proto definition for this message. If any rules are violated, the result is
-// a list of violation errors wrapped in CostMultiError, or nil if none found.
-func (m *Cost) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *Cost) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Mantissa
-
-	// no validation rules for FractionalLength
-
-	if len(errors) > 0 {
-		return CostMultiError(errors)
-	}
-
-	return nil
-}
-
-// CostMultiError is an error wrapping multiple validation errors returned by
-// Cost.ValidateAll() if the designated constraints aren't met.
-type CostMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m CostMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m CostMultiError) AllErrors() []error { return m }
-
-// CostValidationError is the validation error returned by Cost.Validate if the
-// designated constraints aren't met.
-type CostValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e CostValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e CostValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e CostValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e CostValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e CostValidationError) ErrorName() string { return "CostValidationError" }
-
-// Error satisfies the builtin error interface
-func (e CostValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sCost.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = CostValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = CostValidationError{}
-
 // Validate checks the field values on GiveOrdersRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, the
 // first error encountered is returned, or nil if there are no violations.
@@ -378,34 +174,7 @@ func (m *OrderToGiveInfo) validate(all bool) error {
 
 	// no validation rules for OrderId
 
-	if all {
-		switch v := interface{}(m.GetCost()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, OrderToGiveInfoValidationError{
-					field:  "Cost",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, OrderToGiveInfoValidationError{
-					field:  "Cost",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetCost()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return OrderToGiveInfoValidationError{
-				field:  "Cost",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
+	// no validation rules for Cost
 
 	if all {
 		switch v := interface{}(m.GetPacking()).(type) {
@@ -797,63 +566,9 @@ func (m *CustomerOrderInfo) validate(all bool) error {
 
 	// no validation rules for OrderId
 
-	if all {
-		switch v := interface{}(m.GetWeight()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, CustomerOrderInfoValidationError{
-					field:  "Weight",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, CustomerOrderInfoValidationError{
-					field:  "Weight",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetWeight()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return CustomerOrderInfoValidationError{
-				field:  "Weight",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
+	// no validation rules for Weight
 
-	if all {
-		switch v := interface{}(m.GetCost()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, CustomerOrderInfoValidationError{
-					field:  "Cost",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, CustomerOrderInfoValidationError{
-					field:  "Cost",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetCost()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return CustomerOrderInfoValidationError{
-				field:  "Cost",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
+	// no validation rules for Cost
 
 	if all {
 		switch v := interface{}(m.GetExpiry()).(type) {
@@ -1186,62 +901,26 @@ func (m *ReceiveOrderRequest) validate(all bool) error {
 		}
 	}
 
-	if all {
-		switch v := interface{}(m.GetWeight()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, ReceiveOrderRequestValidationError{
-					field:  "Weight",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, ReceiveOrderRequestValidationError{
-					field:  "Weight",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
+	if m.GetWeight() < 0 {
+		err := ReceiveOrderRequestValidationError{
+			field:  "Weight",
+			reason: "value must be greater than or equal to 0",
 		}
-	} else if v, ok := interface{}(m.GetWeight()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return ReceiveOrderRequestValidationError{
-				field:  "Weight",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
+		if !all {
+			return err
 		}
+		errors = append(errors, err)
 	}
 
-	if all {
-		switch v := interface{}(m.GetCost()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, ReceiveOrderRequestValidationError{
-					field:  "Cost",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, ReceiveOrderRequestValidationError{
-					field:  "Cost",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
+	if m.GetCost() < 0 {
+		err := ReceiveOrderRequestValidationError{
+			field:  "Cost",
+			reason: "value must be greater than or equal to 0",
 		}
-	} else if v, ok := interface{}(m.GetCost()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return ReceiveOrderRequestValidationError{
-				field:  "Cost",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
+		if !all {
+			return err
 		}
+		errors = append(errors, err)
 	}
 
 	if all {
