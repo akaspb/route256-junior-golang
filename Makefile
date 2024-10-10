@@ -5,7 +5,8 @@ coverage:
 	go test $(CURDIR)/test/cli/
 
 get-protoc:
-	sudo apt install -y protobuf-compiler
+	apt install -y protobuf-compiler
+	protoc --version
 
 all: deps generate build run
 
