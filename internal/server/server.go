@@ -6,11 +6,11 @@ import (
 )
 
 type Implementation struct {
-	service service.Service
+	service *service.Service
 
 	desc.UnimplementedPvzServiceServer
 }
 
-func NewImplementation(service service.Service) *Implementation {
+func NewImplementation(service *service.Service) *Implementation {
 	return &Implementation{service: service}
 }

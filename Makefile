@@ -31,7 +31,7 @@ generate:
 
 build:
 	touch  $(LOCAL_BIN)
-	go build -o $(LOCAL_BIN)/pvz cmd/main.go
+	go build -o $(LOCAL_BIN)/pvz cmd/pvz_service/main.go
 
 run:
 	$(LOCAL_BIN)/pvz inter
