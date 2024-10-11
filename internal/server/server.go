@@ -2,13 +2,13 @@ package server
 
 import (
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/service"
-	desc "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
+	pb "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
 )
 
 type Implementation struct {
 	service *service.Service
 
-	desc.UnimplementedPvzServiceServer
+	pb.UnimplementedPvzServiceServer
 }
 
 func NewImplementation(service *service.Service) *Implementation {

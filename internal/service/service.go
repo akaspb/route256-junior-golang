@@ -39,6 +39,7 @@ type OrderIDWithMsg struct {
 
 type OrderIDWithExpiryAndStatus struct {
 	ID      models.IDType
+	Weight  models.WeightType
 	Package string
 	Cost    models.CostType
 	Expiry  time.Time
@@ -333,6 +334,7 @@ func (s *Service) getOrderIDWithExpiryAndStatus(ctx context.Context, orderID mod
 	return OrderIDWithExpiryAndStatus{
 		ID:      order.ID,
 		Cost:    order.Cost,
+		Weight:  order.Weight,
 		Package: packagingName,
 		Expiry:  order.Expiry,
 		Expired: !isLessOrEqualTime(currTime, order.Expiry),

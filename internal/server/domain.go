@@ -3,7 +3,8 @@ package server
 import (
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/service"
-	desc "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
+	pb "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
@@ -28,8 +29,12 @@ func costTypeToFloat(cost models.CostType) float32 {
 	return float32(cost)
 }
 
-func OrderIDWithMsgToOrderToGiveInfo(order service.OrderIDWithMsg) desc.OrderToGiveInfo {
-	return desc.OrderToGiveInfo{
+func weightTypeToToFloat(weight models.WeightType) float32 {
+	return float32(weight)
+}
+
+func orderIDWithMsgToOrderToGiveInfo(order service.OrderIDWithMsg) pb.OrderToGiveInfo {
+	return pb.OrderToGiveInfo{
 		OrderId:  idTypeToInt64(order.ID),
 		Cost:     costTypeToFloat(order.Cost),
 		Packing:  wrapperspb.String(order.Package),
@@ -38,12 +43,13 @@ func OrderIDWithMsgToOrderToGiveInfo(order service.OrderIDWithMsg) desc.OrderToG
 	}
 }
 
-func OrderIDWithMsgSlcToOrderToGiveInfoSlc(orders []service.OrderIDWithMsg) []*desc.OrderToGiveInfo {
-	res := make([]*desc.OrderToGiveInfo, len(orders))
-	for i, order := range orders {
-		orderToGiveInfo := OrderIDWithMsgToOrderToGiveInfo(order)
-		res[i] = &orderToGiveInfo
+func orderIDWithExpiryAndStatusToCustomerOrderInfo(order service.OrderIDWithExpiryAndStatus) pb.CustomerOrderInfo {
+	return pb.CustomerOrderInfo{
+		OrderId: idTypeToInt64(order.ID),
+		Weight:  weightTypeToToFloat(order.Weight),
+		Cost:    costTypeToFloat(order.Cost),
+		Expiry:  timestamppb.New(order.Expiry),
+		Expired: order.Expired,
+		Packing: order.Package,
 	}
-
-	return res
 }
