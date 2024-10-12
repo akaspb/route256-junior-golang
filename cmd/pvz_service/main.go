@@ -53,6 +53,7 @@ func main() {
 		fmt.Printf("error in main func: %v\n", err)
 		return
 	}
+	defer pvzService.Close()
 
 	pvzServer := server.NewImplementation(pvzService)
 

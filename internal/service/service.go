@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"runtime"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
@@ -69,7 +71,9 @@ type Service struct {
 	startTime       time.Time
 	systemStartTime time.Time
 	orderStorage    storage.Facade
-	workerCount     int
+	workerCount     atomic.Int32
+	mu              *sync.Mutex
+	workersChan     chan struct{}
 }
 
 func NewService(
@@ -85,6 +89,10 @@ func NewService(
 		systemStartTime: systemStartTime,
 		orderStorage:    orderStorage,
 	}
+	s.workerCount.Store(0)
+	s.workersChan = make(chan struct{}, runtime.GOMAXPROCS(0))
+	s.mu = &sync.Mutex{}
+
 	if err := s.ChangeWorkerCount(workerCount); err != nil {
 		return nil, err
 	}
@@ -105,6 +113,9 @@ func (s *Service) AcceptOrderFromCourier(
 	ctx context.Context,
 	acceptOrderDTO AcceptOrderDTO,
 ) error {
+	<-s.workersChan
+	defer func() { s.workersChan <- struct{}{} }()
+
 	orderID := acceptOrderDTO.OrderID
 	orderCost := acceptOrderDTO.OrderCost
 	oderWeight := acceptOrderDTO.OderWeight
@@ -154,6 +165,9 @@ func (s *Service) AcceptOrderFromCourier(
 }
 
 func (s *Service) ReturnOrder(ctx context.Context, orderID models.IDType) error {
+	<-s.workersChan
+	defer func() { s.workersChan <- struct{}{} }()
+
 	order, err := s.orderStorage.GetOrder(ctx, orderID)
 
 	if err != nil {
@@ -170,7 +184,7 @@ func (s *Service) ReturnOrder(ctx context.Context, orderID models.IDType) error 
 		break
 	case models.StatusToStorage:
 		if !isLessOrEqualTime(order.Expiry, s.GetCurrentTime()) {
-			return fmt.Errorf("order with orderId==%v expiry time is not reached", orderID)
+			return NewArgumentError(fmt.Sprintf("order with orderId==%v expiry time is not reached", orderID))
 		}
 	default: // if some unknown status
 		return errors.New("unhandled error")
@@ -185,6 +199,9 @@ func (s *Service) ReturnOrder(ctx context.Context, orderID models.IDType) error 
 }
 
 func (s *Service) getCustomerOrderIDWithMsg(ctx context.Context, orderID, customerID models.IDType, currTime time.Time) (OrderIDWithMsg, error) {
+	<-s.workersChan
+	defer func() { s.workersChan <- struct{}{} }()
+
 	order, err := s.orderStorage.GetOrder(ctx, orderID)
 
 	if err != nil {
@@ -250,6 +267,9 @@ func (s *Service) getCustomerOrderIDWithMsg(ctx context.Context, orderID, custom
 }
 
 func (s *Service) GiveOrderToCustomer(ctx context.Context, orderIDs []models.IDType, customerID models.IDType) ([]OrderIDWithMsg, error) {
+	<-s.workersChan
+	defer func() { s.workersChan <- struct{}{} }()
+
 	currTime := s.GetCurrentTime()
 
 	res := make([]OrderIDWithMsg, len(orderIDs))
@@ -264,6 +284,10 @@ func (s *Service) GiveOrderToCustomer(ctx context.Context, orderIDs []models.IDT
 
 	// add this loop with purpose if error occurred in previous loop no change in DB were made
 	for _, order := range res {
+		if !order.Ok {
+			continue
+		}
+
 		if err := s.orderStorage.ChangeOrderStatus(ctx, order.ID, models.Status{
 			Value:     models.StatusToCustomer,
 			ChangedAt: currTime,
@@ -276,6 +300,9 @@ func (s *Service) GiveOrderToCustomer(ctx context.Context, orderIDs []models.IDT
 }
 
 func (s *Service) getOrderIDWithExpiryAndStatus(ctx context.Context, orderID models.IDType, currTime time.Time) (OrderIDWithExpiryAndStatus, error) {
+	<-s.workersChan
+	defer func() { s.workersChan <- struct{}{} }()
+
 	order, err := s.orderStorage.GetOrder(ctx, orderID)
 	if err != nil {
 		return OrderIDWithExpiryAndStatus{}, err
@@ -297,6 +324,9 @@ func (s *Service) getOrderIDWithExpiryAndStatus(ctx context.Context, orderID mod
 }
 
 func (s *Service) GetCustomerOrders(ctx context.Context, customerID models.IDType, n uint) ([]OrderIDWithExpiryAndStatus, error) {
+	<-s.workersChan
+	defer func() { s.workersChan <- struct{}{} }()
+
 	var orderIDs []models.IDType
 	var err error
 	currTime := s.GetCurrentTime()
@@ -326,6 +356,9 @@ func (s *Service) GetCustomerOrders(ctx context.Context, customerID models.IDTyp
 }
 
 func (s *Service) ReturnOrderFromCustomer(ctx context.Context, customerID, orderID models.IDType) error {
+	<-s.workersChan
+	defer func() { s.workersChan <- struct{}{} }()
+
 	currTime := s.GetCurrentTime()
 
 	order, err := s.orderStorage.GetOrder(ctx, orderID)
@@ -371,6 +404,9 @@ func (s *Service) ReturnOrderFromCustomer(ctx context.Context, customerID, order
 }
 
 func (s *Service) GetReturnsList(ctx context.Context, offset, limit int) ([]ReturnOrderAndCustomer, error) {
+	<-s.workersChan
+	defer func() { s.workersChan <- struct{}{} }()
+
 	if offset < 0 {
 		return nil, ErrorInvalidOffsetValue
 	}
@@ -413,15 +449,33 @@ func (s *Service) SetStartTime(startTime time.Time) {
 }
 
 func (s *Service) ChangeWorkerCount(workerCount int) error {
+	s.mu.Lock()
 	if workerCount <= 0 || workerCount > runtime.GOMAXPROCS(0) {
 		return ErrorInvalidWorkerCount
 	}
 
-	s.workerCount = workerCount
+	prevWorkerCount := int(s.workerCount.Load())
+	deltaWorkers := workerCount - prevWorkerCount
+	if deltaWorkers > 0 {
+		for i := 0; i < deltaWorkers; i++ {
+			s.workersChan <- struct{}{}
+		}
+	} else if deltaWorkers < 0 {
+		for i := 0; i < -deltaWorkers; i++ {
+			<-s.workersChan
+		}
+	}
 
+	s.workerCount.Store(int32(workerCount))
+
+	s.mu.Unlock()
 	return nil
 }
 
 func (s *Service) GetWorkerCount() int {
-	return s.workerCount
+	return int(s.workerCount.Load())
+}
+
+func (s *Service) Close() {
+	close(s.workersChan)
 }

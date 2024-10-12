@@ -44,7 +44,7 @@ func getReturnsCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 				return
 			}
 
-			if len(response.Orders) == 0 {
+			if len(response.GetOrders()) == 0 {
 				fmt.Println("No orders to show with such offset and limit")
 				return
 			}
