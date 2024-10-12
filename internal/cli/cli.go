@@ -3,12 +3,13 @@ package cli
 import (
 	"context"
 	"errors"
+	"fmt"
+	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
+	"google.golang.org/grpc/status"
 	"time"
 
 	"github.com/spf13/cobra"
-	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
-	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
-	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage"
+	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
 )
 
 var (
@@ -16,24 +17,19 @@ var (
 )
 
 type CliService struct {
-	orderStorage storage.Facade
-	packService  *packaging.Packaging
-	srvc         *srvc.Service
-	rootCli      *cobra.Command
+	client  pvz_service.PvzServiceClient
+	rootCli *cobra.Command
 }
 
-func NewCliService(orderStorage storage.Facade, packService *packaging.Packaging, service *srvc.Service) *CliService {
+func NewCliService(client pvz_service.PvzServiceClient) *CliService {
 	c := &CliService{
-		orderStorage: orderStorage,
-		packService:  packService,
-		srvc:         service,
+		client: client,
 	}
 
 	c.rootCli = getRootCli()
-	c.rootCli.AddCommand(getGiveCmd(service))
+	c.rootCli.AddCommand(getGiveCmd(client))
 	c.rootCli.AddCommand(getInterCmd(service, c.rootCli))
 	c.rootCli.AddCommand(getListCmd(service))
-	c.rootCli.AddCommand(getNowCmd(service))
 	c.rootCli.AddCommand(getReceiveCmd(service, packService))
 	c.rootCli.AddCommand(getRemoveCmd(service))
 	c.rootCli.AddCommand(getReturnCmd(service))
@@ -74,4 +70,9 @@ func (c *CliService) Execute(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func handleResponseError(err error) {
+	code := status.Code(err)
+	fmt.Printf("%v: %v\n", code, err)
 }

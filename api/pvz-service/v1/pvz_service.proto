@@ -64,7 +64,7 @@ message GiveOrdersRequest {
 message OrderToGiveInfo {
     int64 order_id = 1;
     float cost = 2;
-    google.protobuf.StringValue packing = 3;
+    string packing = 3;
     string message = 4;
     bool ok_to_give = 5;
 }

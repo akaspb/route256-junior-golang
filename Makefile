@@ -34,7 +34,7 @@ build:
 	go build -o $(LOCAL_BIN)/pvz cmd/pvz_service/main.go
 
 run:
-	$(LOCAL_BIN)/pvz inter
+	$(LOCAL_BIN)/pvz
 
 
 

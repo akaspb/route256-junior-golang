@@ -5,7 +5,6 @@ import (
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 	pb "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func int64ToIDType(id int64) models.IDType {
@@ -36,7 +35,7 @@ func orderIDWithMsgToOrderToGiveInfo(order service.OrderIDWithMsg) pb.OrderToGiv
 	return pb.OrderToGiveInfo{
 		OrderId:  idTypeToInt64(order.ID),
 		Cost:     costTypeToFloat(order.Cost),
-		Packing:  wrapperspb.String(order.Package),
+		Packing:  order.Package,
 		Message:  order.Msg,
 		OkToGive: order.Ok,
 	}
