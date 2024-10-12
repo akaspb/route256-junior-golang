@@ -2,21 +2,21 @@ package cli
 
 import (
 	"fmt"
+	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
 	"strconv"
 
 	"github.com/spf13/cobra"
-	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 )
 
-func ThreadsHandler(service *srvc.Service, threadsCount int) error {
-	if err := service.ChangeWorkerCount(threadsCount); err != nil {
-		return fmt.Errorf("error: %w", err)
-	}
+//func ThreadsHandler(service *srvc.Service, threadsCount int) error {
+//	if err := service.ChangeWorkerCount(threadsCount); err != nil {
+//		return fmt.Errorf("error: %w", err)
+//	}
+//
+//	return nil
+//}
 
-	return nil
-}
-
-func getThreadsCmd(service *srvc.Service) *cobra.Command {
+func getThreadsCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 	var threadsCli = &cobra.Command{
 		Use:     "threads",
 		Short:   "Set max threads count for program tasks processing",
@@ -34,11 +34,23 @@ func getThreadsCmd(service *srvc.Service) *cobra.Command {
 				return
 			}
 
-			if err := ThreadsHandler(service, int(threadsCount)); err != nil {
-				fmt.Println(err.Error())
-			} else {
-				fmt.Println("success")
+			//if err := ThreadsHandler(service, int(threadsCount)); err != nil {
+			//	fmt.Println(err.Error())
+			//} else {
+			//	fmt.Println("success")
+			//}
+
+			request := &pvz_service.ChangeThreadCountRequest{
+				ThreadCount: uint32(threadsCount),
 			}
+
+			_, err = client.ChangeThreadCount(cmd.Context(), request)
+			if err != nil {
+				handleResponseError(err)
+				return
+			}
+
+			fmt.Println("success")
 		},
 	}
 

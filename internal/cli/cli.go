@@ -2,18 +2,11 @@ package cli
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
-	"google.golang.org/grpc/status"
-	"time"
 
 	"github.com/spf13/cobra"
 	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
-)
-
-var (
-	ErrorNoStartTimeInCMD = errors.New("no start time flag in cmd")
+	"google.golang.org/grpc/status"
 )
 
 type CliService struct {
@@ -28,37 +21,15 @@ func NewCliService(client pvz_service.PvzServiceClient) *CliService {
 
 	c.rootCli = getRootCli()
 	c.rootCli.AddCommand(getGiveCmd(client))
-	c.rootCli.AddCommand(getInterCmd(service, c.rootCli))
-	c.rootCli.AddCommand(getListCmd(service))
-	c.rootCli.AddCommand(getReceiveCmd(service, packService))
-	c.rootCli.AddCommand(getRemoveCmd(service))
-	c.rootCli.AddCommand(getReturnCmd(service))
-	c.rootCli.AddCommand(getReturnsCmd(service))
-	c.rootCli.AddCommand(getThreadsCmd(service))
+	c.rootCli.AddCommand(getInterCmd(c.rootCli))
+	c.rootCli.AddCommand(getListCmd(client))
+	c.rootCli.AddCommand(getReceiveCmd(client))
+	c.rootCli.AddCommand(getRemoveCmd(client))
+	c.rootCli.AddCommand(getReturnCmd(client))
+	c.rootCli.AddCommand(getReturnsCmd(client))
+	c.rootCli.AddCommand(getThreadsCmd(client))
 
 	return c
-}
-
-func getStartTimeInCmd(cmd *cobra.Command) (time.Time, error) {
-	if !cmd.Flags().Changed("start") {
-		return time.Time{}, ErrorNoStartTimeInCMD
-	}
-
-	startStr, err := cmd.Flags().GetString("start")
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	startTime, err := time.Parse("02.01.2006", startStr)
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	return startTime, nil
-}
-
-func getToday(service *srvc.Service) string {
-	return service.GetCurrentTime().Truncate(24 * time.Hour).Format("02.01.2006")
 }
 
 func (c *CliService) Execute(ctx context.Context) error {
@@ -73,6 +44,11 @@ func (c *CliService) Execute(ctx context.Context) error {
 }
 
 func handleResponseError(err error) {
-	code := status.Code(err)
-	fmt.Printf("%v: %v\n", code, err)
+	errStatus, ok := status.FromError(err)
+	if !ok {
+		fmt.Println("handleResponseError function should be used with status errors only")
+		return
+	}
+
+	fmt.Printf("%v: %v\n", errStatus.Code(), errStatus.Message())
 }

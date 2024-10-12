@@ -1,50 +1,34 @@
 package cli
 
 import (
-	"bytes"
-	"context"
-	"errors"
 	"fmt"
+	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
 
 	"github.com/spf13/cobra"
-	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
-	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 )
 
-func ReturnHandler(ctx context.Context, buffer *bytes.Buffer, service *srvc.Service, customerID, orderID models.IDType) error {
-	if err := service.ReturnOrderFromCustomer(ctx, customerID, orderID); err != nil {
-		return err
-	}
+//func ReturnHandler(ctx context.Context, buffer *bytes.Buffer, service *srvc.Service, customerID, orderID models.IDType) error {
+//	if err := service.ReturnOrderFromCustomer(ctx, customerID, orderID); err != nil {
+//		return err
+//	}
+//
+//	fmt.Fprintln(buffer, "success: take order from customer to store it in PVZ")
+//
+//	return nil
+//}
 
-	fmt.Fprintln(buffer, "success: take order from customer to store it in PVZ")
-
-	return nil
-}
-
-func getReturnCmd(service *srvc.Service) *cobra.Command {
+func getReturnCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 	var returnCli = &cobra.Command{
 		Use:     "return",
 		Short:   "Get order from customer to return",
 		Long:    `Get order from customer to return`,
 		Example: "return -o=<orderID> -c=<customerID>",
 		Run: func(cmd *cobra.Command, args []string) {
-			if startTime, err := getStartTimeInCmd(cmd); err != nil {
-				if !errors.Is(err, ErrorNoStartTimeInCMD) {
-					fmt.Println(err.Error())
-					return
-				}
-			} else {
-				service.SetStartTime(startTime)
-			}
-
-			var orderID, customerID models.IDType
-
 			if !cmd.Flags().Changed("order") {
 				fmt.Println("order flag is not defined, check 'return --help'")
 				return
 			}
-			orderIDint64, err := cmd.Flags().GetInt64("order")
-			orderID = models.IDType(orderIDint64)
+			orderID, err := cmd.Flags().GetInt64("order")
 			if err != nil {
 				fmt.Println(err.Error())
 				return
@@ -54,20 +38,24 @@ func getReturnCmd(service *srvc.Service) *cobra.Command {
 				fmt.Println("customer flag is not defined, check 'return --help'")
 				return
 			}
-			customerIDint64, err := cmd.Flags().GetInt64("customer")
-			customerID = models.IDType(customerIDint64)
+			customerID, err := cmd.Flags().GetInt64("customer")
 			if err != nil {
 				fmt.Println(err.Error())
 				return
 			}
 
-			var buffer bytes.Buffer
-			err = ReturnHandler(cmd.Context(), &buffer, service, customerID, orderID)
+			request := &pvz_service.ReturnOrderRequest{
+				CustomerId: customerID,
+				OrderId:    orderID,
+			}
+
+			_, err = client.ReturnOrder(cmd.Context(), request)
 			if err != nil {
-				fmt.Println(err.Error())
+				handleResponseError(err)
 				return
 			}
-			fmt.Print(buffer.String())
+
+			fmt.Println("success")
 		},
 	}
 

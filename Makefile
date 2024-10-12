@@ -31,11 +31,15 @@ generate:
 
 build:
 	touch  $(LOCAL_BIN)
-	go build -o $(LOCAL_BIN)/pvz cmd/pvz_service/main.go
+	go build -o $(LOCAL_BIN)/pvz-service cmd/pvz_service/main.go
+	go build -o $(LOCAL_BIN)/pvz cmd/pvz_cli/main.go
 
 run:
-	$(LOCAL_BIN)/pvz
-
+	touch logs.txt
+	$(LOCAL_BIN)/pvz-service > logs.txt 2>&1 &
+	sleep 1
+	$(LOCAL_BIN)/pvz inter
+	pkill -SIGINT pvz-service
 
 
 .vendor-proto: .vendor-proto/google/protobuf .vendor-proto/google/api .vendor-proto/protoc-gen-openapiv2/options .vendor-proto/validate

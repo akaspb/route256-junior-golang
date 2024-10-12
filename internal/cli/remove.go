@@ -1,62 +1,52 @@
 package cli
 
 import (
-	"bytes"
-	"context"
-	"errors"
 	"fmt"
+	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
 	"strconv"
 
 	"github.com/spf13/cobra"
-	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
-	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 )
 
-func RemoveHandler(ctx context.Context, buffer *bytes.Buffer, service *srvc.Service, orderID models.IDType) error {
-	if err := service.ReturnOrder(ctx, orderID); err != nil {
-		return err
-	}
+//func RemoveHandler(ctx context.Context, buffer *bytes.Buffer, service *srvc.Service, orderID models.IDType) error {
+//	if err := service.ReturnOrder(ctx, orderID); err != nil {
+//		return err
+//	}
+//
+//	fmt.Fprintln(buffer, "success: order can be given to courier for return")
+//
+//	return nil
+//}
 
-	fmt.Fprintln(buffer, "success: order can be given to courier for return")
-
-	return nil
-}
-
-func getRemoveCmd(service *srvc.Service) *cobra.Command {
+func getRemoveCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 	var removeCli = &cobra.Command{
 		Use:     "remove",
 		Short:   "Return order from PVZ to courier",
 		Long:    `Return order from PVZ to courier`,
 		Example: "remove <orderID>",
 		Run: func(cmd *cobra.Command, args []string) {
-			if startTime, err := getStartTimeInCmd(cmd); err != nil {
-				if !errors.Is(err, ErrorNoStartTimeInCMD) {
-					fmt.Println(err.Error())
-					return
-				}
-			} else {
-				service.SetStartTime(startTime)
-			}
-
 			if len(args) < 1 {
 				fmt.Println("orderID is not defined, check 'remove --help'")
 				return
 			}
 
-			orderIDint64, err := strconv.ParseInt(args[0], 10, 64)
+			orderID, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil {
 				fmt.Println(err.Error())
 				return
 			}
-			orderID := models.IDType(orderIDint64)
 
-			var buffer bytes.Buffer
-			err = RemoveHandler(cmd.Context(), &buffer, service, orderID)
+			request := &pvz_service.RemoveOrderRequest{
+				OrderId: orderID,
+			}
+
+			_, err = client.RemoveOrder(cmd.Context(), request)
 			if err != nil {
-				fmt.Println(err.Error())
+				handleResponseError(err)
 				return
 			}
-			fmt.Print(buffer.String())
+
+			fmt.Println("success")
 		},
 	}
 

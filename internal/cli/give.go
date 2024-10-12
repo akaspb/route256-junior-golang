@@ -89,8 +89,12 @@ func getGiveCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 				maxPackageNameLen = max(maxPackageNameLen, len(order.GetPacking()))
 			}
 
-			fmt.Println(
-				"%8s|Give|%-"+strconv.Itoa(maxMsgLen)+"s|%"+strconv.Itoa(maxPackageNameLen)+"s|Cost",
+			if len(response.GetOrders()) == 0 {
+				fmt.Println("No orders for this customer")
+			}
+
+			fmt.Printf(
+				"%8s|Give|%-"+strconv.Itoa(maxMsgLen)+"s|%"+strconv.Itoa(maxPackageNameLen)+"s|Cost\n",
 				"ID",
 				"Message",
 				"Pack",
@@ -102,7 +106,7 @@ func getGiveCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 					give = "YES"
 				}
 				fmt.Printf(
-					"%8v|%4s|%-"+strconv.Itoa(maxMsgLen)+"s|%-"+strconv.Itoa(maxPackageNameLen)+"s|%v",
+					"%8v|%4s|%-"+strconv.Itoa(maxMsgLen)+"s|%-"+strconv.Itoa(maxPackageNameLen)+"s|%v\n",
 					order.GetOrderId(), give, order.GetMessage(), order.GetPacking(), order.Cost)
 			}
 		},

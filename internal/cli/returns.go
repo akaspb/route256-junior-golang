@@ -1,65 +1,50 @@
 package cli
 
 import (
-	"bytes"
-	"context"
-	"errors"
 	"fmt"
+	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
 
 	"github.com/spf13/cobra"
-	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 )
 
-func ReturnsHandler(
-	ctx context.Context,
-	buffer *bytes.Buffer,
-	service *srvc.Service,
-	offset, limit int,
-) error {
-	returnsChan, err := service.GetReturnsList(ctx, offset, limit)
-	if err != nil {
-		return fmt.Errorf("error: %v\n", err)
+//func ReturnsHandler(
+//	ctx context.Context,
+//	buffer *bytes.Buffer,
+//	service *srvc.Service,
+//	offset, limit int,
+//) error {
+//	returnsChan, err := service.GetReturnsList(ctx, offset, limit)
+//	if err != nil {
+//		return fmt.Errorf("error: %v\n", err)
+//
+//	}
+//
+//	if len(returnsChan) == 0 {
+//		fmt.Println()
+//		return errors.New("No orders")
+//	}
+//
+//	fmt.Fprintf(buffer, "%8s|%11s\n", "Order ID", "Customer ID")
+//	for raw := range returnsChan {
+//		tableRow := fmt.Sprintf("%8v|%11v", raw.OrderID, raw.CustomerID)
+//		fmt.Fprintln(buffer, tableRow)
+//	}
+//
+//	return nil
+//}
 
-	}
-
-	if len(returnsChan) == 0 {
-		fmt.Println()
-		return errors.New("No orders")
-	}
-
-	fmt.Fprintf(buffer, "%8s|%11s\n", "Order ID", "Customer ID")
-	for raw := range returnsChan {
-		tableRow := fmt.Sprintf("%8v|%11v", raw.OrderID, raw.CustomerID)
-		fmt.Fprintln(buffer, tableRow)
-	}
-
-	return nil
-}
-
-func getReturnsCmd(service *srvc.Service) *cobra.Command {
+func getReturnsCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 	var returnsCli = &cobra.Command{
 		Use:     "returns",
 		Short:   "Get all orders, which must be given to courier/couriers for return from PVZ",
 		Long:    `Get all orders, which must be given to courier/couriers for return from PVZ`,
 		Example: "returns -o=<offset> -l=<limit>",
 		Run: func(cmd *cobra.Command, args []string) {
-			if startTime, err := getStartTimeInCmd(cmd); err != nil {
-				if !errors.Is(err, ErrorNoStartTimeInCMD) {
-					fmt.Println(err.Error())
-					return
-				}
-			} else {
-				service.SetStartTime(startTime)
-			}
-
-			var offset, limit int
-			var err error
-
 			if !cmd.Flags().Changed("offset") {
 				fmt.Println("offset flag is not defined, check 'returns --help'")
 				return
 			}
-			offset, err = cmd.Flags().GetInt("offset")
+			offset, err := cmd.Flags().GetInt("offset")
 			if err != nil {
 				fmt.Println(err.Error())
 			}
@@ -68,19 +53,32 @@ func getReturnsCmd(service *srvc.Service) *cobra.Command {
 				fmt.Println("limit flag is not defined, check 'returns --help'")
 				return
 			}
-			limit, err = cmd.Flags().GetInt("limit")
+			limit, err := cmd.Flags().GetInt("limit")
 			if err != nil {
 				fmt.Println(err.Error())
 				return
 			}
 
-			var buffer bytes.Buffer
-			err = ReturnsHandler(cmd.Context(), &buffer, service, offset, limit)
+			request := &pvz_service.GetReturnedOrdersRequest{
+				Offset: uint32(offset),
+				Limit:  uint32(limit),
+			}
+
+			response, err := client.GetReturnedOrders(cmd.Context(), request)
 			if err != nil {
-				fmt.Println(err.Error())
+				handleResponseError(err)
 				return
 			}
-			fmt.Print(buffer.String())
+
+			if len(response.Orders) == 0 {
+				fmt.Println("No orders")
+				return
+			}
+
+			fmt.Printf("%8s|%11s\n", "Order ID", "Customer ID")
+			for _, order := range response.Orders {
+				fmt.Printf("%8v|%11v\n", order.GetOrderId(), order.GetCustomerId())
+			}
 		},
 	}
 

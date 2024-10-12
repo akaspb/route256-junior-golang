@@ -1,94 +1,78 @@
 package cli
 
 import (
-	"bytes"
-	"context"
-	"errors"
 	"fmt"
+	"google.golang.org/protobuf/types/known/timestamppb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
-	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
-	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
-	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
+	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
 )
 
-type ReceiveHandlerDTO struct {
-	Ctx         context.Context
-	Buffer      *bytes.Buffer
-	Service     *srvc.Service
-	OrderID     models.IDType
-	OrderCost   models.CostType
-	OrderWeight models.WeightType
-	OrderExpiry time.Time
-	PackName    string
-	CustomerID  models.IDType
-}
+//type ReceiveHandlerDTO struct {
+//	Ctx         context.Context
+//	Buffer      *bytes.Buffer
+//	Service     *srvc.Service
+//	OrderID     models.IDType
+//	OrderCost   models.CostType
+//	OrderWeight models.WeightType
+//	OrderExpiry time.Time
+//	PackName    string
+//	CustomerID  models.IDType
+//}
+//
+//func ReceiveHandler(
+//	receiveHandlerDTO ReceiveHandlerDTO,
+//) error {
+//	ctx := receiveHandlerDTO.Ctx
+//	buffer := receiveHandlerDTO.Buffer
+//	service := receiveHandlerDTO.Service
+//	orderID := receiveHandlerDTO.OrderID
+//	orderCost := receiveHandlerDTO.OrderCost
+//	orderWeight := receiveHandlerDTO.OrderWeight
+//	orderExpiry := receiveHandlerDTO.OrderExpiry
+//	packName := receiveHandlerDTO.PackName
+//	customerID := receiveHandlerDTO.CustomerID
+//
+//	var packPtr *models.Pack
+//	if packName != "" {
+//		pack, err := service.Packaging.GetPackagingByName(packName)
+//		if err != nil {
+//			return err
+//		}
+//
+//		packPtr = &pack
+//	}
+//
+//	if err := service.AcceptOrderFromCourier(ctx, srvc.AcceptOrderDTO{
+//		OrderID:     orderID,
+//		OrderCost:   orderCost,
+//		OderWeight:  orderWeight,
+//		CustomerID:  customerID,
+//		Pack:        packPtr,
+//		OrderExpiry: orderExpiry,
+//	}); err != nil {
+//		return fmt.Errorf("error: %w", err)
+//	}
+//
+//	fmt.Fprintln(buffer, "success: take order for storage in PVZ")
+//	return nil
+//}
 
-func ReceiveHandler(
-	receiveHandlerDTO ReceiveHandlerDTO,
-) error {
-	ctx := receiveHandlerDTO.Ctx
-	buffer := receiveHandlerDTO.Buffer
-	service := receiveHandlerDTO.Service
-	orderID := receiveHandlerDTO.OrderID
-	orderCost := receiveHandlerDTO.OrderCost
-	orderWeight := receiveHandlerDTO.OrderWeight
-	orderExpiry := receiveHandlerDTO.OrderExpiry
-	packName := receiveHandlerDTO.PackName
-	customerID := receiveHandlerDTO.CustomerID
-
-	var packPtr *models.Pack
-	if packName != "" {
-		pack, err := service.Packaging.GetPackagingByName(packName)
-		if err != nil {
-			return err
-		}
-
-		packPtr = &pack
-	}
-
-	if err := service.AcceptOrderFromCourier(ctx, srvc.AcceptOrderDTO{
-		OrderID:     orderID,
-		OrderCost:   orderCost,
-		OderWeight:  orderWeight,
-		CustomerID:  customerID,
-		Pack:        packPtr,
-		OrderExpiry: orderExpiry,
-	}); err != nil {
-		return fmt.Errorf("error: %w", err)
-	}
-
-	fmt.Fprintln(buffer, "success: take order for storage in PVZ")
-	return nil
-}
-
-func getReceiveCmd(service *srvc.Service, packService *packaging.Packaging) *cobra.Command {
+func getReceiveCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 	var receiveCli = &cobra.Command{
 		Use:     "receive",
 		Short:   "Receive order from courier to PVZ",
 		Long:    `Receive order from courier to PVZ`,
 		Example: "receive -o=<orderID> -m=<order cost> -w=<order weight> -c=<customerID> -e=<expiry in DD.MM.YYYY format> [-p=<packaging name>]",
 		Run: func(cmd *cobra.Command, args []string) {
-			if startTime, err := getStartTimeInCmd(cmd); err != nil {
-				if !errors.Is(err, ErrorNoStartTimeInCMD) {
-					fmt.Println(err.Error())
-					return
-				}
-			} else {
-				service.SetStartTime(startTime)
-			}
-
-			var orderID, customerID models.IDType
-			var orderExpiry time.Time
-
 			if !cmd.Flags().Changed("order") {
 				fmt.Println("order flag is not defined, check 'receive --help'")
 				return
 			}
-			orderIDint64, err := cmd.Flags().GetInt64("order")
-			orderID = models.IDType(orderIDint64)
+			orderID, err := cmd.Flags().GetInt64("order")
 			if err != nil {
 				fmt.Println(err.Error())
 				return
@@ -98,8 +82,7 @@ func getReceiveCmd(service *srvc.Service, packService *packaging.Packaging) *cob
 				fmt.Println("weight flag is not defined, check 'receive --help'")
 				return
 			}
-			weightFloat32, err := cmd.Flags().GetFloat32("weight")
-			weight := models.WeightType(weightFloat32)
+			weight, err := cmd.Flags().GetFloat32("weight")
 			if err != nil {
 				fmt.Println(err.Error())
 				return
@@ -109,8 +92,7 @@ func getReceiveCmd(service *srvc.Service, packService *packaging.Packaging) *cob
 				fmt.Println("cost flag is not defined, check 'receive --help'")
 				return
 			}
-			costFloat32, err := cmd.Flags().GetFloat32("money")
-			cost := models.CostType(costFloat32)
+			cost, err := cmd.Flags().GetFloat32("money")
 			if err != nil {
 				fmt.Println(err.Error())
 				return
@@ -120,8 +102,7 @@ func getReceiveCmd(service *srvc.Service, packService *packaging.Packaging) *cob
 				fmt.Println("customer flag is not defined, check 'receive --help'")
 				return
 			}
-			customerIDint64, err := cmd.Flags().GetInt64("customer")
-			customerID = models.IDType(customerIDint64)
+			customerID, err := cmd.Flags().GetInt64("customer")
 			if err != nil {
 				fmt.Println(err.Error())
 				return
@@ -137,7 +118,7 @@ func getReceiveCmd(service *srvc.Service, packService *packaging.Packaging) *cob
 				return
 			}
 
-			orderExpiry, err = time.Parse("02.01.2006", expiryStr)
+			expiry, err := time.Parse("02.01.2006", expiryStr)
 			if err != nil {
 				fmt.Println(err.Error())
 				return
@@ -149,23 +130,27 @@ func getReceiveCmd(service *srvc.Service, packService *packaging.Packaging) *cob
 				return
 			}
 
-			var buffer bytes.Buffer
-			if err := ReceiveHandler(
-				ReceiveHandlerDTO{
-					Ctx:         cmd.Context(),
-					Buffer:      &buffer,
-					Service:     service,
-					OrderID:     orderID,
-					OrderCost:   cost,
-					OrderWeight: weight,
-					OrderExpiry: orderExpiry,
-					PackName:    packName,
-					CustomerID:  customerID,
-				},
-			); err != nil {
-				fmt.Println(err.Error())
+			var packing *wrapperspb.StringValue
+			if packName != "" {
+				packing = wrapperspb.String(packName)
 			}
-			fmt.Print(buffer.String())
+
+			request := &pvz_service.ReceiveOrderRequest{
+				Id:         orderID,
+				CustomerId: customerID,
+				Expiry:     timestamppb.New(expiry),
+				Weight:     weight,
+				Cost:       cost,
+				Packing:    packing,
+			}
+
+			_, err = client.ReceiveOrder(cmd.Context(), request)
+			if err != nil {
+				handleResponseError(err)
+				return
+			}
+
+			fmt.Println("success")
 		},
 	}
 
@@ -180,13 +165,13 @@ func getReceiveCmd(service *srvc.Service, packService *packaging.Packaging) *cob
 		},
 	})
 
-	packs := packService.GetAllPacks()
-	packagingNames := make([]string, 0, len(packs))
-	for _, pack := range packs {
-		packagingNames = append(packagingNames, fmt.Sprintf("\n\t - %s", pack.Name))
+	packNames := []string{"packet", "box", "wrap"}
+	packs := make([]string, len(packNames))
+	for _, packName := range packNames {
+		packs = append(packs, fmt.Sprintf("\n\t - %s", packName))
 	}
 
-	packagingUsage := strings.Join(packagingNames, "")
+	packagingUsage := strings.Join(packs, "")
 
 	receiveCli.Flags().Int64P("order", "o", 0, "unique order ID")
 	receiveCli.Flags().Float32P("money", "m", 0, "order cost")

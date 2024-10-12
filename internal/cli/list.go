@@ -2,11 +2,11 @@ package cli
 
 import (
 	"fmt"
-	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 	"strconv"
 
 	"github.com/spf13/cobra"
+	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 //func ListHandler(ctx context.Context, buffer *bytes.Buffer, service *srvc.Service, customerID models.IDType, lastN uint) error {
@@ -93,7 +93,7 @@ func getListCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 				maxPackageNameLen = max(maxPackageNameLen, len(order.GetPacking()))
 			}
 
-			fmt.Println("%8s|    Expiry|Expired|%"+strconv.Itoa(maxPackageNameLen)+"s|Cost", "ID", "Pack")
+			fmt.Printf("%8s|    Expiry|Expired|%"+strconv.Itoa(maxPackageNameLen)+"s|Cost\n", "ID", "Pack")
 
 			for _, order := range response.GetOrders() {
 				expired := "NO"
@@ -101,8 +101,8 @@ func getListCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 					expired = "YES"
 				}
 
-				fmt.Println(
-					"%8v|%-10s|%7s|%"+strconv.Itoa(maxPackageNameLen)+"s|%v",
+				fmt.Printf(
+					"%8v|%-10s|%7s|%"+strconv.Itoa(maxPackageNameLen)+"s|%v\n",
 					order.GetOrderId(),
 					order.GetExpiry().AsTime().Format("02.01.2006"),
 					expired,

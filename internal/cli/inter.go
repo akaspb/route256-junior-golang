@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	srvc "gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -18,23 +17,13 @@ var (
 	ErrorContextCanceled = errors.New("context was canceled")
 )
 
-func getInterCmd(service *srvc.Service, rootCli *cobra.Command) *cobra.Command {
+func getInterCmd(rootCli *cobra.Command) *cobra.Command {
 	var interCli = &cobra.Command{
 		Use:   "inter",
 		Short: "Start program in interactive mode",
 		Long:  `Start program in interactive mode`,
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()
-
-			if startTime, err := getStartTimeInCmd(cmd); err != nil {
-				if !errors.Is(err, ErrorNoStartTimeInCMD) {
-					fmt.Println(err.Error())
-					return
-				}
-			} else {
-				service.SetStartTime(startTime)
-			}
-
 			for {
 				fmt.Print("> ")
 				res, err := waitUserInput(ctx)
@@ -63,8 +52,6 @@ func getInterCmd(service *srvc.Service, rootCli *cobra.Command) *cobra.Command {
 			}
 		},
 	}
-
-	interCli.Flags().StringP("start", "s", getToday(service), "PVZ start time in format DD.MM.YYYY")
 
 	return interCli
 }
