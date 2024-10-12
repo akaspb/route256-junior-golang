@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/spf13/viper"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/middleware"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/server"
@@ -22,17 +23,16 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-const (
-	psqlDSN     = "postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable"
-	grpcHost    = "localhost:7001"
-	workerCount = 2
-)
-
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	defer cancel()
 
-	pool, err := pgxpool.Connect(ctx, psqlDSN)
+	if err := initConfig(); err != nil {
+		fmt.Printf("error initializing configs: %s\n", err.Error())
+		return
+	}
+
+	pool, err := pgxpool.Connect(ctx, getPostgresDSN())
 	if err != nil {
 		fmt.Printf("error in main func: %v\n", err)
 		return
@@ -48,7 +48,7 @@ func main() {
 	}
 
 	now := time.Now().Truncate(24 * time.Hour)
-	pvzService, err := service.NewService(orderStorage, packService, now, now, workerCount)
+	pvzService, err := service.NewService(orderStorage, packService, now, now, viper.GetInt("program.worker_count"))
 	if err != nil {
 		fmt.Printf("error in main func: %v\n", err)
 		return
@@ -56,7 +56,7 @@ func main() {
 
 	pvzServer := server.NewImplementation(pvzService)
 
-	lis, err := net.Listen("tcp", grpcHost)
+	lis, err := net.Listen("tcp", viper.GetString("server.host"))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -86,4 +86,25 @@ func newStorageFacade(pool *pgxpool.Pool) storage.Facade {
 	pgRepository := postgres.NewPgStorage(txManager)
 
 	return storage.NewStorageFacade(txManager, pgRepository)
+}
+
+func initConfig() error {
+	viper.AddConfigPath("configs")
+	viper.SetConfigName("config")
+	return viper.ReadInConfig()
+}
+
+func getPostgresDSN() string {
+	//postgres://username:password@host:port/database
+	//"postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable"
+	return fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
+		viper.GetString("db.username"),
+		viper.GetString("db.password"),
+		viper.GetString("db.host"),
+		viper.GetString("db.port"),
+		viper.GetString("db.postgres"),
+		viper.GetString("db.dbname"),
+		viper.GetString("db.sslmode"),
+	)
 }

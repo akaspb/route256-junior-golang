@@ -1,0 +1,14 @@
+server:
+  host: "localhost:7001"
+
+#"postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable"
+db:
+  username: "postgres"
+  password: "postgres"
+  host: "localhost"
+  port: "5433"
+  dbname: "postgres"
+  sslmode: "disable"
+
+program:
+  worker_count: 2

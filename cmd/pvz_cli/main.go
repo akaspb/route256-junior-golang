@@ -8,14 +8,11 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/spf13/viper"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/cli"
 	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-)
-
-const (
-	grpcServerHost = "localhost:7001"
 )
 
 func main() {
@@ -23,7 +20,12 @@ func main() {
 	defer cancel()
 	serviceStopped := make(chan struct{})
 
-	conn, err := grpc.NewClient(grpcServerHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err := initConfig(); err != nil {
+		fmt.Printf("error initializing configs: %s\n", err.Error())
+		return
+	}
+
+	conn, err := grpc.NewClient(viper.GetString("server.host"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("failed to create grpc client: %v", err)
 	}
@@ -44,4 +46,10 @@ func main() {
 		<-serviceStopped
 	case <-serviceStopped:
 	}
+}
+
+func initConfig() error {
+	viper.AddConfigPath("configs")
+	viper.SetConfigName("config")
+	return viper.ReadInConfig()
 }
