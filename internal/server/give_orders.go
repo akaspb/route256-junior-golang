@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 
 	pb "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
 	"google.golang.org/grpc/codes"
@@ -13,9 +14,15 @@ func (s *Implementation) GiveOrders(ctx context.Context, req *pb.GiveOrdersReque
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
+	orderIDsProto := req.GetOrderIds()
+	orderIDs := make([]models.IDType, len(orderIDsProto))
+	for j, id := range orderIDsProto {
+		orderIDs[j] = int64ToIDType(id)
+	}
+
 	orders, err := s.service.GiveOrderToCustomer(
 		ctx,
-		int64SlcToIDTypeSlc(req.GetOrderIds()),
+		orderIDs,
 		int64ToIDType(req.GetCustomerId()),
 	)
 	if err != nil {

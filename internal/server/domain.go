@@ -16,21 +16,20 @@ func idTypeToInt64(id models.IDType) int64 {
 	return int64(id)
 }
 
-func int64SlcToIDTypeSlc(ids []int64) []models.IDType {
-	res := make([]models.IDType, len(ids))
-	for j, id := range ids {
-		res[j] = int64ToIDType(id)
-	}
-
-	return res
-}
-
 func costTypeToFloat(cost models.CostType) float32 {
 	return float32(cost)
 }
 
-func weightTypeToToFloat(weight models.WeightType) float32 {
+func floatToCostType(cost float32) models.CostType {
+	return models.CostType(cost)
+}
+
+func weightTypeToFloat(weight models.WeightType) float32 {
 	return float32(weight)
+}
+
+func floatToWeightType(weight float32) models.WeightType {
+	return models.WeightType(weight)
 }
 
 func orderIDWithMsgToOrderToGiveInfo(order service.OrderIDWithMsg) pb.OrderToGiveInfo {
@@ -46,10 +45,17 @@ func orderIDWithMsgToOrderToGiveInfo(order service.OrderIDWithMsg) pb.OrderToGiv
 func orderIDWithExpiryAndStatusToCustomerOrderInfo(order service.OrderIDWithExpiryAndStatus) pb.CustomerOrderInfo {
 	return pb.CustomerOrderInfo{
 		OrderId: idTypeToInt64(order.ID),
-		Weight:  weightTypeToToFloat(order.Weight),
+		Weight:  weightTypeToFloat(order.Weight),
 		Cost:    costTypeToFloat(order.Cost),
 		Expiry:  timestamppb.New(order.Expiry),
 		Expired: order.Expired,
 		Packing: order.Package,
+	}
+}
+
+func ReturnOrderAndCustomerToReturnedOrder(order service.ReturnOrderAndCustomer) pb.ReturnedOrder {
+	return pb.ReturnedOrder{
+		OrderId:    idTypeToInt64(order.OrderID),
+		CustomerId: idTypeToInt64(order.CustomerID),
 	}
 }

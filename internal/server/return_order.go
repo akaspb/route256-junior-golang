@@ -1,0 +1,25 @@
+package server
+
+import (
+	"context"
+	pb "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+)
+
+func (s *Implementation) ReturnOrder(ctx context.Context, req *pb.ReturnOrderRequest) (*pb.ReturnOrderResponse, error) {
+	if err := req.ValidateAll(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	err := s.service.ReturnOrderFromCustomer(
+		ctx,
+		int64ToIDType(req.GetCustomerId()),
+		int64ToIDType(req.GetOrderId()),
+	)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &pb.ReturnOrderResponse{}, nil
+}
