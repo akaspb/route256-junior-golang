@@ -57,7 +57,7 @@ func main() {
 
 	pvzServer := server.NewImplementation(pvzService)
 
-	lis, err := net.Listen("tcp", viper.GetString("server.host"))
+	lis, err := net.Listen("tcp", viper.GetString("grpc.host"))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

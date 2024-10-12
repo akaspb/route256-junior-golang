@@ -1,4 +1,4 @@
-server:
+grpc:
   host: "localhost:7001"
 
 db:

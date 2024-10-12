@@ -25,7 +25,7 @@ func main() {
 		return
 	}
 
-	conn, err := grpc.NewClient(viper.GetString("server.host"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(viper.GetString("grpc.host"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("failed to create grpc client: %v", err)
 	}
