@@ -1,7 +1,6 @@
 server:
   host: "localhost:7001"
 
-#"postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable"
 db:
   username: "postgres"
   password: "postgres"
