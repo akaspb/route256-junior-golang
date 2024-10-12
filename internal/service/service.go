@@ -18,15 +18,29 @@ const (
 	MaxReturnTime = 2 * Day
 )
 
+type ArgumentError struct {
+	text string
+}
+
+func NewArgumentError(text string) *ArgumentError {
+	return &ArgumentError{text: text}
+}
+
+func (e *ArgumentError) Error() string {
+	return e.text
+}
+
 var (
-	ErrorCustomerID              = errors.New("operation is forbidden for not this order customer")
-	ErrorOrderWasAccepted        = errors.New("order was accepted earlier")
-	ErrorOrderExpiredAlready     = errors.New("order expired")
-	ErrorOderNegativeCost        = errors.New("order cost can't be negative")
-	ErrorOderNegativeWeight      = errors.New("order weight can't be negative")
-	ErrorOrderWasTakenByCustomer = errors.New("order was taken by customer")
-	ErrorOrderWasNotFounded      = errors.New("order is not in PVZ or has already been returned and given to courier")
-	ErrorInvalidWorkerCount      = errors.New("worker count must be > 0 and <= max thread count")
+	ErrorCustomerID              = NewArgumentError("operation is forbidden for not this order customer")
+	ErrorOrderWasAccepted        = NewArgumentError("order was accepted earlier")
+	ErrorOrderExpiredAlready     = NewArgumentError("order expired")
+	ErrorOderNegativeCost        = NewArgumentError("order cost can't be negative")
+	ErrorOderNegativeWeight      = NewArgumentError("order weight can't be negative")
+	ErrorOrderWasTakenByCustomer = NewArgumentError("order was taken by customer")
+	ErrorOrderWasNotFounded      = NewArgumentError("order is not in PVZ or has already been returned and given to courier")
+	ErrorInvalidWorkerCount      = NewArgumentError("worker count must be > 0 and <= max thread count")
+	ErrorInvalidOffsetValue      = NewArgumentError("offset value must be >= 0")
+	ErrorInvalidLimitValue       = NewArgumentError("limit value must be > 0")
 )
 
 type OrderIDWithMsg struct {
@@ -451,20 +465,16 @@ func (s *Service) ReturnOrderFromCustomer(ctx context.Context, customerID, order
 // GetReturnsList method is generator, it uses chan to return results from db
 func (s *Service) GetReturnsList(ctx context.Context, offset, limit int) (<-chan ReturnOrderAndCustomer, error) {
 	if offset < 0 {
-		return nil, errors.New("offset value must be >= 0")
+		return nil, ErrorInvalidOffsetValue
 	}
 
 	if limit <= 0 {
-		return nil, errors.New("limit value must be > 0")
+		return nil, ErrorInvalidLimitValue
 	}
 
 	returnOrderIDs, err := s.orderStorage.GetOrderIDsWhereStatus(ctx, models.StatusReturn, uint(offset), uint(limit))
 	if err != nil {
 		return nil, err
-	}
-
-	if len(returnOrderIDs) == 0 {
-		return nil, errors.New("no orders to show with such offset and limit")
 	}
 
 	// Worker Pool
