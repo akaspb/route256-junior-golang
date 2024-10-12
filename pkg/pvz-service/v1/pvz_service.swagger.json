@@ -16,6 +16,37 @@
     "application/json"
   ],
   "paths": {
+    "/ChangeThreadCount": {
+      "get": {
+        "operationId": "PvzService_ChangeThreadCount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pvzChangeThreadCountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "threadCount",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "PvzService"
+        ]
+      }
+    },
     "/GetCustomerOrders": {
       "get": {
         "operationId": "PvzService_GetCustomerOrders",
@@ -227,6 +258,9 @@
         }
       },
       "additionalProperties": {}
+    },
+    "pvzChangeThreadCountResponse": {
+      "type": "object"
     },
     "pvzCustomerOrderInfo": {
       "type": "object",

@@ -1875,3 +1875,218 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetReturnedOrdersResponseValidationError{}
+
+// Validate checks the field values on ChangeThreadCountRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ChangeThreadCountRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ChangeThreadCountRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ChangeThreadCountRequestMultiError, or nil if none found.
+func (m *ChangeThreadCountRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ChangeThreadCountRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if m.GetThreadCount() < 1 {
+		err := ChangeThreadCountRequestValidationError{
+			field:  "ThreadCount",
+			reason: "value must be greater than or equal to 1",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ChangeThreadCountRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ChangeThreadCountRequestMultiError is an error wrapping multiple validation
+// errors returned by ChangeThreadCountRequest.ValidateAll() if the designated
+// constraints aren't met.
+type ChangeThreadCountRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ChangeThreadCountRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ChangeThreadCountRequestMultiError) AllErrors() []error { return m }
+
+// ChangeThreadCountRequestValidationError is the validation error returned by
+// ChangeThreadCountRequest.Validate if the designated constraints aren't met.
+type ChangeThreadCountRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ChangeThreadCountRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ChangeThreadCountRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ChangeThreadCountRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ChangeThreadCountRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ChangeThreadCountRequestValidationError) ErrorName() string {
+	return "ChangeThreadCountRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ChangeThreadCountRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sChangeThreadCountRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ChangeThreadCountRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ChangeThreadCountRequestValidationError{}
+
+// Validate checks the field values on ChangeThreadCountResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ChangeThreadCountResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ChangeThreadCountResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ChangeThreadCountResponseMultiError, or nil if none found.
+func (m *ChangeThreadCountResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ChangeThreadCountResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return ChangeThreadCountResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ChangeThreadCountResponseMultiError is an error wrapping multiple validation
+// errors returned by ChangeThreadCountResponse.ValidateAll() if the
+// designated constraints aren't met.
+type ChangeThreadCountResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ChangeThreadCountResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ChangeThreadCountResponseMultiError) AllErrors() []error { return m }
+
+// ChangeThreadCountResponseValidationError is the validation error returned by
+// ChangeThreadCountResponse.Validate if the designated constraints aren't met.
+type ChangeThreadCountResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ChangeThreadCountResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ChangeThreadCountResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ChangeThreadCountResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ChangeThreadCountResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ChangeThreadCountResponseValidationError) ErrorName() string {
+	return "ChangeThreadCountResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ChangeThreadCountResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sChangeThreadCountResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ChangeThreadCountResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ChangeThreadCountResponseValidationError{}

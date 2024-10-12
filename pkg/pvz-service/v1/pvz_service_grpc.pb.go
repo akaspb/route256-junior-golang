@@ -25,6 +25,7 @@ const (
 	PvzService_RemoveOrder_FullMethodName       = "/pvz.PvzService/RemoveOrder"
 	PvzService_ReturnOrder_FullMethodName       = "/pvz.PvzService/ReturnOrder"
 	PvzService_GetReturnedOrders_FullMethodName = "/pvz.PvzService/GetReturnedOrders"
+	PvzService_ChangeThreadCount_FullMethodName = "/pvz.PvzService/ChangeThreadCount"
 )
 
 // PvzServiceClient is the client API for PvzService service.
@@ -37,6 +38,7 @@ type PvzServiceClient interface {
 	RemoveOrder(ctx context.Context, in *RemoveOrderRequest, opts ...grpc.CallOption) (*RemoveOrderResponse, error)
 	ReturnOrder(ctx context.Context, in *ReturnOrderRequest, opts ...grpc.CallOption) (*ReturnOrderResponse, error)
 	GetReturnedOrders(ctx context.Context, in *GetReturnedOrdersRequest, opts ...grpc.CallOption) (*GetReturnedOrdersResponse, error)
+	ChangeThreadCount(ctx context.Context, in *ChangeThreadCountRequest, opts ...grpc.CallOption) (*ChangeThreadCountResponse, error)
 }
 
 type pvzServiceClient struct {
@@ -107,6 +109,16 @@ func (c *pvzServiceClient) GetReturnedOrders(ctx context.Context, in *GetReturne
 	return out, nil
 }
 
+func (c *pvzServiceClient) ChangeThreadCount(ctx context.Context, in *ChangeThreadCountRequest, opts ...grpc.CallOption) (*ChangeThreadCountResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ChangeThreadCountResponse)
+	err := c.cc.Invoke(ctx, PvzService_ChangeThreadCount_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PvzServiceServer is the server API for PvzService service.
 // All implementations must embed UnimplementedPvzServiceServer
 // for forward compatibility.
@@ -117,6 +129,7 @@ type PvzServiceServer interface {
 	RemoveOrder(context.Context, *RemoveOrderRequest) (*RemoveOrderResponse, error)
 	ReturnOrder(context.Context, *ReturnOrderRequest) (*ReturnOrderResponse, error)
 	GetReturnedOrders(context.Context, *GetReturnedOrdersRequest) (*GetReturnedOrdersResponse, error)
+	ChangeThreadCount(context.Context, *ChangeThreadCountRequest) (*ChangeThreadCountResponse, error)
 	mustEmbedUnimplementedPvzServiceServer()
 }
 
@@ -144,6 +157,9 @@ func (UnimplementedPvzServiceServer) ReturnOrder(context.Context, *ReturnOrderRe
 }
 func (UnimplementedPvzServiceServer) GetReturnedOrders(context.Context, *GetReturnedOrdersRequest) (*GetReturnedOrdersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReturnedOrders not implemented")
+}
+func (UnimplementedPvzServiceServer) ChangeThreadCount(context.Context, *ChangeThreadCountRequest) (*ChangeThreadCountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangeThreadCount not implemented")
 }
 func (UnimplementedPvzServiceServer) mustEmbedUnimplementedPvzServiceServer() {}
 func (UnimplementedPvzServiceServer) testEmbeddedByValue()                    {}
@@ -274,6 +290,24 @@ func _PvzService_GetReturnedOrders_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PvzService_ChangeThreadCount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChangeThreadCountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PvzServiceServer).ChangeThreadCount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PvzService_ChangeThreadCount_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PvzServiceServer).ChangeThreadCount(ctx, req.(*ChangeThreadCountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PvzService_ServiceDesc is the grpc.ServiceDesc for PvzService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -304,6 +338,10 @@ var PvzService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetReturnedOrders",
 			Handler:    _PvzService_GetReturnedOrders_Handler,
+		},
+		{
+			MethodName: "ChangeThreadCount",
+			Handler:    _PvzService_ChangeThreadCount_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

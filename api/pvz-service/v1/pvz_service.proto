@@ -44,6 +44,11 @@ service PvzService {
       get: "/ReturnOrder"
     };
   }
+  rpc ChangeThreadCount (ChangeThreadCountRequest) returns (ChangeThreadCountResponse) {
+    option (google.api.http) = {
+      get: "/ChangeThreadCount"
+    };
+  }
 }
 
 message GiveOrdersRequest {
@@ -152,11 +157,21 @@ message GetReturnedOrdersRequest {
 }
 
 message ReturnedOrder {
-    int64 order_id = 1;
-    int64 customer_id = 2;
+  int64 order_id = 1;
+  int64 customer_id = 2;
 }
 
 message GetReturnedOrdersResponse {
   repeated ReturnedOrder orders = 1;
 }
 
+message ChangeThreadCountRequest {
+  uint32 thread_count = 1 [
+    (validate.rules).uint32.gte = 1,
+    (google.api.field_behavior) = REQUIRED
+  ];
+}
+
+message ChangeThreadCountResponse {
+
+}
