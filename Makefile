@@ -1,5 +1,6 @@
 OUT_PATH:=$(CURDIR)/pkg
 LOCAL_BIN:=$(CURDIR)/bin
+DB_PORT:=5433
 
 coverage:
 	go test $(CURDIR)/test/cli/
@@ -10,7 +11,9 @@ get-protoc:
 
 all: deps generate build run
 
-deps: .vendor-proto
+deps: #.vendor-proto
+	#docker-compose -f docker/docker-compose.yml up -d
+	GOBIN=$(LOCAL_BIN) go install github.com/pressly/goose/v3/cmd/goose@latest
 	GOBIN=$(LOCAL_BIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 	GOBIN=$(LOCAL_BIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 	GOBIN=$(LOCAL_BIN) go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
@@ -28,18 +31,20 @@ generate:
 		--plugin=protoc-gen-validate=$(LOCAL_BIN)/protoc-gen-validate --validate_out="lang=go,paths=source_relative:${OUT_PATH}" \
 		./api/pvz-service/v1/pvz_service.proto
 
-
 build:
+	# $(LOCAL_BIN)/goose -dir $(CURDIR)/migrations postgres "postgres://postgres:postgres@localhost:$(DB_PORT)/postgres?sslmode=disable" up
 	touch  $(LOCAL_BIN)
 	go build -o $(LOCAL_BIN)/pvz-service cmd/pvz_service/main.go
 	go build -o $(LOCAL_BIN)/pvz cmd/pvz_cli/main.go
 
 run:
+	# docker-compose -f docker/docker-compose.yml start
 	touch logs.txt
 	$(LOCAL_BIN)/pvz-service > logs.txt 2>&1 &
 	sleep 1
 	$(LOCAL_BIN)/pvz inter
 	pkill -SIGINT pvz-service
+	# docker-compose -f docker/docker-compose.yml stop
 
 
 .vendor-proto: .vendor-proto/google/protobuf .vendor-proto/google/api .vendor-proto/protoc-gen-openapiv2/options .vendor-proto/validate

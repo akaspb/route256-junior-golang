@@ -10,7 +10,6 @@ import (
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage"
-	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -253,82 +252,24 @@ func (s *Service) getCustomerOrderIDWithMsg(ctx context.Context, orderID, custom
 func (s *Service) GiveOrderToCustomer(ctx context.Context, orderIDs []models.IDType, customerID models.IDType) ([]OrderIDWithMsg, error) {
 	currTime := s.GetCurrentTime()
 
-	// Worker Pool
-	group1, ctx1 := errgroup.WithContext(ctx)
-	orderIDsChan := make(chan models.IDType, len(orderIDs))
-	orderIDWithMsgChan := make(chan OrderIDWithMsg, len(orderIDs))
-	okOrderIDsChan := make(chan models.IDType, len(orderIDs))
+	res := make([]OrderIDWithMsg, len(orderIDs))
+	for i, orderID := range orderIDs {
+		orderIDWithMsg, err := s.getCustomerOrderIDWithMsg(ctx, orderID, customerID, currTime)
+		if err != nil {
+			return nil, err
+		}
 
-	for i := 0; i < s.workerCount; i++ {
-		group1.Go(func() error {
-			for {
-				select {
-				case <-ctx.Done():
-					return nil
-				case orderID, ok := <-orderIDsChan:
-					if !ok {
-						return nil
-					}
-
-					orderIDWithMsg, err := s.getCustomerOrderIDWithMsg(ctx1, orderID, customerID, currTime)
-					if err != nil {
-						return err
-					}
-
-					orderIDWithMsgChan <- orderIDWithMsg
-					if orderIDWithMsg.Ok {
-						okOrderIDsChan <- orderIDWithMsg.ID
-					}
-				}
-			}
-		})
+		res[i] = orderIDWithMsg
 	}
 
-	for _, orderID := range orderIDs {
-		orderIDsChan <- orderID
-	}
-	close(orderIDsChan)
-
-	if err := group1.Wait(); err != nil {
-		defer close(orderIDWithMsgChan)
-		defer close(okOrderIDsChan)
-		return nil, err
-	}
-	close(orderIDWithMsgChan)
-	close(okOrderIDsChan)
-
-	// add this goroutines with purpose if error occurred in previous goroutines no change in DB were made
-	group2, ctx2 := errgroup.WithContext(ctx)
-
-	for i := 0; i < s.workerCount; i++ {
-		group2.Go(func() error {
-			for {
-				select {
-				case <-ctx.Done():
-					return nil
-				case orderID, ok := <-okOrderIDsChan:
-					if !ok {
-						return nil
-					}
-
-					if err := s.orderStorage.ChangeOrderStatus(ctx2, orderID, models.Status{
-						Value:     models.StatusToCustomer,
-						ChangedAt: currTime,
-					}); err != nil {
-						return err
-					}
-				}
-			}
-		})
-	}
-
-	if err := group2.Wait(); err != nil {
-		return nil, err
-	}
-
-	res := make([]OrderIDWithMsg, 0, len(orderIDWithMsgChan))
-	for orderIDWithMsg := range orderIDWithMsgChan {
-		res = append(res, orderIDWithMsg)
+	// add this loop with purpose if error occurred in previous loop no change in DB were made
+	for _, order := range res {
+		if err := s.orderStorage.ChangeOrderStatus(ctx, order.ID, models.Status{
+			Value:     models.StatusToCustomer,
+			ChangedAt: currTime,
+		}); err != nil {
+			return nil, err
+		}
 	}
 
 	return res, nil
@@ -372,46 +313,13 @@ func (s *Service) GetCustomerOrders(ctx context.Context, customerID models.IDTyp
 		}
 	}
 
-	// Worker Pool
-	group, ctx := errgroup.WithContext(ctx)
-	orderIDsChan := make(chan models.IDType, len(orderIDs))
-	resChan := make(chan OrderIDWithExpiryAndStatus, len(orderIDs))
-
-	for i := 0; i < s.workerCount; i++ {
-		group.Go(func() error {
-			for {
-				select {
-				case <-ctx.Done():
-					return nil
-				case orderID, ok := <-orderIDsChan:
-					if !ok {
-						return nil
-					}
-
-					orderIDWithExpiryAndStatus, err := s.getOrderIDWithExpiryAndStatus(ctx, orderID, currTime)
-					if err != nil {
-						return err
-					}
-					resChan <- orderIDWithExpiryAndStatus
-				}
-			}
-		})
-	}
-
-	for _, orderID := range orderIDs {
-		orderIDsChan <- orderID
-	}
-	close(orderIDsChan)
-
-	if err := group.Wait(); err != nil {
-		defer close(resChan)
-		return nil, err
-	}
-	close(resChan)
-
-	res := make([]OrderIDWithExpiryAndStatus, 0, len(resChan))
-	for orderIDWithExpiryAndStatus := range resChan {
-		res = append(res, orderIDWithExpiryAndStatus)
+	res := make([]OrderIDWithExpiryAndStatus, len(orderIDs))
+	for i, orderID := range orderIDs {
+		orderIDWithExpiryAndStatus, err := s.getOrderIDWithExpiryAndStatus(ctx, orderID, currTime)
+		if err != nil {
+			return nil, err
+		}
+		res[i] = orderIDWithExpiryAndStatus
 	}
 
 	return res, nil
@@ -462,8 +370,7 @@ func (s *Service) ReturnOrderFromCustomer(ctx context.Context, customerID, order
 	return nil
 }
 
-// GetReturnsList method is generator, it uses chan to return results from db
-func (s *Service) GetReturnsList(ctx context.Context, offset, limit int) (<-chan ReturnOrderAndCustomer, error) {
+func (s *Service) GetReturnsList(ctx context.Context, offset, limit int) ([]ReturnOrderAndCustomer, error) {
 	if offset < 0 {
 		return nil, ErrorInvalidOffsetValue
 	}
@@ -477,47 +384,20 @@ func (s *Service) GetReturnsList(ctx context.Context, offset, limit int) (<-chan
 		return nil, err
 	}
 
-	// Worker Pool
-	group, ctx := errgroup.WithContext(ctx)
-	orderIDsChan := make(chan models.IDType, len(returnOrderIDs))
-	orderAndCustomerChan := make(chan ReturnOrderAndCustomer, len(returnOrderIDs))
+	res := make([]ReturnOrderAndCustomer, len(returnOrderIDs))
+	for i, orderID := range returnOrderIDs {
+		customerID, err := s.orderStorage.GetOrderCustomerID(ctx, orderID)
+		if err != nil {
+			return nil, err
+		}
 
-	for i := 0; i < s.workerCount; i++ {
-		group.Go(func() error {
-			for {
-				select {
-				case <-ctx.Done():
-					return nil
-				case orderID, ok := <-orderIDsChan:
-					if !ok {
-						return nil
-					}
-
-					customerID, err := s.orderStorage.GetOrderCustomerID(ctx, orderID)
-					if err != nil {
-						return err
-					}
-
-					orderAndCustomerChan <- ReturnOrderAndCustomer{
-						OrderID:    orderID,
-						CustomerID: customerID,
-					}
-				}
-			}
-		})
+		res[i] = ReturnOrderAndCustomer{
+			OrderID:    orderID,
+			CustomerID: customerID,
+		}
 	}
 
-	for _, orderID := range returnOrderIDs {
-		orderIDsChan <- orderID
-	}
-	close(orderIDsChan)
-
-	defer close(orderAndCustomerChan)
-	if err := group.Wait(); err != nil {
-		return nil, err
-	}
-
-	return orderAndCustomerChan, nil
+	return res, nil
 }
 
 func (s *Service) GetCurrentTime() time.Time {

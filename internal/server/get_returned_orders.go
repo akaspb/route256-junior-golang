@@ -15,7 +15,7 @@ func (s *Implementation) GetReturnedOrders(ctx context.Context, req *pb.GetRetur
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	returnsChan, err := s.service.GetReturnsList(ctx, int(req.GetOffset()), int(req.GetLimit()))
+	returns, err := s.service.GetReturnsList(ctx, int(req.GetOffset()), int(req.GetLimit()))
 
 	if err != nil {
 		var argumentErr *service.ArgumentError
@@ -25,10 +25,10 @@ func (s *Implementation) GetReturnedOrders(ctx context.Context, req *pb.GetRetur
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	ordersProto := make([]*pb.ReturnedOrder, 0, len(returnsChan))
-	for order := range returnsChan {
+	ordersProto := make([]*pb.ReturnedOrder, len(returns))
+	for i, order := range returns {
 		returnedOrder := ReturnOrderAndCustomerToReturnedOrder(order)
-		ordersProto = append(ordersProto, &returnedOrder)
+		ordersProto[i] = &returnedOrder
 	}
 
 	return &pb.GetReturnedOrdersResponse{
