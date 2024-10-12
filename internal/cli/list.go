@@ -9,40 +9,6 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-//func ListHandler(ctx context.Context, buffer *bytes.Buffer, service *srvc.Service, customerID models.IDType, lastN uint) error {
-//	orders, err := service.GetCustomerOrders(ctx, customerID, lastN)
-//	if err != nil {
-//		return fmt.Errorf("error: %w", err)
-//	}
-//
-//	if len(orders) == 0 {
-//		fmt.Fprintln(buffer, "No orders")
-//		return nil
-//	}
-//
-//	maxPackageNameLen := len("Pack")
-//	for _, order := range orders {
-//		maxPackageNameLen = max(maxPackageNameLen, len(order.Package))
-//	}
-//
-//	tableTop := fmt.Sprintf("%8s|    Expiry|Expired|%"+strconv.Itoa(maxPackageNameLen)+"s|Cost", "ID", "Pack")
-//	fmt.Fprintln(buffer, tableTop)
-//
-//	for _, order := range orders {
-//		expired := "NO"
-//		if order.Expired {
-//			expired = "YES"
-//		}
-//
-//		tableRow := fmt.Sprintf(
-//			"%8v|%-10s|%7s|%"+strconv.Itoa(maxPackageNameLen)+"s|%v",
-//			order.ID, order.Expiry.Format("02.01.2006"), expired, order.Package, order.Cost,
-//		)
-//		fmt.Fprintln(buffer, tableRow)
-//	}
-//	return nil
-//}
-
 func getListCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 	var listCli = &cobra.Command{
 		Use:     "list",

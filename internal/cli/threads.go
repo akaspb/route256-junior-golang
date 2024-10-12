@@ -8,14 +8,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//func ThreadsHandler(service *srvc.Service, threadsCount int) error {
-//	if err := service.ChangeWorkerCount(threadsCount); err != nil {
-//		return fmt.Errorf("error: %w", err)
-//	}
-//
-//	return nil
-//}
-
 func getThreadsCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 	var threadsCli = &cobra.Command{
 		Use:     "threads",
@@ -33,12 +25,6 @@ func getThreadsCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 				fmt.Println(err.Error())
 				return
 			}
-
-			//if err := ThreadsHandler(service, int(threadsCount)); err != nil {
-			//	fmt.Println(err.Error())
-			//} else {
-			//	fmt.Println("success")
-			//}
 
 			request := &pvz_service.ChangeThreadCountRequest{
 				ThreadCount: uint32(threadsCount),

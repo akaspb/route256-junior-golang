@@ -8,44 +8,6 @@ import (
 	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
 )
 
-//func GiveHandler(ctx context.Context, buffer *bytes.Buffer, service *srvc.Service, customerID models.IDType, orderIDs []models.IDType) error {
-//	orders, err := service.GiveOrderToCustomer(ctx, orderIDs, customerID)
-//	if err != nil {
-//		return fmt.Errorf("error: %w", err)
-//	}
-//
-//	if len(orders) == 0 {
-//		fmt.Fprintln(buffer, "No orders")
-//		return nil
-//	}
-//
-//	maxMsgLen := 0
-//	maxPackageNameLen := len("Pack")
-//	for _, order := range orders {
-//		maxMsgLen = max(maxMsgLen, len(order.Msg))
-//		maxPackageNameLen = max(maxPackageNameLen, len(order.Package))
-//	}
-//
-//	tableTop := fmt.Sprintf(
-//		"%8s|Give|%-"+strconv.Itoa(maxMsgLen)+"s|%"+strconv.Itoa(maxPackageNameLen)+"s|Cost",
-//		"ID",
-//		"Message",
-//		"Pack",
-//	)
-//	fmt.Fprintln(buffer, tableTop)
-//	for _, order := range orders {
-//		give := "NO"
-//		if order.Ok {
-//			give = "YES"
-//		}
-//		tableRow := fmt.Sprintf(
-//			"%8v|%4s|%-"+strconv.Itoa(maxMsgLen)+"s|%-"+strconv.Itoa(maxPackageNameLen)+"s|%v",
-//			order.ID, give, order.Msg, order.Package, order.Cost)
-//		fmt.Fprintln(buffer, tableRow)
-//	}
-//	return nil
-//}
-
 func getGiveCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 	var giveCli = &cobra.Command{
 		Use:     "give",

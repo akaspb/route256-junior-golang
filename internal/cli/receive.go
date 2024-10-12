@@ -11,56 +11,6 @@ import (
 	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
 )
 
-//type ReceiveHandlerDTO struct {
-//	Ctx         context.Context
-//	Buffer      *bytes.Buffer
-//	Service     *srvc.Service
-//	OrderID     models.IDType
-//	OrderCost   models.CostType
-//	OrderWeight models.WeightType
-//	OrderExpiry time.Time
-//	PackName    string
-//	CustomerID  models.IDType
-//}
-//
-//func ReceiveHandler(
-//	receiveHandlerDTO ReceiveHandlerDTO,
-//) error {
-//	ctx := receiveHandlerDTO.Ctx
-//	buffer := receiveHandlerDTO.Buffer
-//	service := receiveHandlerDTO.Service
-//	orderID := receiveHandlerDTO.OrderID
-//	orderCost := receiveHandlerDTO.OrderCost
-//	orderWeight := receiveHandlerDTO.OrderWeight
-//	orderExpiry := receiveHandlerDTO.OrderExpiry
-//	packName := receiveHandlerDTO.PackName
-//	customerID := receiveHandlerDTO.CustomerID
-//
-//	var packPtr *models.Pack
-//	if packName != "" {
-//		pack, err := service.Packaging.GetPackagingByName(packName)
-//		if err != nil {
-//			return err
-//		}
-//
-//		packPtr = &pack
-//	}
-//
-//	if err := service.AcceptOrderFromCourier(ctx, srvc.AcceptOrderDTO{
-//		OrderID:     orderID,
-//		OrderCost:   orderCost,
-//		OderWeight:  orderWeight,
-//		CustomerID:  customerID,
-//		Pack:        packPtr,
-//		OrderExpiry: orderExpiry,
-//	}); err != nil {
-//		return fmt.Errorf("error: %w", err)
-//	}
-//
-//	fmt.Fprintln(buffer, "success: take order for storage in PVZ")
-//	return nil
-//}
-
 func getReceiveCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 	var receiveCli = &cobra.Command{
 		Use:     "receive",

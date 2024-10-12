@@ -7,16 +7,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//func ReturnHandler(ctx context.Context, buffer *bytes.Buffer, service *srvc.Service, customerID, orderID models.IDType) error {
-//	if err := service.ReturnOrderFromCustomer(ctx, customerID, orderID); err != nil {
-//		return err
-//	}
-//
-//	fmt.Fprintln(buffer, "success: take order from customer to store it in PVZ")
-//
-//	return nil
-//}
-
 func getReturnCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 	var returnCli = &cobra.Command{
 		Use:     "return",

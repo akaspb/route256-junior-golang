@@ -7,32 +7,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//func ReturnsHandler(
-//	ctx context.Context,
-//	buffer *bytes.Buffer,
-//	service *srvc.Service,
-//	offset, limit int,
-//) error {
-//	returnsChan, err := service.GetReturnsList(ctx, offset, limit)
-//	if err != nil {
-//		return fmt.Errorf("error: %v\n", err)
-//
-//	}
-//
-//	if len(returnsChan) == 0 {
-//		fmt.Println()
-//		return errors.New("No orders")
-//	}
-//
-//	fmt.Fprintf(buffer, "%8s|%11s\n", "Order ID", "Customer ID")
-//	for raw := range returnsChan {
-//		tableRow := fmt.Sprintf("%8v|%11v", raw.OrderID, raw.CustomerID)
-//		fmt.Fprintln(buffer, tableRow)
-//	}
-//
-//	return nil
-//}
-
 func getReturnsCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 	var returnsCli = &cobra.Command{
 		Use:     "returns",
@@ -71,7 +45,7 @@ func getReturnsCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 			}
 
 			if len(response.Orders) == 0 {
-				fmt.Println("No orders")
+				fmt.Println("No orders to show with such offset and limit")
 				return
 			}
 

@@ -8,16 +8,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//func RemoveHandler(ctx context.Context, buffer *bytes.Buffer, service *srvc.Service, orderID models.IDType) error {
-//	if err := service.ReturnOrder(ctx, orderID); err != nil {
-//		return err
-//	}
-//
-//	fmt.Fprintln(buffer, "success: order can be given to courier for return")
-//
-//	return nil
-//}
-
 func getRemoveCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 	var removeCli = &cobra.Command{
 		Use:     "remove",
