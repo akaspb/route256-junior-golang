@@ -66,15 +66,6 @@ func (p *Packaging) GetAllPacks() []models.Pack {
 	return packs
 }
 
-//func DefaultPackaging() *Packaging {
-//	packet := NewPack("packet", 5, 10)
-//	box := NewPack("box", 20, 30)
-//	wrap := NewPack("wrap", 1, AnyWeight)
-//
-//	packaging, _ := NewPackaging(packet, box, wrap)
-//	return packaging
-//}
-
 func (p *Packaging) GetPackagingByName(packagingName string) (models.Pack, error) {
 	if pack, ok := p.packsMap[packagingName]; ok {
 		return pack, nil

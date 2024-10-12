@@ -2,9 +2,9 @@ package cli
 
 import (
 	"fmt"
-	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
 
 	"github.com/spf13/cobra"
+	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
 )
 
 func getReturnCmd(client pvz_service.PvzServiceClient) *cobra.Command {

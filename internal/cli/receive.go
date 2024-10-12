@@ -2,13 +2,13 @@ package cli
 
 import (
 	"fmt"
-	"google.golang.org/protobuf/types/known/timestamppb"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
+	"google.golang.org/protobuf/types/known/timestamppb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func getReceiveCmd(client pvz_service.PvzServiceClient) *cobra.Command {

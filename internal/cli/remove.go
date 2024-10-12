@@ -2,10 +2,10 @@ package cli
 
 import (
 	"fmt"
-	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
 	"strconv"
 
 	"github.com/spf13/cobra"
+	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
 )
 
 func getRemoveCmd(client pvz_service.PvzServiceClient) *cobra.Command {

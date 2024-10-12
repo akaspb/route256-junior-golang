@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	pvz_cli "gitlab.ozon.dev/siralexpeter/Homework/internal/cli"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/cli"
 	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -30,7 +30,7 @@ func main() {
 	defer conn.Close()
 
 	pvzClient := pvz_service.NewPvzServiceClient(conn)
-	pvzCmd := pvz_cli.NewCliService(pvzClient)
+	pvzCmd := cli.NewCliService(pvzClient)
 
 	go func() {
 		if err := pvzCmd.Execute(ctx); err != nil {
