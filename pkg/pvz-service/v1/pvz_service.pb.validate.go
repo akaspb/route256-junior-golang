@@ -57,7 +57,16 @@ func (m *GiveOrdersRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for CustomerId
+	if m.GetCustomerId() < 1 {
+		err := GiveOrdersRequestValidationError{
+			field:  "CustomerId",
+			reason: "value must be greater than or equal to 1",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	if len(m.GetOrderIds()) < 1 {
 		err := GiveOrdersRequestValidationError{
@@ -68,6 +77,22 @@ func (m *GiveOrdersRequest) validate(all bool) error {
 			return err
 		}
 		errors = append(errors, err)
+	}
+
+	for idx, item := range m.GetOrderIds() {
+		_, _ = idx, item
+
+		if item < 1 {
+			err := GiveOrdersRequestValidationError{
+				field:  fmt.Sprintf("OrderIds[%v]", idx),
+				reason: "value must be greater than or equal to 1",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
 	}
 
 	if len(errors) > 0 {
@@ -418,7 +443,16 @@ func (m *GetCustomerOrdersRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for CustomerId
+	if m.GetCustomerId() < 1 {
+		err := GetCustomerOrdersRequestValidationError{
+			field:  "CustomerId",
+			reason: "value must be greater than or equal to 1",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	if wrapper := m.GetLastCount(); wrapper != nil {
 
@@ -814,9 +848,27 @@ func (m *ReceiveOrderRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Id
+	if m.GetId() < 1 {
+		err := ReceiveOrderRequestValidationError{
+			field:  "Id",
+			reason: "value must be greater than or equal to 1",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
-	// no validation rules for CustomerId
+	if m.GetCustomerId() < 1 {
+		err := ReceiveOrderRequestValidationError{
+			field:  "CustomerId",
+			reason: "value must be greater than or equal to 1",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	if all {
 		switch v := interface{}(m.GetExpiry()).(type) {
@@ -1102,7 +1154,16 @@ func (m *RemoveOrderRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for OrderId
+	if m.GetOrderId() < 1 {
+		err := RemoveOrderRequestValidationError{
+			field:  "OrderId",
+			reason: "value must be greater than or equal to 1",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	if len(errors) > 0 {
 		return RemoveOrderRequestMultiError(errors)
@@ -1308,9 +1369,27 @@ func (m *ReturnOrderRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for CustomerId
+	if m.GetCustomerId() < 1 {
+		err := ReturnOrderRequestValidationError{
+			field:  "CustomerId",
+			reason: "value must be greater than or equal to 1",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
-	// no validation rules for OrderId
+	if m.GetOrderId() < 1 {
+		err := ReturnOrderRequestValidationError{
+			field:  "OrderId",
+			reason: "value must be greater than or equal to 1",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	if len(errors) > 0 {
 		return ReturnOrderRequestMultiError(errors)
