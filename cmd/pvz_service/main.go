@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/spf13/viper"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/event_logger/kafka"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/middleware"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/server"
@@ -55,11 +55,21 @@ func main() {
 	}
 	defer pvzService.Close()
 
-	pvzServer := server.NewImplementation(pvzService)
+	kafkaProducer, err := initProducer(kafka.Config{
+		Brokers: []string{viper.GetString("kafka.broker")},
+	})
+	if err != nil {
+		fmt.Printf("failed to init kafka producer: %v", err)
+		return
+	}
+
+	eventLogger := kafka.NewTopicSender(kafkaProducer, viper.GetString("kafka.topic"))
+	pvzServer := server.NewImplementation(pvzService, eventLogger)
 
 	lis, err := net.Listen("tcp", viper.GetString("grpc.host"))
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		fmt.Printf("failed to listen: %v", err)
+		return
 	}
 
 	grpcServer := grpc.NewServer(
@@ -70,13 +80,18 @@ func main() {
 
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {
-			log.Fatalf("failed to serve: %v", err)
+			fmt.Printf("failed to serve: %v", err)
+			return
 		}
 	}()
 
 	select {
 	case <-ctx.Done():
 	}
+
+	kafkaProducer.AsyncClose()
+	<-kafkaProducer.Successes()
+	<-kafkaProducer.Errors()
 
 	grpcServer.GracefulStop()
 }

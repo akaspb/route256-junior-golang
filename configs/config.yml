@@ -11,3 +11,7 @@ db:
 
 program:
   worker_count: 2
+
+kafka:
+  broker: "localhost:9092"
+  topic: "pvz.events-log"
