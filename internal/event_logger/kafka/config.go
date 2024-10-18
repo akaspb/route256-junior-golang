@@ -82,7 +82,7 @@ func PrepareConfig(opts ...Option) *sarama.Config {
 			Если эта конфигурация используется для создания `SyncProducer`, оба параметра должны быть установлены
 			в значение true, и вы не должны читать данные из каналов, поскольку это уже делает продьюсер под капотом.
 		*/
-		c.Producer.Return.Successes = true
+		c.Producer.Return.Successes = false
 		c.Producer.Return.Errors = true
 	}
 

@@ -39,7 +39,7 @@ func NewImplementation(
 }
 
 func handleLoggerError(method string, err error) {
-	log.Printf("[interceptor.Logging] method: %s; error: %v", method, err)
+	log.Printf("[kafka producer] method: %s; error: %v", method, err)
 }
 
 func (s *Implementation) logMethodCall(method string, eventType event_logger.EventType, details string) {

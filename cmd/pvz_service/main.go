@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/IBM/sarama"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/spf13/viper"
 	event_factory "gitlab.ozon.dev/siralexpeter/Homework/internal/event_logger/factory"
@@ -124,5 +125,21 @@ func getPostgresDSN() string {
 		viper.GetString("db.postgres"),
 		viper.GetString("db.dbname"),
 		viper.GetString("db.sslmode"),
+	)
+}
+
+func initProducer(config kafka.Config) (sarama.AsyncProducer, error) {
+	return kafka.NewAsyncProducer(config,
+		// kafka.WithIdempotent(),
+		kafka.WithRequiredAcks(sarama.WaitForAll),
+		// kafka.WithMaxOpenRequests(1),
+		kafka.WithMaxRetries(5),
+		kafka.WithRetryBackoff(10*time.Millisecond),
+		// kafka.WithProducerPartitioner(sarama.NewManualPartitioner),
+		// kafka.WithProducerPartitioner(sarama.NewRoundRobinPartitioner),
+		// kafka.WithProducerPartitioner(sarama.NewRandomPartitioner),
+		kafka.WithProducerPartitioner(sarama.NewHashPartitioner),
+		kafka.WithProducerFlushMessages(3),
+		kafka.WithProducerFlushFrequency(1*time.Second),
 	)
 }
