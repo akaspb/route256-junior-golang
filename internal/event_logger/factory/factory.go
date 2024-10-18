@@ -34,11 +34,11 @@ func NewDefaultFactory(startIDValue int64) *Factory {
 	return NewFactory(NewSerialIDGen(startIDValue), NewClockGen())
 }
 
-func (f *Factory) Create(eventType event_logger.EventType, eventMessage []byte) (event_logger.Event, error) {
+func (f *Factory) Create(eventType event_logger.EventType, eventDetails string) (event_logger.Event, error) {
 	return event_logger.Event{
 		ID:        f.idGenerator.Generate(),
-		EventType: eventType,
-		EventData: eventMessage,
+		Type:      eventType,
+		Details:   eventDetails,
 		Timestamp: f.timestampGenerator.Generate(),
 	}, nil
 }

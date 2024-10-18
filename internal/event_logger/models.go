@@ -5,5 +5,5 @@ type EventLogger interface {
 }
 
 type EventFactory interface {
-	Create(eventType EventType, event []byte) (Event, error)
+	Create(eventType EventType, eventDetails string) (Event, error)
 }
