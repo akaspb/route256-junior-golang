@@ -11,6 +11,7 @@ import (
 
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/spf13/viper"
+	event_factory "gitlab.ozon.dev/siralexpeter/Homework/internal/event_logger/factory"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/event_logger/kafka"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/middleware"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
@@ -63,8 +64,9 @@ func main() {
 		return
 	}
 
-	eventLogger := kafka.NewTopicSender(kafkaProducer, viper.GetString("kafka.topic"))
-	pvzServer := server.NewImplementation(pvzService, eventLogger)
+	kafkaEventLogger := kafka.NewTopicSender(kafkaProducer, viper.GetString("kafka.topic"))
+	eventFactory := event_factory.NewDefaultFactory(1)
+	pvzServer := server.NewImplementation(pvzService, kafkaEventLogger, eventFactory)
 
 	lis, err := net.Listen("tcp", viper.GetString("grpc.host"))
 	if err != nil {

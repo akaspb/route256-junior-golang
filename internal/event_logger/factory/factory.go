@@ -1,8 +1,10 @@
-package event
+package factory
 
 import (
 	"math"
 	"time"
+
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/event_logger"
 )
 
 type Factory struct {
@@ -32,13 +34,13 @@ func NewDefaultFactory(startIDValue int64) *Factory {
 	return NewFactory(NewSerialIDGen(startIDValue), NewClockGen())
 }
 
-func (f *Factory) Create(eventType EventType, operationSerialised []byte) Event {
-	return Event{
+func (f *Factory) Create(eventType event_logger.EventType, eventMessage []byte) (event_logger.Event, error) {
+	return event_logger.Event{
 		ID:        f.idGenerator.Generate(),
 		EventType: eventType,
-		Operation: operationSerialised,
+		EventData: eventMessage,
 		Timestamp: f.timestampGenerator.Generate(),
-	}
+	}, nil
 }
 
 type SerialIDGen struct {

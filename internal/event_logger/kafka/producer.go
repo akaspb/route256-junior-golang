@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/IBM/sarama"
-	"gitlab.ozon.dev/siralexpeter/Homework/internal/event_logger/event"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/event_logger"
 )
 
 func NewAsyncProducer(conf Config, opts ...Option) (sarama.AsyncProducer, error) {
@@ -28,11 +28,11 @@ func NewTopicSender(producer sarama.AsyncProducer, topic string) *TopicSender {
 	return &TopicSender{producer: producer, topic: topic}
 }
 
-func (s *TopicSender) Send(event event.Event) error {
+func (s *TopicSender) Send(event event_logger.Event) error {
 	msg := &sarama.ProducerMessage{
 		Topic:     s.topic,
 		Key:       sarama.StringEncoder(strconv.FormatInt(event.ID, 10)),
-		Value:     sarama.ByteEncoder(event.Operation),
+		Value:     sarama.ByteEncoder(event.EventData),
 		Timestamp: event.Timestamp,
 	}
 
