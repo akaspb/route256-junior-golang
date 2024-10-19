@@ -6,32 +6,33 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"strings"
 
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/event_logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
 )
 
 func LocalLogging(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if ok {
-		log.Printf("[interceptor.Logging] method: %s; metadata: %v", info.FullMethod, md)
+	var logStr strings.Builder
+	logStr.WriteString(fmt.Sprintf("[interceptor.Logging] method: %v", info.FullMethod))
+
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		logStr.WriteString(fmt.Sprintf("; metadata: %v", md))
 	}
 
-	rewReq, _ := protojson.Marshal((req).(proto.Message))
-	log.Printf("[interceptor.Logging] method: %s; request: %s", info.FullMethod, string(rewReq))
+	logStr.WriteString(fmt.Sprintf("; request: %v", req))
 
 	res, err := handler(ctx, req)
 	if err != nil {
-		log.Printf("[interceptor.Logging] method: %s; error: %s", info.FullMethod, err.Error())
+		logStr.WriteString(fmt.Sprintf("; error: %v", err))
+		log.Print(logStr.String())
 		return
 	}
 
-	respReq, _ := protojson.Marshal((res).(proto.Message))
-	log.Printf("[interceptor.Logging] method: %s; response: %s", info.FullMethod, string(respReq))
+	logStr.WriteString(fmt.Sprintf("; response: %v", res))
+	log.Print(logStr.String())
 
 	return res, nil
 }
@@ -105,7 +106,7 @@ func getMethodName(fullMethod string) string {
 func responseErrorToString(err error) (string, error) {
 	errStatus, ok := status.FromError(err)
 	if !ok {
-		return "", errors.New("handleResponseError function should be used with status errors only")
+		return "", errors.New("responseErrorToString function should be used with status errors only")
 	}
 
 	return fmt.Sprintf("%v: %v", errStatus.Code(), errStatus.Message()), nil
