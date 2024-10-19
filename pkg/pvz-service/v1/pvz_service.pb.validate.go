@@ -205,7 +205,7 @@ func (m *OrderToGiveInfo) validate(all bool) error {
 
 	// no validation rules for Message
 
-	// no validation rules for OkToGive
+	// no validation rules for Giveable
 
 	if len(errors) > 0 {
 		return OrderToGiveInfoMultiError(errors)

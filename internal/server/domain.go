@@ -37,7 +37,7 @@ func orderIDWithMsgToOrderToGiveInfo(order service.OrderIDWithMsg) pb.OrderToGiv
 		Cost:     costTypeToFloat(order.Cost),
 		Packing:  order.Package,
 		Message:  order.Msg,
-		OkToGive: order.Ok,
+		Giveable: order.Ok,
 	}
 }
 

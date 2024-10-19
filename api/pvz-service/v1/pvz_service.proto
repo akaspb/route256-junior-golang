@@ -63,7 +63,7 @@ message OrderToGiveInfo {
     float cost = 2;
     string packing = 3;
     string message = 4;
-    bool ok_to_give = 5;
+    bool giveable = 5;
 }
 
 message GiveOrdersResponse {

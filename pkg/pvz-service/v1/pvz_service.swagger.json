@@ -326,7 +326,7 @@
         "message": {
           "type": "string"
         },
-        "okToGive": {
+        "giveable": {
           "type": "boolean"
         }
       }
