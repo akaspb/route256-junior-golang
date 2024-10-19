@@ -63,23 +63,3 @@ services:
     command: "bash -c 'echo Waiting for Kafka to be ready... && \
       kafka-topics.sh --create --topic pvz.events-log --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka1:29092'
     "
-
-#  go-consumer-1:
-#    container_name: route256-go-consumer-1
-#    image: go-consumer-image
-#    build:
-#      context: ./../../
-#      dockerfile: ./build/dev/consumer-group/Dockerfile
-#
-#  go-consumer-2:
-#    container_name: route256-go-consumer-2
-#    image: go-consumer-image
-#    depends_on:
-#      - go-consumer-1
-#
-#  go-consumer-3:
-#    container_name: route256-go-consumer-3
-#    image: go-consumer-image
-#    depends_on:
-#      - go-consumer-1
-
