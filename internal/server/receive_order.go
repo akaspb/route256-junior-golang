@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 	pb "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
@@ -16,10 +17,10 @@ func (s *Implementation) ReceiveOrder(ctx context.Context, req *pb.ReceiveOrderR
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	s.logMethodCall(
+	s.logMethodCallProtoMessage(
 		"ReceiveOrder",
 		EventReceiveOrderReq,
-		fmt.Sprintf("receive order id==%v customer_id==%v", req.GetId(), req.GetCustomerId()),
+		req,
 	)
 
 	var packPtr *models.Pack

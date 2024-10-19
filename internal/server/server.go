@@ -1,10 +1,13 @@
 package server
 
 import (
+	"encoding/json"
+	"log"
+
+	"github.com/golang/protobuf/proto"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/event_logger"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 	pb "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
-	"log"
 )
 
 var (
@@ -38,8 +41,13 @@ func NewImplementation(
 	}
 }
 
-func handleLoggerError(method string, err error) {
-	log.Printf("[kafka producer] method: %s; error: %v", method, err)
+func (s *Implementation) logMethodCallProtoMessage(method string, eventType event_logger.EventType, protoMsg proto.Message) {
+	bytes, err := json.Marshal(protoMsg)
+	if err != nil {
+		handleLoggerError(method, err)
+	}
+
+	s.logMethodCall(method, eventType, string(bytes))
 }
 
 func (s *Implementation) logMethodCall(method string, eventType event_logger.EventType, details string) {
@@ -55,4 +63,8 @@ func (s *Implementation) logMethodCall(method string, eventType event_logger.Eve
 	if err != nil {
 		handleLoggerError(method, err)
 	}
+}
+
+func handleLoggerError(method string, err error) {
+	log.Printf("[kafka producer] method: %s; error: %v", method, err)
 }
