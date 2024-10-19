@@ -1,8 +1,8 @@
 package server
 
 import (
+	pb "gitlab.ozon.dev/siralexpeter/Homework/internal/pvz-service/v1"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/service"
-	pb "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
 )
 
 type Implementation struct {

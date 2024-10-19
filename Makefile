@@ -1,6 +1,20 @@
-OUT_PATH:=$(CURDIR)/pkg
 LOCAL_BIN:=$(CURDIR)/bin
+LOCAL_IN:=$(CURDIR)/internal
+GO_KAFKA:=$(LOCAL_IN)/kafka
 DB_PORT:=5433
+
+get-mockgen:
+	GOBIN=$(LOCAL_BIN) go install github.com/gojuno/minimock/v3/cmd/minimock@latest
+
+sarama-async-prod-mock:
+	mkdir -p ${GO_KAFKA}/mocks
+	$(LOCAL_BIN)/minimock -i github.com/IBM/sarama.AsyncProducer -o  ${GO_KAFKA}/mocks/async_provider_mock.go
+
+test-kafka-logger:
+	#go test $(CURDIR)/internal/event_logger/kafka_logger
+	go test $(CURDIR)/internal/event_logger/kafka_logger -coverprofile=$(LOCAL_BIN)/coverage1
+	go tool cover -html $(LOCAL_BIN)/coverage1 -o $(LOCAL_BIN)/index.html
+
 
 get-protoc:
 	apt install -y protobuf-compiler
@@ -8,8 +22,8 @@ get-protoc:
 
 all: deps generate build run
 
-deps: .vendor-proto
-	docker-compose -f docker/docker-compose.yml up -d
+deps: #.vendor-proto
+	#docker-compose -f docker/docker-compose.yml up -d
 	GOBIN=$(LOCAL_BIN) go install github.com/pressly/goose/v3/cmd/goose@latest
 	GOBIN=$(LOCAL_BIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 	GOBIN=$(LOCAL_BIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
@@ -19,29 +33,28 @@ deps: .vendor-proto
 	GOBIN=$(LOCAL_BIN) go install github.com/rakyll/statik@latest
 
 generate:
-	touch ${OUT_PATH}
 	protoc --proto_path api --proto_path vendor.protogen \
-		--plugin=protoc-gen-go=$(LOCAL_BIN)/protoc-gen-go --go_out=${OUT_PATH} --go_opt=paths=source_relative \
-		--plugin=protoc-gen-go-grpc=$(LOCAL_BIN)/protoc-gen-go-grpc --go-grpc_out=${OUT_PATH} --go-grpc_opt=paths=source_relative \
-		--plugin=protoc-gen-grpc-gateway=$(LOCAL_BIN)/protoc-gen-grpc-gateway --grpc-gateway_out ${OUT_PATH} --grpc-gateway_opt paths=source_relative \
-		--plugin=protoc-gen-openapiv2=$(LOCAL_BIN)/protoc-gen-openapiv2 --openapiv2_out=${OUT_PATH} \
-		--plugin=protoc-gen-validate=$(LOCAL_BIN)/protoc-gen-validate --validate_out="lang=go,paths=source_relative:${OUT_PATH}" \
+		--plugin=protoc-gen-go=$(LOCAL_BIN)/protoc-gen-go --go_out=${LOCAL_IN} --go_opt=paths=source_relative \
+		--plugin=protoc-gen-go-grpc=$(LOCAL_BIN)/protoc-gen-go-grpc --go-grpc_out=${LOCAL_IN} --go-grpc_opt=paths=source_relative \
+		--plugin=protoc-gen-grpc-gateway=$(LOCAL_BIN)/protoc-gen-grpc-gateway --grpc-gateway_out ${LOCAL_IN} --grpc-gateway_opt paths=source_relative \
+		--plugin=protoc-gen-openapiv2=$(LOCAL_BIN)/protoc-gen-openapiv2 --openapiv2_out=${LOCAL_IN} \
+		--plugin=protoc-gen-validate=$(LOCAL_BIN)/protoc-gen-validate --validate_out="lang=go,paths=source_relative:${LOCAL_IN}" \
 		./api/pvz-service/v1/pvz_service.proto
 
 build:
-	$(LOCAL_BIN)/goose -dir $(CURDIR)/migrations postgres "postgres://postgres:postgres@localhost:$(DB_PORT)/postgres?sslmode=disable" up
+	#$(LOCAL_BIN)/goose -dir $(CURDIR)/migrations postgres "postgres://postgres:postgres@localhost:$(DB_PORT)/postgres?sslmode=disable" up
 	touch  $(LOCAL_BIN)
 	go build -o $(LOCAL_BIN)/pvz-service cmd/pvz_service/main.go
 	go build -o $(LOCAL_BIN)/pvz cmd/pvz_cli/main.go
 
 run:
-	docker-compose -f docker/docker-compose.yml start
+	#docker-compose -f docker/docker-compose.yml start
 	touch logs.txt
 	$(LOCAL_BIN)/pvz-service > logs.txt 2>&1 &
 	sleep 1
 	$(LOCAL_BIN)/pvz inter
 	pkill -SIGINT pvz-service
-	docker-compose -f docker/docker-compose.yml stop
+	#docker-compose -f docker/docker-compose.yml stop
 
 
 .vendor-proto: .vendor-proto/google/protobuf .vendor-proto/google/api .vendor-proto/protoc-gen-openapiv2/options .vendor-proto/validate

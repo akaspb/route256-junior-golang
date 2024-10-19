@@ -17,11 +17,11 @@ import (
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/kafka"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/middleware"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
+	desc "gitlab.ozon.dev/siralexpeter/Homework/internal/pvz-service/v1"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/server"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage/postgres"
-	desc "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -52,12 +52,7 @@ func main() {
 	}
 
 	now := time.Now().Truncate(24 * time.Hour)
-	pvzService, err := service.NewService(orderStorage, packService, now, now, viper.GetInt("program.worker_count"))
-	if err != nil {
-		fmt.Printf("error in main func: %v\n", err)
-		return
-	}
-	defer pvzService.Close()
+	pvzService := service.NewService(orderStorage, packService, now, now)
 
 	kafkaProducer, err := initProducer(kafka.Config{
 		Brokers: []string{viper.GetString("kafka_logger.broker")},

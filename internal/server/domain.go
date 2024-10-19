@@ -2,8 +2,8 @@ package server
 
 import (
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
+	pb "gitlab.ozon.dev/siralexpeter/Homework/internal/pvz-service/v1"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/service"
-	pb "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
