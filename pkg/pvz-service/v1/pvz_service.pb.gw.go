@@ -58,12 +58,29 @@ func local_request_PvzService_GiveOrders_0(ctx context.Context, marshaler runtim
 }
 
 var (
-	filter_PvzService_GetCustomerOrders_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_PvzService_GetCustomerOrders_0 = &utilities.DoubleArray{Encoding: map[string]int{"customer_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 )
 
 func request_PvzService_GetCustomerOrders_0(ctx context.Context, marshaler runtime.Marshaler, client PvzServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq GetCustomerOrdersRequest
 	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["customer_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "customer_id")
+	}
+
+	protoReq.CustomerId, err = runtime.Int64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "customer_id", err)
+	}
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -80,6 +97,23 @@ func request_PvzService_GetCustomerOrders_0(ctx context.Context, marshaler runti
 func local_request_PvzService_GetCustomerOrders_0(ctx context.Context, marshaler runtime.Marshaler, server PvzServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq GetCustomerOrdersRequest
 	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["customer_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "customer_id")
+	}
+
+	protoReq.CustomerId, err = runtime.Int64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "customer_id", err)
+	}
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -217,42 +251,6 @@ func local_request_PvzService_GetReturnedOrders_0(ctx context.Context, marshaler
 
 }
 
-var (
-	filter_PvzService_ChangeThreadCount_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
-func request_PvzService_ChangeThreadCount_0(ctx context.Context, marshaler runtime.Marshaler, client PvzServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ChangeThreadCountRequest
-	var metadata runtime.ServerMetadata
-
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_PvzService_ChangeThreadCount_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.ChangeThreadCount(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func local_request_PvzService_ChangeThreadCount_0(ctx context.Context, marshaler runtime.Marshaler, server PvzServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ChangeThreadCountRequest
-	var metadata runtime.ServerMetadata
-
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_PvzService_ChangeThreadCount_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := server.ChangeThreadCount(ctx, &protoReq)
-	return msg, metadata, err
-
-}
-
 // RegisterPvzServiceHandlerServer registers the http handlers for service PvzService to "mux".
 // UnaryRPC     :call PvzServiceServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
@@ -268,7 +266,7 @@ func RegisterPvzServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pvz.PvzService/GiveOrders", runtime.WithHTTPPathPattern("/GiveOrders"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pvz.PvzService/GiveOrders", runtime.WithHTTPPathPattern("/orders"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -293,7 +291,7 @@ func RegisterPvzServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pvz.PvzService/GetCustomerOrders", runtime.WithHTTPPathPattern("/GetCustomerOrders"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pvz.PvzService/GetCustomerOrders", runtime.WithHTTPPathPattern("/orders/{customer_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -318,7 +316,7 @@ func RegisterPvzServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pvz.PvzService/ReceiveOrder", runtime.WithHTTPPathPattern("/ReceiveOrder"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pvz.PvzService/ReceiveOrder", runtime.WithHTTPPathPattern("/orders"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -343,7 +341,7 @@ func RegisterPvzServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pvz.PvzService/RemoveOrder", runtime.WithHTTPPathPattern("/RemoveOrder"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pvz.PvzService/RemoveOrder", runtime.WithHTTPPathPattern("/orders"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -360,7 +358,7 @@ func RegisterPvzServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 
 	})
 
-	mux.Handle("POST", pattern_PvzService_ReturnOrder_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_PvzService_ReturnOrder_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -368,7 +366,7 @@ func RegisterPvzServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pvz.PvzService/ReturnOrder", runtime.WithHTTPPathPattern("/ReturnOrder"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pvz.PvzService/ReturnOrder", runtime.WithHTTPPathPattern("/orders/return"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -393,7 +391,7 @@ func RegisterPvzServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pvz.PvzService/GetReturnedOrders", runtime.WithHTTPPathPattern("/ReturnOrder"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pvz.PvzService/GetReturnedOrders", runtime.WithHTTPPathPattern("/orders/returns"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -407,31 +405,6 @@ func RegisterPvzServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		}
 
 		forward_PvzService_GetReturnedOrders_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("GET", pattern_PvzService_ChangeThreadCount_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pvz.PvzService/ChangeThreadCount", runtime.WithHTTPPathPattern("/ChangeThreadCount"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_PvzService_ChangeThreadCount_0(annotatedContext, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_PvzService_ChangeThreadCount_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -482,7 +455,7 @@ func RegisterPvzServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pvz.PvzService/GiveOrders", runtime.WithHTTPPathPattern("/GiveOrders"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pvz.PvzService/GiveOrders", runtime.WithHTTPPathPattern("/orders"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -504,7 +477,7 @@ func RegisterPvzServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pvz.PvzService/GetCustomerOrders", runtime.WithHTTPPathPattern("/GetCustomerOrders"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pvz.PvzService/GetCustomerOrders", runtime.WithHTTPPathPattern("/orders/{customer_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -526,7 +499,7 @@ func RegisterPvzServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pvz.PvzService/ReceiveOrder", runtime.WithHTTPPathPattern("/ReceiveOrder"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pvz.PvzService/ReceiveOrder", runtime.WithHTTPPathPattern("/orders"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -548,7 +521,7 @@ func RegisterPvzServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pvz.PvzService/RemoveOrder", runtime.WithHTTPPathPattern("/RemoveOrder"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pvz.PvzService/RemoveOrder", runtime.WithHTTPPathPattern("/orders"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -564,13 +537,13 @@ func RegisterPvzServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 
 	})
 
-	mux.Handle("POST", pattern_PvzService_ReturnOrder_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_PvzService_ReturnOrder_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pvz.PvzService/ReturnOrder", runtime.WithHTTPPathPattern("/ReturnOrder"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pvz.PvzService/ReturnOrder", runtime.WithHTTPPathPattern("/orders/return"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -592,7 +565,7 @@ func RegisterPvzServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pvz.PvzService/GetReturnedOrders", runtime.WithHTTPPathPattern("/ReturnOrder"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pvz.PvzService/GetReturnedOrders", runtime.WithHTTPPathPattern("/orders/returns"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -608,45 +581,21 @@ func RegisterPvzServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 
 	})
 
-	mux.Handle("GET", pattern_PvzService_ChangeThreadCount_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pvz.PvzService/ChangeThreadCount", runtime.WithHTTPPathPattern("/ChangeThreadCount"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_PvzService_ChangeThreadCount_0(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_PvzService_ChangeThreadCount_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
 	return nil
 }
 
 var (
-	pattern_PvzService_GiveOrders_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"GiveOrders"}, ""))
+	pattern_PvzService_GiveOrders_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"orders"}, ""))
 
-	pattern_PvzService_GetCustomerOrders_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"GetCustomerOrders"}, ""))
+	pattern_PvzService_GetCustomerOrders_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"orders", "customer_id"}, ""))
 
-	pattern_PvzService_ReceiveOrder_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"ReceiveOrder"}, ""))
+	pattern_PvzService_ReceiveOrder_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"orders"}, ""))
 
-	pattern_PvzService_RemoveOrder_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"RemoveOrder"}, ""))
+	pattern_PvzService_RemoveOrder_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"orders"}, ""))
 
-	pattern_PvzService_ReturnOrder_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"ReturnOrder"}, ""))
+	pattern_PvzService_ReturnOrder_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"orders", "return"}, ""))
 
-	pattern_PvzService_GetReturnedOrders_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"ReturnOrder"}, ""))
-
-	pattern_PvzService_ChangeThreadCount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"ChangeThreadCount"}, ""))
+	pattern_PvzService_GetReturnedOrders_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"orders", "returns"}, ""))
 )
 
 var (
@@ -661,6 +610,4 @@ var (
 	forward_PvzService_ReturnOrder_0 = runtime.ForwardResponseMessage
 
 	forward_PvzService_GetReturnedOrders_0 = runtime.ForwardResponseMessage
-
-	forward_PvzService_ChangeThreadCount_0 = runtime.ForwardResponseMessage
 )

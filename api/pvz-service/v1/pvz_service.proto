@@ -13,40 +13,35 @@ import "google/api/annotations.proto";
 service PvzService {
   rpc GiveOrders (GiveOrdersRequest) returns (GiveOrdersResponse) {
     option (google.api.http) = {
-      post: "/GiveOrders"
+      post: "/orders"
       body: "*"
     };
   }
   rpc GetCustomerOrders (GetCustomerOrdersRequest) returns (GetCustomerOrdersResponse) {
     option (google.api.http) = {
-      get: "/GetCustomerOrders"
+      get: "/orders/{customer_id}"
     };
   }
   rpc ReceiveOrder (ReceiveOrderRequest) returns (ReceiveOrderResponse) {
     option (google.api.http) = {
-      put: "/ReceiveOrder"
+      put: "/orders"
       body: "*"
     };
   }
   rpc RemoveOrder (RemoveOrderRequest) returns (RemoveOrderResponse) {
     option (google.api.http) = {
-      delete: "/RemoveOrder"
+      delete: "/orders"
     };
   }
   rpc ReturnOrder (ReturnOrderRequest) returns (ReturnOrderResponse) {
     option (google.api.http) = {
-      post: "/ReturnOrder"
+      put: "/orders/return"
       body: "*"
     };
   }
   rpc GetReturnedOrders (GetReturnedOrdersRequest) returns (GetReturnedOrdersResponse) {
     option (google.api.http) = {
-      get: "/ReturnOrder"
-    };
-  }
-  rpc ChangeThreadCount (ChangeThreadCountRequest) returns (ChangeThreadCountResponse) {
-    option (google.api.http) = {
-      get: "/ChangeThreadCount"
+      get: "/orders/returns"
     };
   }
 }
@@ -171,15 +166,4 @@ message ReturnedOrder {
 
 message GetReturnedOrdersResponse {
   repeated ReturnedOrder orders = 1;
-}
-
-message ChangeThreadCountRequest {
-  uint32 thread_count = 1 [
-    (validate.rules).uint32.gte = 1,
-    (google.api.field_behavior) = REQUIRED
-  ];
-}
-
-message ChangeThreadCountResponse {
-
 }

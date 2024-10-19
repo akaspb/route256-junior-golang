@@ -16,14 +16,14 @@
     "application/json"
   ],
   "paths": {
-    "/ChangeThreadCount": {
-      "get": {
-        "operationId": "PvzService_ChangeThreadCount",
+    "/orders": {
+      "delete": {
+        "operationId": "PvzService_RemoveOrder",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/pvzChangeThreadCountResponse"
+              "$ref": "#/definitions/pvzRemoveOrderResponse"
             }
           },
           "default": {
@@ -35,57 +35,17 @@
         },
         "parameters": [
           {
-            "name": "threadCount",
-            "in": "query",
-            "required": true,
-            "type": "integer",
-            "format": "int64"
-          }
-        ],
-        "tags": [
-          "PvzService"
-        ]
-      }
-    },
-    "/GetCustomerOrders": {
-      "get": {
-        "operationId": "PvzService_GetCustomerOrders",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/pvzGetCustomerOrdersResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "customerId",
+            "name": "orderId",
             "in": "query",
             "required": true,
             "type": "string",
             "format": "int64"
-          },
-          {
-            "name": "lastCount",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
           }
         ],
         "tags": [
           "PvzService"
         ]
-      }
-    },
-    "/GiveOrders": {
+      },
       "post": {
         "operationId": "PvzService_GiveOrders",
         "responses": {
@@ -115,9 +75,7 @@
         "tags": [
           "PvzService"
         ]
-      }
-    },
-    "/ReceiveOrder": {
+      },
       "put": {
         "operationId": "PvzService_ReceiveOrder",
         "responses": {
@@ -149,14 +107,14 @@
         ]
       }
     },
-    "/RemoveOrder": {
-      "delete": {
-        "operationId": "PvzService_RemoveOrder",
+    "/orders/return": {
+      "put": {
+        "operationId": "PvzService_ReturnOrder",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/pvzRemoveOrderResponse"
+              "$ref": "#/definitions/pvzReturnOrderResponse"
             }
           },
           "default": {
@@ -168,11 +126,12 @@
         },
         "parameters": [
           {
-            "name": "orderId",
-            "in": "query",
+            "name": "body",
+            "in": "body",
             "required": true,
-            "type": "string",
-            "format": "int64"
+            "schema": {
+              "$ref": "#/definitions/pvzReturnOrderRequest"
+            }
           }
         ],
         "tags": [
@@ -180,7 +139,7 @@
         ]
       }
     },
-    "/ReturnOrder": {
+    "/orders/returns": {
       "get": {
         "operationId": "PvzService_GetReturnedOrders",
         "responses": {
@@ -216,14 +175,16 @@
         "tags": [
           "PvzService"
         ]
-      },
-      "post": {
-        "operationId": "PvzService_ReturnOrder",
+      }
+    },
+    "/orders/{customerId}": {
+      "get": {
+        "operationId": "PvzService_GetCustomerOrders",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/pvzReturnOrderResponse"
+              "$ref": "#/definitions/pvzGetCustomerOrdersResponse"
             }
           },
           "default": {
@@ -235,12 +196,18 @@
         },
         "parameters": [
           {
-            "name": "body",
-            "in": "body",
+            "name": "customerId",
+            "in": "path",
             "required": true,
-            "schema": {
-              "$ref": "#/definitions/pvzReturnOrderRequest"
-            }
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "lastCount",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -258,9 +225,6 @@
         }
       },
       "additionalProperties": {}
-    },
-    "pvzChangeThreadCountResponse": {
-      "type": "object"
     },
     "pvzCustomerOrderInfo": {
       "type": "object",
