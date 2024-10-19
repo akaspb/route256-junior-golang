@@ -37,6 +37,7 @@ func main() {
 	pool, err := pgxpool.Connect(ctx, getPostgresDSN())
 	if err != nil {
 		fmt.Printf("error in main func: %v\n", err)
+		fmt.Printf("error in main func: %v\n", err)
 		return
 	}
 	defer pool.Close()
@@ -58,16 +59,14 @@ func main() {
 	defer pvzService.Close()
 
 	kafkaProducer, err := initProducer(kafka.Config{
-		Brokers: []string{viper.GetString("kafka.broker")},
+		Brokers: []string{viper.GetString("kafka_logger.broker")},
 	})
 	if err != nil {
 		fmt.Printf("failed to init kafka producer: %v", err)
 		return
 	}
 
-	kafkaEventLogger := kafka.NewTopicSender(kafkaProducer, viper.GetString("kafka.topic"))
-	eventFactory := event_factory.NewDefaultFactory(1)
-	pvzServer := server.NewImplementation(pvzService, kafkaEventLogger, eventFactory)
+	pvzServer := server.NewImplementation(pvzService)
 
 	lis, err := net.Listen("tcp", viper.GetString("grpc.host"))
 	if err != nil {
@@ -75,8 +74,16 @@ func main() {
 		return
 	}
 
+	kafkaEventLogger := kafka.NewTopicSender(kafkaProducer, viper.GetString("kafka_logger.topic"))
+	eventFactory := event_factory.NewDefaultFactory(1)
+	remoteLogging := middleware.GetRemoteLogging(
+		kafkaEventLogger,
+		eventFactory,
+		viper.GetStringSlice("kafka_logger.methods"),
+	)
+
 	grpcServer := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(middleware.Logging),
+		grpc.ChainUnaryInterceptor(middleware.LocalLogging, remoteLogging),
 	)
 	reflection.Register(grpcServer)
 	desc.RegisterPvzServiceServer(grpcServer, pvzServer)

@@ -34,7 +34,7 @@ func NewDefaultFactory(startIDValue int64) *Factory {
 	return NewFactory(NewSerialIDGen(startIDValue), NewClockGen())
 }
 
-func (f *Factory) Create(eventType event_logger.EventType, details string) (event_logger.Event, error) {
+func (f *Factory) Create(eventType event_logger.EventType, details any) (event_logger.Event, error) {
 	return event_logger.Event{
 		ID:        f.idGenerator.Generate(),
 		Type:      eventType,

@@ -6,6 +6,7 @@ require (
 	github.com/IBM/sarama v1.43.3
 	github.com/envoyproxy/protoc-gen-validate v1.1.0
 	github.com/georgysavva/scany v1.2.2
+	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.22.0
 	github.com/jackc/pgconn v1.14.3
 	github.com/jackc/pgx/v4 v4.18.3

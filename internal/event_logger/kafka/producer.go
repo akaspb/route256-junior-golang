@@ -14,7 +14,7 @@ func NewAsyncProducer(conf Config, opts ...Option) (sarama.AsyncProducer, error)
 
 	asyncProducer, err := sarama.NewAsyncProducer(conf.Brokers, config)
 	if err != nil {
-		return nil, fmt.Errorf("NewSyncProducer failed: %w", err)
+		return nil, fmt.Errorf("NewAsyncProducer failed: %w", err)
 	}
 
 	return asyncProducer, nil
