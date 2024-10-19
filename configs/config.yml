@@ -9,9 +9,6 @@ db:
   dbname: "postgres"
   sslmode: "disable"
 
-program:
-  worker_count: 2
-
 kafka_logger:
   broker: "localhost:9092"
   topic: "pvz.events-log"
