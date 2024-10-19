@@ -11,7 +11,7 @@ sarama-async-prod-mock:
 	$(LOCAL_BIN)/minimock -i github.com/IBM/sarama.AsyncProducer -o  ${GO_KAFKA}/mocks/async_provider_mock.go
 
 test-kafka-logger:
-	#go test $(CURDIR)/internal/event_logger/kafka_logger
+	go test $(CURDIR)/internal/event_logger/kafka_logger
 	go test $(CURDIR)/internal/event_logger/kafka_logger -coverprofile=$(LOCAL_BIN)/coverage1
 	go tool cover -html $(LOCAL_BIN)/coverage1 -o $(LOCAL_BIN)/index.html
 
@@ -22,8 +22,8 @@ get-protoc:
 
 all: deps generate build run
 
-deps: #.vendor-proto
-	#docker-compose -f docker/docker-compose.yml up -d
+deps: .vendor-proto
+	docker-compose -f docker/docker-compose.yml up -d
 	GOBIN=$(LOCAL_BIN) go install github.com/pressly/goose/v3/cmd/goose@latest
 	GOBIN=$(LOCAL_BIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 	GOBIN=$(LOCAL_BIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
@@ -42,7 +42,7 @@ generate:
 		./api/pvz-service/v1/pvz_service.proto
 
 build:
-	#$(LOCAL_BIN)/goose -dir $(CURDIR)/migrations postgres "postgres://postgres:postgres@localhost:$(DB_PORT)/postgres?sslmode=disable" up
+	$(LOCAL_BIN)/goose -dir $(CURDIR)/migrations postgres "postgres://postgres:postgres@localhost:$(DB_PORT)/postgres?sslmode=disable" up
 	touch  $(LOCAL_BIN)
 	go build -o $(LOCAL_BIN)/pvz-service cmd/pvz_service/main.go
 	go build -o $(LOCAL_BIN)/pvz cmd/pvz_cli/main.go
