@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/event_logger/kafka_logger"
 	"net"
 	"os"
 	"os/signal"
@@ -74,7 +75,7 @@ func main() {
 		return
 	}
 
-	kafkaEventLogger := kafka.NewTopicSender(kafkaProducer, viper.GetString("kafka_logger.topic"))
+	kafkaEventLogger := kafka_logger.NewKafkaLogger(kafkaProducer, viper.GetString("kafka_logger.topic"))
 	eventFactory := event_factory.NewDefaultFactory(1)
 	remoteLogging := middleware.GetRemoteLogging(
 		kafkaEventLogger,
