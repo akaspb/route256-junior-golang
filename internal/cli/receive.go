@@ -2,16 +2,17 @@ package cli
 
 import (
 	"fmt"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
-	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
+	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/internal/pvz-service/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-func getReceiveCmd(client pvz_service.PvzServiceClient) *cobra.Command {
+func getReceiveCmd(client pvz_service.PvzServiceClient, packService *packaging.Packaging) *cobra.Command {
 	var receiveCli = &cobra.Command{
 		Use:     "receive",
 		Short:   "Receive order from courier to PVZ",
@@ -115,23 +116,19 @@ func getReceiveCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 		},
 	})
 
-	packNames := []string{"packet", "box", "wrap"}
-	packs := make([]string, len(packNames))
-	for _, packName := range packNames {
-		packs = append(packs, fmt.Sprintf("\n\t - %s", packName))
-	}
+	var usage strings.Builder
+	usage.WriteString("packaging name:")
 
-	packagingUsage := strings.Join(packs, "")
+	for _, pack := range packService.GetAllPacks() {
+		usage.WriteString(fmt.Sprintf("\n\t - %s", pack.Name))
+	}
 
 	receiveCli.Flags().Int64P("order", "o", 0, "unique order ID")
 	receiveCli.Flags().Float32P("money", "m", 0, "order cost")
 	receiveCli.Flags().Float32P("weight", "w", 0, "order weight")
 	receiveCli.Flags().Int64P("customer", "c", 0, "unique customer ID")
 	receiveCli.Flags().StringP("expiry", "e", "", "expiry time in format DD.MM.YYYY")
-	receiveCli.Flags().StringP("pack", "p", "", fmt.Sprintf(
-		"packaging name: %s",
-		packagingUsage,
-	))
+	receiveCli.Flags().StringP("pack", "p", "", usage.String())
 
 	return receiveCli
 }

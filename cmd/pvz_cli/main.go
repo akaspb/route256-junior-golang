@@ -10,7 +10,8 @@ import (
 
 	"github.com/spf13/viper"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/cli"
-	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
+	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/internal/pvz-service/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -25,14 +26,23 @@ func main() {
 		return
 	}
 
-	conn, err := grpc.NewClient(viper.GetString("grpc.host"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(
+		viper.GetString("grpc.host"),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 	if err != nil {
 		log.Fatalf("failed to create grpc client: %v", err)
 	}
 	defer conn.Close()
 
 	pvzClient := pvz_service.NewPvzServiceClient(conn)
-	pvzCmd := cli.NewCliService(pvzClient)
+	packService, err := packaging.NewPackaging()
+	if err != nil {
+		fmt.Printf("error during starting packing service: %v\n", err)
+		return
+	}
+
+	pvzCmd := cli.NewCliService(pvzClient, packService)
 
 	go func() {
 		if err := pvzCmd.Execute(ctx); err != nil {

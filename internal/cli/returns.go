@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
+	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/internal/pvz-service/v1"
 )
 
 func getReturnsCmd(client pvz_service.PvzServiceClient) *cobra.Command {

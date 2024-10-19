@@ -2,9 +2,10 @@ package kafka_logger
 
 import (
 	"encoding/json"
+	"strconv"
+
 	"github.com/IBM/sarama"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/event_logger"
-	"strconv"
 )
 
 type KafkaLogger struct {

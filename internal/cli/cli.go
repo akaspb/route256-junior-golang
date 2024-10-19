@@ -5,29 +5,31 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
+	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/internal/pvz-service/v1"
 	"google.golang.org/grpc/status"
 )
 
 type CliService struct {
-	client  pvz_service.PvzServiceClient
-	rootCli *cobra.Command
+	client      pvz_service.PvzServiceClient
+	packService *packaging.Packaging
+	rootCli     *cobra.Command
 }
 
-func NewCliService(client pvz_service.PvzServiceClient) *CliService {
+func NewCliService(client pvz_service.PvzServiceClient, packService *packaging.Packaging) *CliService {
 	c := &CliService{
-		client: client,
+		client:      client,
+		packService: packService,
 	}
 
 	c.rootCli = getRootCli()
 	c.rootCli.AddCommand(getGiveCmd(client))
 	c.rootCli.AddCommand(getInterCmd(c.rootCli))
 	c.rootCli.AddCommand(getListCmd(client))
-	c.rootCli.AddCommand(getReceiveCmd(client))
+	c.rootCli.AddCommand(getReceiveCmd(client, c.packService))
 	c.rootCli.AddCommand(getRemoveCmd(client))
 	c.rootCli.AddCommand(getReturnCmd(client))
 	c.rootCli.AddCommand(getReturnsCmd(client))
-	c.rootCli.AddCommand(getThreadsCmd(client))
 
 	return c
 }

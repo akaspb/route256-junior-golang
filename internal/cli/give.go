@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
-	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/pkg/pvz-service/v1"
+	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/internal/pvz-service/v1"
 )
 
 func getGiveCmd(client pvz_service.PvzServiceClient) *cobra.Command {
@@ -48,7 +48,7 @@ func getGiveCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 			maxPackageNameLen := len("Pack")
 			for _, order := range response.GetOrders() {
 				maxMsgLen = max(maxMsgLen, len(order.GetMessage()))
-				maxPackageNameLen = max(maxPackageNameLen, len(order.GetPacking()))
+				maxPackageNameLen = max(maxPackageNameLen, len(order.OrderInfo.GetPacking()))
 			}
 
 			if len(response.GetOrders()) == 0 {
@@ -64,12 +64,16 @@ func getGiveCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 
 			for _, order := range response.GetOrders() {
 				give := "NO"
-				if order.GetOkToGive() {
+				if order.GetGiveable() {
 					give = "YES"
 				}
 				fmt.Printf(
 					"%8v|%4s|%-"+strconv.Itoa(maxMsgLen)+"s|%-"+strconv.Itoa(maxPackageNameLen)+"s|%v\n",
-					order.GetOrderId(), give, order.GetMessage(), order.GetPacking(), order.Cost)
+					order.OrderInfo.GetOrderId(),
+					give, order.GetMessage(),
+					order.OrderInfo.GetPacking(),
+					order.OrderInfo.GetCost(),
+				)
 			}
 		},
 	}

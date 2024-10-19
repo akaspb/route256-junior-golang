@@ -37,8 +37,7 @@ func main() {
 
 	pool, err := pgxpool.Connect(ctx, getPostgresDSN())
 	if err != nil {
-		fmt.Printf("error in main func: %v\n", err)
-		fmt.Printf("error in main func: %v\n", err)
+		fmt.Printf("error during creating a new db pool: %v\n", err)
 		return
 	}
 	defer pool.Close()
@@ -47,7 +46,7 @@ func main() {
 
 	packService, err := packaging.NewPackaging()
 	if err != nil {
-		fmt.Printf("error in main func: %v\n", err)
+		fmt.Printf("error during starting packing service: %v\n", err)
 		return
 	}
 
