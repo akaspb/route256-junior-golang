@@ -101,7 +101,10 @@ func main() {
 
 	kafkaProducer.AsyncClose()
 	<-kafkaProducer.Successes()
-	<-kafkaProducer.Errors()
+
+	for kafkaErr := range kafkaProducer.Errors() {
+		fmt.Printf("kafka error: %v\n", kafkaErr.Err)
+	}
 
 	grpcServer.GracefulStop()
 }
@@ -137,7 +140,7 @@ func initProducer(config kafka.Config) (sarama.AsyncProducer, error) {
 	return kafka.NewAsyncProducer(config,
 		kafka.WithMaxRetries(5),
 		kafka.WithRetryBackoff(10*time.Millisecond),
-		kafka.WithProducerFlushMessages(3),
-		kafka.WithProducerFlushFrequency(1*time.Second),
+		kafka.WithProducerFlushMessages(2),
+		kafka.WithProducerFlushFrequency(500*time.Millisecond),
 	)
 }
