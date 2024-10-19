@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"gitlab.ozon.dev/siralexpeter/Homework/internal/event_logger/kafka_logger"
 	"net"
 	"os"
 	"os/signal"
@@ -14,7 +13,8 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/spf13/viper"
 	event_factory "gitlab.ozon.dev/siralexpeter/Homework/internal/event_logger/factory"
-	"gitlab.ozon.dev/siralexpeter/Homework/internal/event_logger/kafka"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/event_logger/kafka_logger"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/kafka"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/middleware"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/server"
