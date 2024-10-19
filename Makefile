@@ -48,7 +48,7 @@ build:
 	go build -o $(LOCAL_BIN)/pvz cmd/pvz_cli/main.go
 
 run:
-	#docker-compose -f docker/docker-compose.yml start
+	docker-compose -f docker/docker-compose.yml start
 	touch logs.txt
 	$(LOCAL_BIN)/pvz-service > logs.txt 2>&1 &
 	sleep 1
