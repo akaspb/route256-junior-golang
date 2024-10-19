@@ -175,6 +175,111 @@ var _ interface {
 	ErrorName() string
 } = GiveOrdersRequestValidationError{}
 
+// Validate checks the field values on OrderInfo with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *OrderInfo) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on OrderInfo with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in OrderInfoMultiError, or nil
+// if none found.
+func (m *OrderInfo) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *OrderInfo) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for OrderId
+
+	// no validation rules for Cost
+
+	// no validation rules for Packing
+
+	if len(errors) > 0 {
+		return OrderInfoMultiError(errors)
+	}
+
+	return nil
+}
+
+// OrderInfoMultiError is an error wrapping multiple validation errors returned
+// by OrderInfo.ValidateAll() if the designated constraints aren't met.
+type OrderInfoMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m OrderInfoMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m OrderInfoMultiError) AllErrors() []error { return m }
+
+// OrderInfoValidationError is the validation error returned by
+// OrderInfo.Validate if the designated constraints aren't met.
+type OrderInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e OrderInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e OrderInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e OrderInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e OrderInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e OrderInfoValidationError) ErrorName() string { return "OrderInfoValidationError" }
+
+// Error satisfies the builtin error interface
+func (e OrderInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sOrderInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = OrderInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = OrderInfoValidationError{}
+
 // Validate checks the field values on OrderToGiveInfo with the rules defined
 // in the proto definition for this message. If any rules are violated, the
 // first error encountered is returned, or nil if there are no violations.
@@ -197,11 +302,34 @@ func (m *OrderToGiveInfo) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for OrderId
-
-	// no validation rules for Cost
-
-	// no validation rules for Packing
+	if all {
+		switch v := interface{}(m.GetOrderInfo()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, OrderToGiveInfoValidationError{
+					field:  "OrderInfo",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, OrderToGiveInfoValidationError{
+					field:  "OrderInfo",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetOrderInfo()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return OrderToGiveInfoValidationError{
+				field:  "OrderInfo",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	// no validation rules for Message
 
@@ -571,11 +699,36 @@ func (m *CustomerOrderInfo) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for OrderId
+	if all {
+		switch v := interface{}(m.GetOrderInfo()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CustomerOrderInfoValidationError{
+					field:  "OrderInfo",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CustomerOrderInfoValidationError{
+					field:  "OrderInfo",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetOrderInfo()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CustomerOrderInfoValidationError{
+				field:  "OrderInfo",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	// no validation rules for Weight
-
-	// no validation rules for Cost
 
 	if all {
 		switch v := interface{}(m.GetExpiry()).(type) {
@@ -607,8 +760,6 @@ func (m *CustomerOrderInfo) validate(all bool) error {
 	}
 
 	// no validation rules for Expired
-
-	// no validation rules for Packing
 
 	if len(errors) > 0 {
 		return CustomerOrderInfoMultiError(errors)

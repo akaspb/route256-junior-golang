@@ -58,12 +58,16 @@ message GiveOrdersRequest {
   ];
 }
 
-message OrderToGiveInfo {
+message OrderInfo {
     int64 order_id = 1;
     float cost = 2;
-    string packing = 3;
-    string message = 4;
-    bool giveable = 5;
+    string packing = 6;
+}
+
+message OrderToGiveInfo {
+    OrderInfo order_info = 1;
+    string message = 2;
+    bool giveable = 3;
 }
 
 message GiveOrdersResponse {
@@ -82,12 +86,10 @@ message GetCustomerOrdersRequest {
 }
 
 message CustomerOrderInfo {
-  int64 order_id = 1;
+  OrderInfo order_info = 1;
   float weight = 2;
-  float cost = 3;
-  google.protobuf.Timestamp expiry = 4;
-  bool expired = 5;
-  string packing = 6;
+  google.protobuf.Timestamp expiry = 3;
+  bool expired = 4;
 }
 
 message GetCustomerOrdersResponse {

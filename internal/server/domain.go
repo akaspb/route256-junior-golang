@@ -33,9 +33,11 @@ func floatToWeightType(weight float32) models.WeightType {
 
 func orderIDWithMsgToOrderToGiveInfo(order service.OrderIDWithMsg) pb.OrderToGiveInfo {
 	return pb.OrderToGiveInfo{
-		OrderId:  idTypeToInt64(order.ID),
-		Cost:     costTypeToFloat(order.Cost),
-		Packing:  order.Package,
+		OrderInfo: &pb.OrderInfo{
+			OrderId: idTypeToInt64(order.ID),
+			Cost:    costTypeToFloat(order.Cost),
+			Packing: order.Package,
+		},
 		Message:  order.Msg,
 		Giveable: order.Ok,
 	}
@@ -43,12 +45,14 @@ func orderIDWithMsgToOrderToGiveInfo(order service.OrderIDWithMsg) pb.OrderToGiv
 
 func orderIDWithExpiryAndStatusToCustomerOrderInfo(order service.OrderIDWithExpiryAndStatus) pb.CustomerOrderInfo {
 	return pb.CustomerOrderInfo{
-		OrderId: idTypeToInt64(order.ID),
+		OrderInfo: &pb.OrderInfo{
+			OrderId: idTypeToInt64(order.ID),
+			Cost:    costTypeToFloat(order.Cost),
+			Packing: order.Package,
+		},
 		Weight:  weightTypeToFloat(order.Weight),
-		Cost:    costTypeToFloat(order.Cost),
 		Expiry:  timestamppb.New(order.Expiry),
 		Expired: order.Expired,
-		Packing: order.Package,
 	}
 }
 

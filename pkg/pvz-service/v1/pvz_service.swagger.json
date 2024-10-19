@@ -229,15 +229,10 @@
     "pvzCustomerOrderInfo": {
       "type": "object",
       "properties": {
-        "orderId": {
-          "type": "string",
-          "format": "int64"
+        "orderInfo": {
+          "$ref": "#/definitions/pvzOrderInfo"
         },
         "weight": {
-          "type": "number",
-          "format": "float"
-        },
-        "cost": {
           "type": "number",
           "format": "float"
         },
@@ -247,9 +242,6 @@
         },
         "expired": {
           "type": "boolean"
-        },
-        "packing": {
-          "type": "string"
         }
       }
     },
@@ -309,7 +301,7 @@
         }
       }
     },
-    "pvzOrderToGiveInfo": {
+    "pvzOrderInfo": {
       "type": "object",
       "properties": {
         "orderId": {
@@ -322,6 +314,14 @@
         },
         "packing": {
           "type": "string"
+        }
+      }
+    },
+    "pvzOrderToGiveInfo": {
+      "type": "object",
+      "properties": {
+        "orderInfo": {
+          "$ref": "#/definitions/pvzOrderInfo"
         },
         "message": {
           "type": "string"
