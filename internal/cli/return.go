@@ -7,7 +7,7 @@ import (
 	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/internal/pvz-service/v1"
 )
 
-func getReturnCmd(client pvz_service.PvzServiceClient) *cobra.Command {
+func GetReturnCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 	var returnCli = &cobra.Command{
 		Use:     "return",
 		Short:   "Get order from customer to return",

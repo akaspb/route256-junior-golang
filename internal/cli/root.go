@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func getRootCli() *cobra.Command {
+func GetRootCli() *cobra.Command {
 	return &cobra.Command{
 		Use:   "pvz",
 		Short: "pvz is program for implementing the interaction of the PVZ manager with the courier and the customer",

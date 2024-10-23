@@ -12,7 +12,7 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-func getReceiveCmd(client pvz_service.PvzServiceClient, packService *packaging.Packaging) *cobra.Command {
+func GetReceiveCmd(client pvz_service.PvzServiceClient, packService *packaging.Packaging) *cobra.Command {
 	var receiveCli = &cobra.Command{
 		Use:     "receive",
 		Short:   "Receive order from courier to PVZ",

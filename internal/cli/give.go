@@ -8,7 +8,7 @@ import (
 	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/internal/pvz-service/v1"
 )
 
-func getGiveCmd(client pvz_service.PvzServiceClient) *cobra.Command {
+func GetGiveCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 	var giveCli = &cobra.Command{
 		Use:     "give",
 		Short:   "Give orders by their ids from PVZ to customer",

@@ -5,29 +5,25 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
-	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/internal/pvz-service/v1"
 	"google.golang.org/grpc/status"
 )
 
+func AddInterToRoot(root *cobra.Command) {
+	root.AddCommand(getInterCmd(root))
+}
+
 type CliService struct {
-	client  pvz_service.PvzServiceClient
 	rootCli *cobra.Command
 }
 
-func NewCliService(client pvz_service.PvzServiceClient, packService *packaging.Packaging) *CliService {
+func NewCliService(root *cobra.Command, cmds ...*cobra.Command) *CliService {
 	c := &CliService{
-		client: client,
+		rootCli: root,
 	}
 
-	c.rootCli = getRootCli()
-	c.rootCli.AddCommand(getGiveCmd(client))
-	c.rootCli.AddCommand(getInterCmd(c.rootCli))
-	c.rootCli.AddCommand(getListCmd(client))
-	c.rootCli.AddCommand(getReceiveCmd(client, packService))
-	c.rootCli.AddCommand(getRemoveCmd(client))
-	c.rootCli.AddCommand(getReturnCmd(client))
-	c.rootCli.AddCommand(getReturnsCmd(client))
+	for _, cmd := range cmds {
+		c.rootCli.AddCommand(cmd)
+	}
 
 	return c
 }

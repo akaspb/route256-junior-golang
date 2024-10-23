@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-func getListCmd(client pvz_service.PvzServiceClient) *cobra.Command {
+func GetListCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 	var listCli = &cobra.Command{
 		Use:     "list",
 		Short:   "Get customer orders, which are contained in PVZ now",

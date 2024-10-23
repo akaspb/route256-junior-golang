@@ -42,7 +42,7 @@ func main() {
 		return
 	}
 
-	pvzCmd := cli.NewCliService(pvzClient, packService)
+	pvzCmd := initCliService(pvzClient, packService)
 
 	go func() {
 		if err := pvzCmd.Execute(ctx); err != nil {
@@ -62,4 +62,19 @@ func initConfig() error {
 	viper.AddConfigPath("configs")
 	viper.SetConfigName("config")
 	return viper.ReadInConfig()
+}
+
+func initCliService(pvzClient pvz_service.PvzServiceClient, packService *packaging.Packaging) *cli.CliService {
+	root := cli.GetRootCli()
+	cli.AddInterToRoot(root)
+
+	return cli.NewCliService(
+		root,
+		cli.GetGiveCmd(pvzClient),
+		cli.GetListCmd(pvzClient),
+		cli.GetReceiveCmd(pvzClient, packService),
+		cli.GetRemoveCmd(pvzClient),
+		cli.GetReturnCmd(pvzClient),
+		cli.GetReturnsCmd(pvzClient),
+	)
 }

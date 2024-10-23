@@ -8,7 +8,7 @@ import (
 	pvz_service "gitlab.ozon.dev/siralexpeter/Homework/internal/pvz-service/v1"
 )
 
-func getRemoveCmd(client pvz_service.PvzServiceClient) *cobra.Command {
+func GetRemoveCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 	var removeCli = &cobra.Command{
 		Use:     "remove",
 		Short:   "Return order from PVZ to courier",
