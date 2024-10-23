@@ -11,22 +11,20 @@ import (
 )
 
 type CliService struct {
-	client      pvz_service.PvzServiceClient
-	packService *packaging.Packaging
-	rootCli     *cobra.Command
+	client  pvz_service.PvzServiceClient
+	rootCli *cobra.Command
 }
 
 func NewCliService(client pvz_service.PvzServiceClient, packService *packaging.Packaging) *CliService {
 	c := &CliService{
-		client:      client,
-		packService: packService,
+		client: client,
 	}
 
 	c.rootCli = getRootCli()
 	c.rootCli.AddCommand(getGiveCmd(client))
 	c.rootCli.AddCommand(getInterCmd(c.rootCli))
 	c.rootCli.AddCommand(getListCmd(client))
-	c.rootCli.AddCommand(getReceiveCmd(client, c.packService))
+	c.rootCli.AddCommand(getReceiveCmd(client, packService))
 	c.rootCli.AddCommand(getRemoveCmd(client))
 	c.rootCli.AddCommand(getReturnCmd(client))
 	c.rootCli.AddCommand(getReturnsCmd(client))
