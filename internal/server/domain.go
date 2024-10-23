@@ -37,6 +37,7 @@ func orderIDWithMsgToOrderToGiveInfo(order service.OrderIDWithMsg) pb.OrderToGiv
 			OrderId: idTypeToInt64(order.ID),
 			Cost:    costTypeToFloat(order.Cost),
 			Packing: order.Package,
+			Weight:  weightTypeToFloat(order.Weight),
 		},
 		Message:  order.Msg,
 		Giveable: order.Ok,
@@ -49,8 +50,8 @@ func orderIDWithExpiryAndStatusToCustomerOrderInfo(order service.OrderIDWithExpi
 			OrderId: idTypeToInt64(order.ID),
 			Cost:    costTypeToFloat(order.Cost),
 			Packing: order.Package,
+			Weight:  weightTypeToFloat(order.Weight),
 		},
-		Weight:  weightTypeToFloat(order.Weight),
 		Expiry:  timestamppb.New(order.Expiry),
 		Expired: order.Expired,
 	}

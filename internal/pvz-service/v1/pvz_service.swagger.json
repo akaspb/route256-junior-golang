@@ -232,10 +232,6 @@
         "orderInfo": {
           "$ref": "#/definitions/pvzOrderInfo"
         },
-        "weight": {
-          "type": "number",
-          "format": "float"
-        },
         "expiry": {
           "type": "string",
           "format": "date-time"
@@ -314,6 +310,10 @@
         },
         "packing": {
           "type": "string"
+        },
+        "weight": {
+          "type": "number",
+          "format": "float"
         }
       }
     },

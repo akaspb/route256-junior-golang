@@ -48,7 +48,7 @@ func getGiveCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 			maxPackageNameLen := len("Pack")
 			for _, order := range response.GetOrders() {
 				maxMsgLen = max(maxMsgLen, len(order.GetMessage()))
-				maxPackageNameLen = max(maxPackageNameLen, len(order.OrderInfo.GetPacking()))
+				maxPackageNameLen = max(maxPackageNameLen, len(order.GetOrderInfo().GetPacking()))
 			}
 
 			if len(response.GetOrders()) == 0 {
@@ -56,7 +56,7 @@ func getGiveCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 			}
 
 			fmt.Printf(
-				"%8s|Give|%-"+strconv.Itoa(maxMsgLen)+"s|%"+strconv.Itoa(maxPackageNameLen)+"s|Cost\n",
+				"%8s|Give|%-"+strconv.Itoa(maxMsgLen)+"s|Weight|%"+strconv.Itoa(maxPackageNameLen)+"s|Cost\n",
 				"ID",
 				"Message",
 				"Pack",
@@ -68,11 +68,12 @@ func getGiveCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 					give = "YES"
 				}
 				fmt.Printf(
-					"%8v|%4s|%-"+strconv.Itoa(maxMsgLen)+"s|%-"+strconv.Itoa(maxPackageNameLen)+"s|%v\n",
-					order.OrderInfo.GetOrderId(),
+					"%8v|%4s|%-"+strconv.Itoa(maxMsgLen)+"s|%6.2f|%-"+strconv.Itoa(maxPackageNameLen)+"s|%v\n",
+					order.GetOrderInfo().GetOrderId(),
 					give, order.GetMessage(),
-					order.OrderInfo.GetPacking(),
-					order.OrderInfo.GetCost(),
+					order.GetOrderInfo().GetWeight(),
+					order.GetOrderInfo().GetPacking(),
+					order.GetOrderInfo().GetCost(),
 				)
 			}
 		},

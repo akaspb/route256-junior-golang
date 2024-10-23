@@ -46,6 +46,7 @@ type OrderIDWithMsg struct {
 	Package string
 	Msg     string
 	Ok      bool
+	Weight  models.WeightType
 }
 
 type OrderIDWithExpiryAndStatus struct {
@@ -208,6 +209,7 @@ func (s *Service) getCustomerOrderIDWithMsg(ctx context.Context, orderID, custom
 			Package: packagingName,
 			Msg:     "Order was given to customer earlier",
 			Ok:      false,
+			Weight:  order.Weight,
 		}, nil
 	case models.StatusReturn:
 		return OrderIDWithMsg{
@@ -216,6 +218,7 @@ func (s *Service) getCustomerOrderIDWithMsg(ctx context.Context, orderID, custom
 			Package: packagingName,
 			Msg:     "Order was returned to PVZ by customer",
 			Ok:      false,
+			Weight:  order.Weight,
 		}, nil
 	case models.StatusToStorage:
 		if isLessOrEqualTime(currTime, order.Expiry) {
@@ -225,6 +228,7 @@ func (s *Service) getCustomerOrderIDWithMsg(ctx context.Context, orderID, custom
 				Package: packagingName,
 				Msg:     "Give order to customer",
 				Ok:      true,
+				Weight:  order.Weight,
 			}, nil
 		} else {
 			return OrderIDWithMsg{
@@ -233,6 +237,7 @@ func (s *Service) getCustomerOrderIDWithMsg(ctx context.Context, orderID, custom
 				Package: packagingName,
 				Msg:     "Order expiry time was reached",
 				Ok:      false,
+				Weight:  order.Weight,
 			}, nil
 		}
 	default: // if some unknown status

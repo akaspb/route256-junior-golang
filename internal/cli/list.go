@@ -56,10 +56,10 @@ func getListCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 
 			maxPackageNameLen := len("Pack")
 			for _, order := range response.GetOrders() {
-				maxPackageNameLen = max(maxPackageNameLen, len(order.OrderInfo.GetPacking()))
+				maxPackageNameLen = max(maxPackageNameLen, len(order.GetOrderInfo().GetPacking()))
 			}
 
-			fmt.Printf("%8s|    Expiry|Expired|%"+strconv.Itoa(maxPackageNameLen)+"s|Cost\n", "ID", "Pack")
+			fmt.Printf("%8s|    Expiry|Expired|Weight|%"+strconv.Itoa(maxPackageNameLen)+"s|Cost\n", "ID", "Pack")
 
 			for _, order := range response.GetOrders() {
 				expired := "NO"
@@ -68,12 +68,13 @@ func getListCmd(client pvz_service.PvzServiceClient) *cobra.Command {
 				}
 
 				fmt.Printf(
-					"%8v|%-10s|%7s|%"+strconv.Itoa(maxPackageNameLen)+"s|%v\n",
-					order.OrderInfo.GetOrderId(),
+					"%8v|%-10s|%7s|%6.2f|%"+strconv.Itoa(maxPackageNameLen)+"s|%v\n",
+					order.GetOrderInfo().GetOrderId(),
 					order.GetExpiry().AsTime().Format("02.01.2006"),
 					expired,
-					order.OrderInfo.GetPacking(),
-					order.OrderInfo.GetCost(),
+					order.GetOrderInfo().GetWeight(),
+					order.GetOrderInfo().GetPacking(),
+					order.GetOrderInfo().GetCost(),
 				)
 			}
 		},

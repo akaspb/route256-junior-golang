@@ -203,6 +203,8 @@ func (m *OrderInfo) validate(all bool) error {
 
 	// no validation rules for Packing
 
+	// no validation rules for Weight
+
 	if len(errors) > 0 {
 		return OrderInfoMultiError(errors)
 	}
@@ -727,8 +729,6 @@ func (m *CustomerOrderInfo) validate(all bool) error {
 			}
 		}
 	}
-
-	// no validation rules for Weight
 
 	if all {
 		switch v := interface{}(m.GetExpiry()).(type) {
