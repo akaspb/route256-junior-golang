@@ -69,7 +69,10 @@ func main() {
 		return
 	}
 
-	kafkaEventLogger := kafka_logger.NewKafkaLogger(kafkaProducer, viper.GetString("kafka_logger.topic"))
+	kafkaEventLogger := kafka_logger.NewKafkaLogger(
+		kafka.NewProducerWrapper(kafkaProducer),
+		viper.GetString("kafka_logger.topic"),
+	)
 	eventFactory := event_factory.NewDefaultFactory(1)
 	remoteLogging := middleware.GetRemoteLogging(
 		kafkaEventLogger,
