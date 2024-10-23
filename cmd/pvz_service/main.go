@@ -54,7 +54,7 @@ func main() {
 	pvzService := service.NewService(orderStorage, packService, now, now)
 
 	kafkaProducer, err := initProducer(kafka.Config{
-		Brokers: []string{viper.GetString("kafka_logger.broker")},
+		Brokers: viper.GetStringSlice("kafka_logger.brokers"),
 	})
 	if err != nil {
 		fmt.Printf("failed to init kafka producer: %v", err)

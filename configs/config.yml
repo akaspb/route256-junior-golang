@@ -10,7 +10,8 @@ db:
   sslmode: "disable"
 
 kafka_logger:
-  broker: "localhost:9092"
+  brokers:
+    - "localhost:9092"
   topic: "pvz.events-log"
   methods:
     - "ReceiveOrder"
