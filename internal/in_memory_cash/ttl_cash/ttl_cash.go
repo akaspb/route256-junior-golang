@@ -5,40 +5,37 @@ import (
 	"time"
 )
 
-type KeyType string
-type Data string
-
-type CashData struct {
+type CashData[D any] struct {
 	validUntil time.Time
-	data       Data
+	data       D
 }
 
-func (c *CashData) Value() Data {
+func (c *CashData[D]) Value() D {
 	return c.data
 }
 
-func (c *CashData) Validate(now time.Time) bool {
+func (c *CashData[D]) Validate(now time.Time) bool {
 	return c.validUntil.Before(now)
 }
 
-type TTLCashFactory struct {
+type TTLCashFactory[K comparable, D any] struct {
 	validTime time.Duration
 }
 
-func NewTTLCashFactory(validTime time.Duration) *TTLCashFactory {
-	return &TTLCashFactory{validTime: validTime}
+func NewTTLCashFactory[K comparable, D any](validTime time.Duration) *TTLCashFactory[K, D] {
+	return &TTLCashFactory[K, D]{validTime: validTime}
 }
 
-func (f *TTLCashFactory) Create(
-	data Data, now time.Time,
-) (in_memory_cash.Cash[time.Time, Data], error) {
-	return &CashData{
+func (f *TTLCashFactory[K, D]) Create(
+	data D, now time.Time,
+) (in_memory_cash.Cash[time.Time, D], error) {
+	return &CashData[D]{
 		validUntil: now.Add(f.validTime),
 		data:       data,
 	}, nil
 }
 
-func NewTTLCash(validTime time.Duration) *in_memory_cash.InMemoryCash[KeyType, time.Time, Data] {
-	cashFactory := NewTTLCashFactory(validTime)
-	return in_memory_cash.NewInMemoryCash[KeyType, time.Time, Data](cashFactory)
+func NewTTLCash[K comparable, D any](validTime time.Duration) *in_memory_cash.InMemoryCash[K, time.Time, D] {
+	cashFactory := NewTTLCashFactory[K, D](validTime)
+	return in_memory_cash.NewInMemoryCash[K, time.Time, D](cashFactory)
 }
