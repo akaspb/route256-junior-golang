@@ -20,3 +20,4 @@ kafka_logger:
 
 service:
   cache_ttl: "15m"
+  http_address: ":8110"

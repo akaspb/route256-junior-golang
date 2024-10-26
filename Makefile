@@ -3,6 +3,9 @@ LOCAL_IN:=$(CURDIR)/internal
 GO_KAFKA:=$(LOCAL_IN)/kafka
 DB_PORT:=5433
 
+run-prometheus:
+	prometheus --config.file config/prometheus.yml
+
 get-mockgen:
 	GOBIN=$(LOCAL_BIN) go install github.com/gojuno/minimock/v3/cmd/minimock@latest
 
@@ -54,7 +57,7 @@ run:
 	sleep 1
 	$(LOCAL_BIN)/pvz inter
 	pkill -SIGINT pvz-service
-	#docker-compose -f docker/docker-compose.yml stop
+	docker-compose -f docker/docker-compose.yml stop
 
 
 .vendor-proto: .vendor-proto/google/protobuf .vendor-proto/google/api .vendor-proto/protoc-gen-openapiv2/options .vendor-proto/validate

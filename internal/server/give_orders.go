@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/metrics"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 	pb "gitlab.ozon.dev/siralexpeter/Homework/internal/pvz-service/v1"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/service"
@@ -36,10 +37,17 @@ func (s *Implementation) GiveOrders(ctx context.Context, req *pb.GiveOrdersReque
 	}
 
 	ordersProto := make([]*pb.OrderToGiveInfo, len(orders))
+	ordersToGiveCount := 0
 	for i, order := range orders {
+		if order.Ok {
+			ordersToGiveCount++
+		}
+
 		orderToGiveInfo := orderIDWithMsgToOrderToGiveInfo(order)
 		ordersProto[i] = &orderToGiveInfo
 	}
+
+	metrics.AddOrdersGiven(ordersToGiveCount)
 
 	return &pb.GiveOrdersResponse{
 		Orders: ordersProto,

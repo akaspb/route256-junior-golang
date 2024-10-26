@@ -14,7 +14,9 @@ import (
 	"github.com/spf13/viper"
 	event_factory "gitlab.ozon.dev/siralexpeter/Homework/internal/event_logger/factory"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/event_logger/kafka_logger"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/http"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/kafka"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/metrics"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/middleware"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/packaging"
 	desc "gitlab.ozon.dev/siralexpeter/Homework/internal/pvz-service/v1"
@@ -61,6 +63,15 @@ func main() {
 		now,
 		now,
 	)
+
+	metrics.Init()
+
+	httpServer := http.NewServer(viper.GetString("service.http_address"))
+	go func() {
+		if err := httpServer.ListenAndServe(); err != nil {
+			fmt.Printf("http server ListenAndServe: %v\n", err)
+		}
+	}()
 
 	kafkaProducer, err := initProducer(kafka.Config{
 		Brokers: viper.GetStringSlice("kafka_logger.brokers"),
@@ -111,6 +122,10 @@ func main() {
 
 	for kafkaErr := range kafkaProducer.Errors() {
 		fmt.Printf("kafka error: %v\n", kafkaErr.Err)
+	}
+
+	if err := httpServer.Shutdown(ctx); err != nil {
+		fmt.Printf("http handler shutdown: %v\n", err)
 	}
 
 	grpcServer.GracefulStop()
