@@ -27,10 +27,6 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-const (
-	cacheLiveTime = 5 * time.Minute
-)
-
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	defer cancel()
@@ -57,7 +53,10 @@ func main() {
 
 	now := time.Now().Truncate(24 * time.Hour)
 	pvzService := service.NewService(
-		in_memory_cache.NewInMemoryCache(orderStorage, cacheLiveTime),
+		in_memory_cache.NewInMemoryCache(
+			orderStorage,
+			viper.GetDuration("service.cache_ttl"),
+		),
 		packService,
 		now,
 		now,

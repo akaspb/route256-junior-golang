@@ -17,3 +17,6 @@ kafka_logger:
     - "ReceiveOrder"
     - "GiveOrders"
     - "ReturnOrder"
+
+service:
+  cache_ttl: "15m"
