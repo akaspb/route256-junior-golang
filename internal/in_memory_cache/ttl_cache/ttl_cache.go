@@ -35,7 +35,7 @@ func (f *TTLCacheFactory[K, D]) Create(
 	}
 }
 
-func NewTTLCache[K comparable, D any](validTime time.Duration) *in_memory_cache.InMemoryCache[time.Time, D] {
+func NewTTLCache[K comparable, D any](validTime time.Duration) *in_memory_cache.InMemoryCache[K, time.Time, D] {
 	cacheFactory := NewTTLCacheFactory[K, D](validTime)
-	return in_memory_cache.NewInMemoryCache[time.Time, D](cacheFactory)
+	return in_memory_cache.NewInMemoryCache[K, time.Time, D](cacheFactory)
 }

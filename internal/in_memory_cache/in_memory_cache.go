@@ -4,18 +4,18 @@ import (
 	"sync"
 )
 
-type InMemoryCache[V comparable, D any] struct {
+type InMemoryCache[K, V comparable, D any] struct {
 	cacheFactory CacheFactory[V, D]
 	memory       sync.Map
 }
 
-func NewInMemoryCache[V comparable, D any](cacheFactory CacheFactory[V, D]) *InMemoryCache[V, D] {
-	return &InMemoryCache[V, D]{
+func NewInMemoryCache[K, V comparable, D any](cacheFactory CacheFactory[V, D]) *InMemoryCache[K, V, D] {
+	return &InMemoryCache[K, V, D]{
 		cacheFactory: cacheFactory,
 	}
 }
 
-func (c *InMemoryCache[V, D]) Get(key any, validateArg V) (res D, ok bool) {
+func (c *InMemoryCache[K, V, D]) Get(key K, validateArg V) (res D, ok bool) {
 	cacheAny, ok := c.memory.Load(key)
 	if !ok {
 		return
@@ -32,13 +32,13 @@ func (c *InMemoryCache[V, D]) Get(key any, validateArg V) (res D, ok bool) {
 	return
 }
 
-func (c *InMemoryCache[V, D]) Set(key any, data D, validateValue V) {
+func (c *InMemoryCache[K, V, D]) Set(key K, data D, validateValue V) {
 	cache := c.cacheFactory.Create(data, validateValue)
 	c.memory.Store(key, cache)
 	return
 }
 
-func (c *InMemoryCache[V, D]) Delete(key any) (ok bool) {
+func (c *InMemoryCache[K, V, D]) Delete(key K) (ok bool) {
 	_, ok = c.memory.LoadAndDelete(key)
 	return
 }

@@ -19,14 +19,14 @@ const (
 
 type InMemoryCache struct {
 	repo  storage.Facade
-	cache *in_memory_cache.InMemoryCache[time.Time, any]
+	cache *in_memory_cache.InMemoryCache[string, time.Time, any]
 	mu    sync.Mutex
 }
 
 func NewInMemoryCache(repository storage.Facade, validTime time.Duration) *InMemoryCache {
 	return &InMemoryCache{
 		repo:  repository,
-		cache: ttl_cache.NewTTLCache[time.Time, any](validTime),
+		cache: ttl_cache.NewTTLCache[string, any](validTime),
 		mu:    sync.Mutex{},
 	}
 }
