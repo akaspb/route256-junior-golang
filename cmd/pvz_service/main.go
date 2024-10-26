@@ -21,9 +21,14 @@ import (
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/server"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/service"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage"
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage/in_memory_cache"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage/postgres"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+)
+
+const (
+	cacheLiveTime = 5 * time.Minute
 )
 
 func main() {
@@ -51,7 +56,12 @@ func main() {
 	}
 
 	now := time.Now().Truncate(24 * time.Hour)
-	pvzService := service.NewService(orderStorage, packService, now, now)
+	pvzService := service.NewService(
+		in_memory_cache.NewInMemoryCache(orderStorage, cacheLiveTime),
+		packService,
+		now,
+		now,
+	)
 
 	kafkaProducer, err := initProducer(kafka.Config{
 		Brokers: viper.GetStringSlice("kafka_logger.brokers"),

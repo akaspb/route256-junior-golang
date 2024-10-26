@@ -9,8 +9,7 @@ import (
 )
 
 var (
-	ErrOrderNotFound     = errors.New("order is not found")
-	ErrOrderWithIdExists = errors.New("order with such id exist")
+	ErrOrderNotFound = errors.New("order is not found")
 )
 
 type Facade interface {
