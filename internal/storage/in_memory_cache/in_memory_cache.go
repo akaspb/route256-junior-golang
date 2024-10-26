@@ -3,12 +3,13 @@ package in_memory_cache
 import (
 	"context"
 	"fmt"
+	"sync"
+	"time"
+
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/in_memory_cache"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/in_memory_cache/ttl_cache"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/models"
 	"gitlab.ozon.dev/siralexpeter/Homework/internal/storage"
-	"sync"
-	"time"
 )
 
 const (

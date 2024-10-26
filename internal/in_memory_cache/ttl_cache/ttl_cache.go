@@ -1,8 +1,9 @@
 package ttl_cache
 
 import (
-	"gitlab.ozon.dev/siralexpeter/Homework/internal/in_memory_cache"
 	"time"
+
+	"gitlab.ozon.dev/siralexpeter/Homework/internal/in_memory_cache"
 )
 
 type CacheData[D any] struct {
